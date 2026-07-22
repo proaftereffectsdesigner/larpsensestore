@@ -50,8 +50,12 @@ export default function Navbar() {
   return (
     <nav className="border-b border-white/5 bg-[#0a0a0a]/30 backdrop-blur-2xl sticky top-0 z-50">
       <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-        <Link href="/" className="text-xl font-bold tracking-tight text-white flex items-center gap-2">
-          LarpSenseStore
+        <Link href="/" className="text-xl font-bold tracking-tight text-white flex items-center gap-3">
+          <img src="/logo.png" alt="LarpSenseStore Logo" className="h-8 w-auto object-contain drop-shadow-md" />
+          <div className="flex items-baseline">
+            <span className="font-extrabold tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-300">LarpSense</span>
+            <span className="font-light tracking-wide text-gray-400 ml-1">Store</span>
+          </div>
         </Link>
         <div className="flex items-center gap-4 sm:gap-6">
           {user ? (

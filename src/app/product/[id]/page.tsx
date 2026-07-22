@@ -1,0 +1,233 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { products } from "@/lib/products";
+import { supabase } from "@/lib/supabase-client";
+import { User } from "@supabase/supabase-js";
+import { CheckCircle2, CreditCard, Wallet, ChevronDown, Minus, Plus, ShieldCheck } from "lucide-react";
+
+export default function ProductPage() {
+  const { id } = useParams();
+  const router = useRouter();
+  const product = products.find((p) => p.id === id);
+
+  const [stock, setStock] = useState<number | null>(null);
+  const [loadingStock, setLoadingStock] = useState(true);
+  const [quantity, setQuantity] = useState(1);
+  const [loadingCheckout, setLoadingCheckout] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+  const [authChecked, setAuthChecked] = useState(false);
+  
+  const [paymentMethod, setPaymentMethod] = useState<"stripe" | "balance">("stripe");
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+      setAuthChecked(true);
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!product) return;
+    
+    fetch("/api/stock")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.ok && data.stock && data.stock.cs2) {
+          const available = data.stock.cs2[product.type]?.available || 0;
+          setStock(available);
+        }
+      })
+      .catch((err) => console.error(err))
+      .finally(() => setLoadingStock(false));
+  }, [product]);
+
+  if (!product) {
+    return <div className="p-20 text-center text-white">Product not found</div>;
+  }
+
+  const handleQuantityChange = (delta: number) => {
+    if (loadingStock || stock === 0) return;
+    const max = Math.min(100, stock || 100);
+    const newQuantity = quantity + delta;
+    if (newQuantity >= 1 && newQuantity <= max) {
+      setQuantity(newQuantity);
+    }
+  };
+
+  const handleCheckout = async () => {
+    if (!user) {
+      router.push("/login");
+      return;
+    }
+
+    setLoadingCheckout(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+
+      const res = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          productId: product.id, 
+          quantity, 
+          userId: user.id,
+          token,
+          paymentMethod
+        }),
+      });
+      const data = await res.json();
+      if (data.url) {
+        router.push(data.url);
+      } else {
+        alert("Checkout failed: " + data.error);
+        setLoadingCheckout(false);
+      }
+    } catch (err) {
+      alert("Error initiating checkout");
+      setLoadingCheckout(false);
+    }
+  };
+
+  const totalPrice = product.price * quantity;
+
+  return (
+    <div className="flex justify-center items-center py-12 px-4 relative z-10 min-h-[calc(100vh-80px)]">
+      <div className="bg-[#111111] border border-white/5 rounded-3xl p-6 md:p-8 w-full max-w-[420px] shadow-2xl relative">
+        
+        {/* Cena i Tytuł */}
+        <div className="mb-6">
+          <div className="text-[10px] font-bold text-gray-500 tracking-widest uppercase mb-1 flex justify-between items-center">
+            <span>Price</span>
+            <span className="text-accent flex items-center gap-1"><ShieldCheck className="w-3 h-3" /> {product.name}</span>
+          </div>
+          <div className="text-5xl font-medium text-white tracking-tight flex items-baseline gap-2">
+            €{totalPrice.toFixed(2)}
+            {quantity > 1 && <span className="text-sm text-gray-500 font-sans tracking-normal">(€{product.price.toFixed(2)} ea)</span>}
+          </div>
+        </div>
+
+        {/* Sekcja Email */}
+        <div className="mb-6">
+          <div className="text-[10px] font-bold text-gray-500 tracking-widest uppercase mb-2">Email for your order</div>
+          <div className="w-full bg-[#1c1c1c] border border-white/5 rounded-xl px-4 py-3 text-gray-300 text-sm">
+            {authChecked ? (user?.email || "Not logged in") : "Loading..."}
+          </div>
+          <div className="text-xs text-gray-500 mt-2 font-mono">
+            {user ? "Saved to your account." : "Please log in to purchase."}
+          </div>
+        </div>
+
+        {/* Sekcja Metoda Płatności */}
+        <div className="mb-6">
+          <div className="text-[10px] font-bold text-gray-500 tracking-widest uppercase mb-2">Payment method</div>
+          <div className="relative">
+            <button 
+              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+              className="w-full bg-[#1c1c1c] border border-white/5 rounded-xl px-4 py-3 text-white flex items-center justify-between hover:bg-[#222] transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                {paymentMethod === "stripe" ? (
+                  <div className="w-8 h-8 bg-indigo-500/10 rounded-full flex items-center justify-center">
+                    <CreditCard className="w-4 h-4 text-indigo-400" />
+                  </div>
+                ) : (
+                  <div className="w-8 h-8 bg-emerald-500/10 rounded-full flex items-center justify-center">
+                    <Wallet className="w-4 h-4 text-emerald-400" />
+                  </div>
+                )}
+                <div className="text-left">
+                  <div className="text-sm font-medium">{paymentMethod === "stripe" ? "Stripe" : "Balance (Test Mode)"}</div>
+                  <div className="text-xs text-gray-500">
+                    {paymentMethod === "stripe" ? "Credit Card, BLIK, etc." : "Mock order without NFA balance"}
+                  </div>
+                </div>
+              </div>
+              <ChevronDown className={`w-4 h-4 text-gray-500 transition-transform ${isDropdownOpen ? "rotate-180" : ""}`} />
+            </button>
+
+            {isDropdownOpen && (
+              <div className="absolute top-full left-0 right-0 mt-2 bg-[#1c1c1c] border border-white/10 rounded-xl overflow-hidden z-20 shadow-xl">
+                <button 
+                  onClick={() => { setPaymentMethod("stripe"); setIsDropdownOpen(false); }}
+                  className="w-full px-4 py-3 text-left hover:bg-white/5 transition-colors flex items-center gap-3 border-b border-white/5"
+                >
+                  <CreditCard className="w-4 h-4 text-indigo-400" />
+                  <span className="text-sm text-white">Stripe</span>
+                </button>
+                <button 
+                  onClick={() => { setPaymentMethod("balance"); setIsDropdownOpen(false); }}
+                  className="w-full px-4 py-3 text-left hover:bg-white/5 transition-colors flex items-center gap-3"
+                >
+                  <Wallet className="w-4 h-4 text-emerald-400" />
+                  <span className="text-sm text-white">Balance (Test Mode)</span>
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Sekcja Ilości */}
+        <div className="mb-8 flex items-center justify-between">
+          <div className="text-[14px] font-bold text-white flex flex-col">
+            Quantity
+            <span className="text-[10px] text-gray-500 uppercase tracking-widest mt-1">
+              {loadingStock ? "Checking..." : `${stock || 0} In Stock`}
+            </span>
+          </div>
+          <div className="flex items-center bg-[#1c1c1c] border border-white/5 rounded-xl overflow-hidden">
+            <button 
+              onClick={() => handleQuantityChange(-1)}
+              disabled={quantity <= 1 || loadingStock || stock === 0}
+              className="w-10 h-10 flex items-center justify-center text-gray-400 hover:bg-white/5 hover:text-white transition-colors disabled:opacity-30"
+            >
+              <Minus className="w-4 h-4" />
+            </button>
+            <div className="w-12 h-10 flex items-center justify-center text-white font-mono text-sm border-x border-white/5">
+              {quantity}
+            </div>
+            <button 
+              onClick={() => handleQuantityChange(1)}
+              disabled={quantity >= Math.min(100, stock || 100) || loadingStock || stock === 0}
+              className="w-10 h-10 flex items-center justify-center text-gray-400 hover:bg-white/5 hover:text-white transition-colors disabled:opacity-30"
+            >
+              <Plus className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+
+        {/* Przycisk Płatności */}
+        {authChecked && !user ? (
+          <button 
+            onClick={() => router.push("/login")}
+            className="w-full bg-[#eeeeee] text-black font-semibold rounded-2xl px-4 py-4 flex items-center justify-center gap-2 hover:bg-white transition-colors"
+          >
+            Sign in to pay
+          </button>
+        ) : (
+          <button 
+            onClick={handleCheckout}
+            disabled={loadingCheckout || loadingStock || stock === 0}
+            className="w-full bg-[#eeeeee] text-black font-semibold rounded-2xl px-4 py-4 flex items-center justify-center gap-2 hover:bg-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {loadingCheckout ? (
+              <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin" />
+            ) : (
+              `Pay €${totalPrice.toFixed(2)} with ${paymentMethod === "stripe" ? "Stripe" : "Balance"}`
+            )}
+          </button>
+        )}
+
+        {/* Stopka */}
+        <div className="mt-6 text-center text-xs text-gray-500 font-mono leading-relaxed">
+          You finish on the next page.<br/>
+          Your order is saved to your email.
+        </div>
+        
+      </div>
+    </div>
+  );
+}

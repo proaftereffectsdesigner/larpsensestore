@@ -16,7 +16,8 @@ export async function GET(request: Request) {
 
   const clientId = process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID;
   const clientSecret = process.env.DISCORD_CLIENT_SECRET;
-  const redirectUri = `http://localhost:3000/api/discord/callback`;
+  const baseUrl = new URL(request.url).origin;
+  const redirectUri = `${baseUrl}/api/discord/callback`;
 
   try {
     const tokenResponse = await fetch('https://discord.com/api/oauth2/token', {

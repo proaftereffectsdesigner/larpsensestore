@@ -163,13 +163,24 @@ export default function TopUpModal() {
                 <div className="relative">
                   <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white font-bold">€</span>
                   <input 
-                    type="number" 
-                    value={amount || ''}
-                    onChange={(e) => setAmount(Number(e.target.value))}
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={amount === 0 ? '' : amount}
+                    onChange={(e) => {
+                      const raw = e.target.value;
+                      if (raw === '' || raw === '0' || raw === '0.') {
+                        setAmount(0);
+                      } else {
+                        const parsed = parseFloat(raw);
+                        if (!isNaN(parsed)) setAmount(parsed);
+                      }
+                    }}
                     className="w-full bg-[#141414] border border-white/10 rounded-xl py-4 pl-10 pr-4 text-white font-bold focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/50 transition-all text-lg shadow-inner"
-                    placeholder="Custom amount"
+                    placeholder="0.50"
                   />
                 </div>
+                <p className="text-xs text-gray-600 font-medium pl-1">Minimum deposit: <span className="text-gray-500">€0.50</span>. For Tether USDT minimum is <span className="text-gray-500">€5.00</span>.</p>
               </div>
 
               {/* Payment Method */}

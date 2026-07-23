@@ -62,6 +62,7 @@ export default function Navbar() {
   const confirmSignOut = async () => {
     await supabase.auth.signOut();
     setShowLogoutConfirm(false);
+    window.location.reload();
   };
 
   return (

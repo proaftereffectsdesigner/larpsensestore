@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase-client";
 import { Users, CreditCard, Activity, Euro, Plus, Minus, Search, Shield, Copy, CheckCircle2, UserX, Trash2, Calendar, Monitor, Link as LinkIcon, ExternalLink, Settings } from "lucide-react";
 
@@ -8,6 +9,9 @@ export default function AdminDashboard() {
   const [stats, setStats] = useState<any>(null);
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [authChecked, setAuthChecked] = useState(false);
+  const router = useRouter();
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState<'all' | 'banned' | 'restricted'>('all');
   const [sessionToken, setSessionToken] = useState<string | null>(null);
@@ -132,8 +136,26 @@ export default function AdminDashboard() {
   useEffect(() => {
     const fetchData = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
+      if (!session) {
+        router.replace('/');
+        return;
+      }
       setSessionToken(session.access_token);
+
+      // Check if user is admin
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('is_admin')
+        .eq('id', session.user.id)
+        .single();
+
+      if (!profile?.is_admin) {
+        router.replace('/');
+        return;
+      }
+
+      setIsAdmin(true);
+      setAuthChecked(true);
 
       try {
         const [statsRes, usersRes] = await Promise.all([
@@ -294,6 +316,8 @@ export default function AdminDashboard() {
 
     return matchesSearch && matchesStatus;
   });
+
+  if (!authChecked) return null;
 
   if (loading) {
     return <div className="animate-pulse flex gap-4"><div className="w-64 h-32 bg-white/5 rounded-2xl"></div><div className="w-64 h-32 bg-white/5 rounded-2xl"></div></div>;

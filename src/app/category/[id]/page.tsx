@@ -42,11 +42,9 @@ export default function CategoryPage() {
   const [isVariantDropdownOpen, setIsVariantDropdownOpen] = useState(false);
 
   const CRYPTO_COINS = [
-    { id: 'USDT_TRX', name: 'USDT (Tron)', icon: '₮', color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
-    { id: 'LTC', name: 'Litecoin', icon: 'Ł', color: 'text-blue-400', bg: 'bg-blue-500/10' },
     { id: 'SOL', name: 'Solana', icon: '◎', color: 'text-purple-400', bg: 'bg-purple-500/10' },
-    { id: 'ETH', name: 'Ethereum', icon: 'Ξ', color: 'text-indigo-400', bg: 'bg-indigo-500/10' },
-    { id: 'BTC', name: 'Bitcoin', icon: '₿', color: 'text-amber-400', bg: 'bg-amber-500/10', note: 'min €10' },
+    { id: 'LTC', name: 'Litecoin', icon: 'Ł', color: 'text-blue-400', bg: 'bg-blue-500/10' },
+    { id: 'USDT_TRX', name: 'Tether USDT', icon: '₮', color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
   ];
 
   useEffect(() => {
@@ -362,7 +360,7 @@ export default function CategoryPage() {
                       {paymentMethod === "stripe" ? "Debit / Credit Card" : paymentMethod === "crypto" ? "Cryptocurrency" : "Balance"}
                     </div>
                     <div className="text-xs text-gray-500">
-                      {paymentMethod === "stripe" ? "Mastercard, Visa, Apple Pay etc. via Stripe (1.5% + €0.25 fee)" : paymentMethod === "crypto" ? (selectedCryptoCoin ? `${CRYPTO_COINS.find(c => c.id === selectedCryptoCoin)?.name} (0.5% fee)` : "BTC, ETH, LTC, USDT, SOL (0.5% fee)") : "Pay with your NFA Store balance"}
+                      {paymentMethod === "stripe" ? "Mastercard, Visa, Apple Pay etc. via Stripe (1.5% + €0.25 fee)" : paymentMethod === "crypto" ? (selectedCryptoCoin ? `${CRYPTO_COINS.find(c => c.id === selectedCryptoCoin)?.name} (0.5% fee)` : "SOL, LTC, USDT (0.5% fee)") : "Pay with your NFA Store balance"}
                     </div>
                   </div>
                 </div>
@@ -402,7 +400,7 @@ export default function CategoryPage() {
                         </div>
                         <div>
                           <div className="text-sm text-white">Cryptocurrency</div>
-                          <div className="text-xs text-gray-500">BTC, ETH, LTC, USDT, SOL <span className="text-amber-400">(0.5% fee)</span></div>
+                          <div className="text-xs text-gray-500">SOL, LTC, USDT <span className="text-amber-400">(0.5% fee)</span></div>
                         </div>
                       </div>
                       <ChevronRight className={`w-4 h-4 text-gray-500 transition-transform ${isCryptoExpanded && paymentMethod === 'crypto' ? 'rotate-90' : ''}`} />
@@ -424,17 +422,10 @@ export default function CategoryPage() {
                             </div>
                             <span className={`text-sm font-bold ${selectedCryptoCoin === coin.id ? 'text-white' : 'text-gray-400'}`}>
                               {coin.name}
-                              {coin.note && <span className="text-[10px] ml-2 text-gray-500 font-medium">({coin.note})</span>}
                             </span>
                           </button>
                         ))}
                       </div>
-                      {totalPrice < 10 && selectedCryptoCoin === 'BTC' && (
-                        <div className="mt-3 text-xs font-medium text-amber-400/90 bg-amber-400/10 p-3 rounded-xl flex items-center gap-2">
-                          <ShieldAlert className="w-4 h-4 shrink-0" />
-                          Minimum amount for Bitcoin is €10.00
-                        </div>
-                      )}
                     </div>
                   )}
                   
@@ -466,7 +457,7 @@ export default function CategoryPage() {
           ) : (
             <button 
               onClick={handleCheckout}
-              disabled={loadingCheckout || loadingStock || stock === 0 || (paymentMethod === 'crypto' && selectedCryptoCoin === 'BTC' && totalPrice < 10)}
+              disabled={loadingCheckout || loadingStock || stock === 0}
               className="w-full bg-emerald-500 hover:bg-emerald-400 text-black font-bold rounded-2xl px-4 py-4 flex items-center justify-center gap-2 transition-all shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:shadow-[0_0_30px_rgba(16,185,129,0.5)] disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none hover:-translate-y-0.5 disabled:hover:translate-y-0"
             >
               {loadingCheckout ? (

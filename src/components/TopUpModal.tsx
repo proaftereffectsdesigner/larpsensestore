@@ -17,11 +17,9 @@ export default function TopUpModal() {
   const [loadingText, setLoadingText] = useState("Initializing secure connection...");
 
   const CRYPTO_COINS = [
-    { id: 'USDT_TRX', name: 'USDT (Tron)', icon: '₮', color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
-    { id: 'LTC', name: 'Litecoin', icon: 'Ł', color: 'text-blue-400', bg: 'bg-blue-500/10' },
     { id: 'SOL', name: 'Solana', icon: '◎', color: 'text-purple-400', bg: 'bg-purple-500/10' },
-    { id: 'ETH', name: 'Ethereum', icon: 'Ξ', color: 'text-indigo-400', bg: 'bg-indigo-500/10' },
-    { id: 'BTC', name: 'Bitcoin', icon: '₿', color: 'text-amber-400', bg: 'bg-amber-500/10', note: 'min €10' },
+    { id: 'LTC', name: 'Litecoin', icon: 'Ł', color: 'text-blue-400', bg: 'bg-blue-500/10' },
+    { id: 'USDT_TRX', name: 'Tether USDT', icon: '₮', color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
   ];
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
@@ -204,7 +202,7 @@ export default function TopUpModal() {
                         </div>
                         <div className="text-left">
                           <div className={`font-bold text-sm ${method === 'crypto' ? 'text-white' : 'text-gray-300'}`}>Cryptocurrency</div>
-                          <div className="text-[11px] text-gray-500 font-medium">BTC, ETH, LTC, USDT, SOL <span className="text-amber-400 font-bold">(0.5% fee)</span></div>
+                          <div className="text-[11px] text-gray-500 font-medium">SOL, LTC, USDT <span className="text-amber-400 font-bold">(0.5% fee)</span></div>
                         </div>
                       </div>
                       <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${method === 'crypto' ? 'border-amber-400' : 'border-gray-600'}`}>
@@ -225,19 +223,12 @@ export default function TopUpModal() {
                               <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm font-black ${coin.bg} ${coin.color}`}>
                                 {coin.icon}
                               </div>
-                              <span className={`text-sm font-bold ${selectedCryptoCoin === coin.id ? 'text-white' : 'text-gray-400'}`}>
-                            {coin.name}
-                            {coin.note && <span className="text-[10px] ml-2 text-gray-500 font-medium">({coin.note})</span>}
-                          </span>
+                            <span className={`text-sm font-bold ${selectedCryptoCoin === coin.id ? 'text-white' : 'text-gray-400'}`}>
+                              {coin.name}
+                            </span>
                             </button>
                           ))}
                         </div>
-                        {amount < 10 && selectedCryptoCoin === 'BTC' && (
-                          <div className="mt-4 text-xs font-medium text-amber-400/90 bg-amber-400/10 p-3 rounded-xl flex items-center gap-2">
-                            <ShieldAlert className="w-4 h-4 shrink-0" />
-                            Minimum amount for Bitcoin is €10.00
-                          </div>
-                        )}
                       </div>
                     )}
                   </div>
@@ -274,7 +265,7 @@ export default function TopUpModal() {
 
                 <button
                   onClick={startPaymentSimulation}
-                  disabled={amount < 0.50 || (method === 'crypto' && selectedCryptoCoin === 'BTC' && amount < 10)}
+                  disabled={amount < 0.50}
                   className="w-full bg-accent hover:bg-accent/90 text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_20px_rgba(255,255,255,0.1)] hover:shadow-[0_0_30px_rgba(255,255,255,0.2)]"
                 >
                   Confirm Payment <ChevronRight className="w-5 h-5" />

@@ -131,9 +131,18 @@ function DashboardContent() {
   };
 
   useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_OUT' || !session) {
+        window.location.href = "/";
+      } else {
+        setUser(session.user);
+        loadDashboardData(session.user);
+      }
+    });
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!session) {
-        router.push("/login");
+        window.location.href = "/";
         return;
       }
       setUser(session.user);
@@ -149,6 +158,7 @@ function DashboardContent() {
 
     return () => {
       window.removeEventListener('balance-updated', handleBalanceUpdate);
+      subscription.unsubscribe();
     };
   }, [router]);
 

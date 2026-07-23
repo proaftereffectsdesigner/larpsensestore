@@ -247,6 +247,7 @@ function DashboardContent() {
             setUser(data.user);
             setAvatarBlobToUpload(null);
             setProfileMessage({ type: 'success', text: "Profile updated successfully!" });
+            window.dispatchEvent(new Event('balance-updated'));
             setTimeout(() => setProfileMessage(null), 5000);
         }
     } catch (err: any) {

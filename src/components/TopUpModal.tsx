@@ -124,11 +124,51 @@ export default function TopUpModal() {
     }
   };
 
+  // Called directly when user clicks a crypto coin — receives coinId fresh, no stale closure
+  const startPaymentWithCoin = async (coinId: string) => {
+    if (amount < 0.5) return;
+    setErrorMsg(null);
+
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      setErrorMsg("You must be logged in to top up!");
+      return;
+    }
+
+    setStep(2);
+    setLoadingText("Initializing Secure Gateway...");
+
+    try {
+      const res = await fetch("/api/create-plisio-invoice", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: session.user.id,
+          token: session.access_token,
+          amount: amount,
+          currency: coinId,
+          type: "topup"
+        })
+      });
+
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        setErrorMsg("Failed to initialize crypto payment: " + (data.error || "Unknown error"));
+        setStep(1);
+      }
+    } catch (err) {
+      setErrorMsg("Error contacting payment gateway.");
+      setStep(1);
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 overflow-y-auto">
       <div className="absolute inset-0 bg-black/80 backdrop-blur-md" onClick={() => step !== 2 && setIsOpen(false)}></div>
       
-      <div className={`bg-[#0a0a0a] border border-white/10 rounded-3xl w-full max-w-lg relative z-10 shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-y-auto max-h-[calc(100dvh-2rem)] my-auto transition-all duration-500 ${step === 2 ? 'scale-95' : 'scale-100'}`}>
+      <div className={`bg-[#0a0a0a] border border-white/10 rounded-3xl w-full max-w-lg relative z-10 shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-y-auto overflow-x-hidden max-h-[calc(100dvh-2rem)] my-auto transition-all duration-500 [scrollbar-width:thin] [scrollbar-color:#ffffff20_transparent] ${step === 2 ? 'scale-95' : 'scale-100'}`}>
         
         {/* Header */}
         <div className="p-6 md:p-8 pb-0 flex justify-between items-center relative z-20">
@@ -229,7 +269,18 @@ export default function TopUpModal() {
                           {CRYPTO_COINS.map(coin => (
                             <button
                               key={coin.id}
-                              onClick={() => setSelectedCryptoCoin(coin.id)}
+                              onClick={() => {
+                                if (coin.id === 'USDT_TON' && amount < 5) {
+                                  setSelectedCryptoCoin(coin.id);
+                                  return; // just highlight, don't pay yet
+                                }
+                                setSelectedCryptoCoin(coin.id);
+                                // Use a small timeout so state settles before we call the async fn
+                                setTimeout(() => {
+                                  // Call payment directly with coin.id to avoid stale closure
+                                  startPaymentWithCoin(coin.id);
+                                }, 0);
+                              }}
                               className={`flex items-center gap-3 p-3 rounded-xl transition-all ${selectedCryptoCoin === coin.id ? 'bg-white/10 border border-white/20 shadow-inner' : 'bg-[#0a0a0a] border border-white/5 hover:bg-white/5'}`}
                             >
                               <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm font-black ${coin.bg} ${coin.color}`}>

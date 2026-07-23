@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, Suspense } from "react";
+import { useEffect, useState, Suspense, useRef } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase-client";
 import ParticlesBackground from "@/components/ParticlesBackground";
@@ -48,6 +48,7 @@ function DashboardContent() {
   const [passwordUpdating, setPasswordUpdating] = useState(false);
   const [emailUpdating, setEmailUpdating] = useState(false);
   const [profileUpdating, setProfileUpdating] = useState(false);
+  const saveVersionRef = useRef(0);
   const [resetEmailSent, setResetEmailSent] = useState(false);
   const [revealedIdx, setRevealedIdx] = useState<{orderId: string, idx: number} | null>(null);
   const [ordersPage, setOrdersPage] = useState(1);
@@ -202,6 +203,7 @@ function DashboardContent() {
 
     setProfileUpdating(true);
     setProfileMessage(null);
+    const currentVersion = ++saveVersionRef.current;
     let finalAvatarUrl = newAvatar;
     
     try {
@@ -243,7 +245,7 @@ function DashboardContent() {
             }).eq("id", user.id);
         }
         
-        if (data.user) {
+        if (data.user && saveVersionRef.current === currentVersion) {
             setUser(data.user);
             setAvatarBlobToUpload(null);
             setProfileMessage({ type: 'success', text: "Profile updated successfully!" });
@@ -709,7 +711,15 @@ function DashboardContent() {
                           disabled={profileUpdating}
                           className="bg-accent text-white font-bold rounded-xl px-8 py-3 hover:bg-accent/80 transition-all hover:scale-105 shadow-[0_0_15px_rgba(255,255,255,0.1)] disabled:opacity-50 disabled:hover:scale-100 flex items-center gap-2"
                         >
-                          {profileUpdating ? "Saving..." : "Save Profile"}
+                          {profileUpdating ? (
+                            <>
+                              <svg className="animate-spin w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                              </svg>
+                              Saving...
+                            </>
+                          ) : "Save Profile"}
                         </button>
                       </div>
 

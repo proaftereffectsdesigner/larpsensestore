@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { products } from "@/lib/products";
 import { supabase } from "@/lib/supabase-client";
 import { User } from "@supabase/supabase-js";
-import { CheckCircle2, CreditCard, Wallet, ChevronDown, Minus, Plus, ShieldCheck, Bitcoin } from "lucide-react";
+import { CheckCircle2, CreditCard, Wallet, ChevronDown, Minus, Plus, ShieldCheck, Bitcoin, ShieldAlert } from "lucide-react";
 import { SiStripe } from "react-icons/si";
 
 export default function ProductPage() {

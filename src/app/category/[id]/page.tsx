@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { products } from "@/lib/products";
 import { supabase } from "@/lib/supabase-client";
 import { User } from "@supabase/supabase-js";
-import { CheckCircle2, CreditCard, Wallet, ChevronDown, Minus, Plus, ShieldCheck, Gamepad2, Info, Bitcoin, Zap, Lock, RefreshCcw } from "lucide-react";
+import { CheckCircle2, CreditCard, Wallet, ChevronDown, Minus, Plus, ShieldCheck, Gamepad2, Info, Bitcoin, Zap, Lock, RefreshCcw, ShieldAlert } from "lucide-react";
 import { SiStripe } from "react-icons/si";
 import ParticlesBackground from "@/components/ParticlesBackground";
 import Image from "next/image";

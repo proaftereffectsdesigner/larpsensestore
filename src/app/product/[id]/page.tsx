@@ -31,6 +31,7 @@ export default function ProductPage() {
   const [paymentMethod, setPaymentMethod] = useState<"stripe" | "crypto" | "balance">("stripe");
   const [selectedCryptoCoin, setSelectedCryptoCoin] = useState<string | null>(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isCryptoExpanded, setIsCryptoExpanded] = useState(false);
 
   const CRYPTO_COINS = [
     { id: 'USDT_TRX', name: 'USDT (Tron)', icon: '₮', color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
@@ -207,7 +208,7 @@ export default function ProductPage() {
             </button>
 
             {isDropdownOpen && (
-              <div className="absolute top-full left-0 right-0 mt-2 bg-[#1c1c1c] border border-white/10 rounded-xl overflow-hidden z-20 shadow-xl">
+              <div className="absolute top-full left-0 right-0 mt-2 bg-[#1c1c1c] border border-white/10 rounded-xl overflow-y-auto z-20 shadow-xl max-h-[300px]">
                 <button 
                   onClick={() => { setPaymentMethod("stripe"); setIsDropdownOpen(false); }}
                   className="w-full px-4 py-3 text-left hover:bg-white/5 transition-colors flex items-center gap-3 border-b border-white/5"
@@ -221,7 +222,15 @@ export default function ProductPage() {
                   </div>
                 </button>
                 <button 
-                  onClick={() => { setPaymentMethod("crypto"); if (!selectedCryptoCoin) setSelectedCryptoCoin(CRYPTO_COINS[0].id); }}
+                  onClick={() => { 
+                    if (paymentMethod === "crypto") {
+                      setIsCryptoExpanded(!isCryptoExpanded);
+                    } else {
+                      setPaymentMethod("crypto"); 
+                      setIsCryptoExpanded(true);
+                      if (!selectedCryptoCoin) setSelectedCryptoCoin(CRYPTO_COINS[0].id); 
+                    }
+                  }}
                   className={`w-full px-4 py-3 text-left transition-colors flex flex-col border-b border-white/5 ${paymentMethod === "crypto" ? 'bg-white/5' : 'hover:bg-white/5'}`}
                 >
                   <div className="flex items-center justify-between w-full">
@@ -234,18 +243,18 @@ export default function ProductPage() {
                         <div className="text-xs text-gray-500">BTC, ETH, LTC, USDT, SOL <span className="text-amber-400">(0.5% fee)</span></div>
                       </div>
                     </div>
-                    <ChevronRight className={`w-4 h-4 text-gray-500 transition-transform ${paymentMethod === 'crypto' ? 'rotate-90' : ''}`} />
+                    <ChevronRight className={`w-4 h-4 text-gray-500 transition-transform ${isCryptoExpanded && paymentMethod === 'crypto' ? 'rotate-90' : ''}`} />
                   </div>
                 </button>
                 
-                {paymentMethod === 'crypto' && (
+                {paymentMethod === 'crypto' && isCryptoExpanded && (
                   <div className="p-3 bg-[#111] border-b border-white/5 animate-in slide-in-from-top-2 duration-200">
                     <div className="text-[10px] font-bold text-gray-500 uppercase mb-2">Select Currency</div>
                     <div className="flex flex-col gap-1.5">
                       {CRYPTO_COINS.map(coin => (
                         <button
                           key={coin.id}
-                          onClick={() => { setSelectedCryptoCoin(coin.id); setIsDropdownOpen(false); }}
+                          onClick={() => { setSelectedCryptoCoin(coin.id); setIsDropdownOpen(false); setIsCryptoExpanded(false); }}
                           className={`flex items-center gap-3 p-3 rounded-xl transition-all ${selectedCryptoCoin === coin.id ? 'bg-white/10 border border-white/20' : 'bg-[#1c1c1c] border border-white/5 hover:bg-white/5'}`}
                         >
                           <div className={`w-8 h-8 rounded-md flex items-center justify-center text-sm font-black ${coin.bg} ${coin.color}`}>

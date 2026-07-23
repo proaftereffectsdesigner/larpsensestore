@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { products } from "@/lib/products";
 import { supabase } from "@/lib/supabase-client";
 import { User } from "@supabase/supabase-js";
-import { CheckCircle2, CreditCard, Wallet, ChevronDown, Minus, Plus, ShieldCheck, Gamepad2, Info, Bitcoin, Zap, Lock, RefreshCcw, ShieldAlert } from "lucide-react";
+import { CheckCircle2, CreditCard, Wallet, ChevronDown, ChevronRight, Minus, Plus, ShieldCheck, Gamepad2, Info, Bitcoin, Zap, Lock, RefreshCcw, ShieldAlert } from "lucide-react";
 import { SiStripe } from "react-icons/si";
 import ParticlesBackground from "@/components/ParticlesBackground";
 import Image from "next/image";
@@ -383,19 +383,48 @@ export default function CategoryPage() {
                     </div>
                   </button>
                   <button 
-                    onClick={() => { setPaymentMethod("crypto"); setIsDropdownOpen(false); if (!selectedCryptoCoin) setSelectedCryptoCoin(CRYPTO_COINS[0].id); }}
+                    onClick={() => { setPaymentMethod("crypto"); if (!selectedCryptoCoin) setSelectedCryptoCoin(CRYPTO_COINS[0].id); }}
                     className={`w-full px-4 py-3 text-left transition-colors flex flex-col border-b border-white/5 ${paymentMethod === "crypto" ? 'bg-white/5' : 'hover:bg-white/5'}`}
                   >
-                    <div className="flex items-center gap-3 w-full">
-                      <div className="flex items-center justify-center w-8 h-8 bg-amber-500/10 rounded-full">
-                        <Bitcoin className="w-4 h-4 text-amber-400" />
+                    <div className="flex items-center justify-between w-full">
+                      <div className="flex items-center gap-3">
+                        <div className="flex items-center justify-center w-8 h-8 bg-amber-500/10 rounded-full">
+                          <Bitcoin className="w-4 h-4 text-amber-400" />
+                        </div>
+                        <div>
+                          <div className="text-sm text-white">Cryptocurrency</div>
+                          <div className="text-xs text-gray-500">BTC, ETH, LTC, USDT, SOL <span className="text-amber-400">(0.5% fee)</span></div>
+                        </div>
                       </div>
-                      <div>
-                        <div className="text-sm text-white">Cryptocurrency</div>
-                        <div className="text-xs text-gray-500">BTC, ETH, LTC, USDT, SOL <span className="text-amber-400">(0.5% fee)</span></div>
-                      </div>
+                      <ChevronRight className={`w-4 h-4 text-gray-500 transition-transform ${paymentMethod === 'crypto' ? 'rotate-90' : ''}`} />
                     </div>
                   </button>
+                  
+                  {paymentMethod === 'crypto' && (
+                    <div className="p-3 bg-[#111] border-b border-white/5 animate-in slide-in-from-top-2 duration-200">
+                      <div className="text-[10px] font-bold text-gray-500 uppercase mb-2">Select Currency</div>
+                      <div className="flex flex-col gap-1.5">
+                        {CRYPTO_COINS.map(coin => (
+                          <button
+                            key={coin.id}
+                            onClick={() => { setSelectedCryptoCoin(coin.id); setIsDropdownOpen(false); }}
+                            className={`flex items-center gap-3 p-3 rounded-xl transition-all ${selectedCryptoCoin === coin.id ? 'bg-white/10 border border-white/20' : 'bg-[#1c1c1c] border border-white/5 hover:bg-white/5'}`}
+                          >
+                            <div className={`w-8 h-8 rounded-md flex items-center justify-center text-sm font-black ${coin.bg} ${coin.color}`}>
+                              {coin.icon}
+                            </div>
+                            <span className={`text-sm font-bold ${selectedCryptoCoin === coin.id ? 'text-white' : 'text-gray-400'}`}>{coin.name}</span>
+                          </button>
+                        ))}
+                      </div>
+                      {totalPrice < 10 && (
+                        <div className="mt-3 text-xs font-medium text-amber-400/90 bg-amber-400/10 p-3 rounded-xl flex items-center gap-2">
+                          <ShieldAlert className="w-4 h-4 shrink-0" />
+                          Minimum amount for cryptocurrency is €10.00
+                        </div>
+                      )}
+                    </div>
+                  )}
                   
                   <button 
                     onClick={() => { setPaymentMethod("balance"); setIsDropdownOpen(false); }}
@@ -409,33 +438,6 @@ export default function CategoryPage() {
                       <div className="text-xs text-gray-500">Pay with your NFA Store balance <span className="text-emerald-400">(Instant)</span></div>
                     </div>
                   </button>
-                </div>
-              )}
-              
-              {/* INLINE CRYPTO SELECTION */}
-              {paymentMethod === 'crypto' && (
-                <div className="mt-2 p-4 bg-[#0a0a0a]/50 border border-white/10 rounded-xl shadow-inner">
-                  <div className="text-[10px] font-bold text-gray-500 uppercase mb-3">Select Currency</div>
-                  <div className="grid grid-cols-2 gap-2">
-                    {CRYPTO_COINS.map(coin => (
-                      <button
-                        key={coin.id}
-                        onClick={() => setSelectedCryptoCoin(coin.id)}
-                        className={`flex items-center gap-2 p-3 rounded-xl transition-all ${selectedCryptoCoin === coin.id ? 'bg-white/10 border border-white/20 shadow-inner' : 'bg-[#1c1c1c] border border-white/5 hover:bg-white/5'}`}
-                      >
-                        <div className={`w-6 h-6 rounded-md flex items-center justify-center text-xs font-black ${coin.bg} ${coin.color}`}>
-                          {coin.icon}
-                        </div>
-                        <span className={`text-xs font-bold ${selectedCryptoCoin === coin.id ? 'text-white' : 'text-gray-400'}`}>{coin.name}</span>
-                      </button>
-                    ))}
-                  </div>
-                  {totalPrice < 10 && (
-                    <div className="mt-3 text-xs font-medium text-amber-400/90 bg-amber-400/10 p-3 rounded-xl flex items-center gap-2">
-                      <ShieldAlert className="w-4 h-4 shrink-0" />
-                      Minimum amount for cryptocurrency is €10.00
-                    </div>
-                  )}
                 </div>
               )}
             </div>

@@ -19,7 +19,7 @@ export default function TopUpModal() {
   const CRYPTO_COINS = [
     { id: 'SOL', name: 'Solana', icon: '◎', color: 'text-purple-400', bg: 'bg-purple-500/10' },
     { id: 'LTC', name: 'Litecoin', icon: 'Ł', color: 'text-blue-400', bg: 'bg-blue-500/10' },
-    { id: 'USDT_TRX', name: 'Tether USDT', icon: '₮', color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
+    { id: 'USDT_TON', name: 'Tether USDT', icon: '₮', color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
   ];
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 

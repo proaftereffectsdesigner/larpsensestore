@@ -54,8 +54,8 @@ export async function POST(req: Request) {
       // "mismatch" can happen if they overpaid/underpaid, but Plisio completed it.
       // We will add the actual paid EUR amount to the balance.
       
-      const userId = orderNumber.split('_')[0]; // We appended _timestamp when creating
-      const amountPaid = Number(txData.source_amount);
+      const [userId, timestamp, originalAmountStr] = orderNumber.split('_'); 
+      const amountPaid = originalAmountStr ? Number(originalAmountStr) : Number(txData.source_amount);
 
       if (isNaN(amountPaid) || amountPaid <= 0) {
         return NextResponse.json({ error: "Invalid amount" }, { status: 400 });

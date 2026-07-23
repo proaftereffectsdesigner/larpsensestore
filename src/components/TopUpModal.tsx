@@ -33,7 +33,7 @@ export default function TopUpModal() {
   const getFeeMultiplier = () => {
     switch (method) {
       case 'card': return 0.015; // 1.5%
-      case 'crypto': return 0.00; // 0%
+      case 'crypto': return 0.005; // 0.5%
     }
   };
 
@@ -186,7 +186,7 @@ export default function TopUpModal() {
                       </div>
                       <div className="text-left">
                         <div className={`font-bold text-sm ${method === 'crypto' ? 'text-white' : 'text-gray-300'}`}>Cryptocurrency</div>
-                        <div className="text-[11px] text-gray-500 font-medium">BTC, ETH, LTC, USDT <span className="text-amber-400 font-bold">(0% fee)</span></div>
+                        <div className="text-[11px] text-gray-500 font-medium">BTC, ETH, LTC, USDT <span className="text-amber-400 font-bold">(0.5% fee)</span></div>
                       </div>
                     </div>
                     <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${method === 'crypto' ? 'border-amber-400' : 'border-gray-600'}`}>

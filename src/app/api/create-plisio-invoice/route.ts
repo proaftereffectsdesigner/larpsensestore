@@ -37,16 +37,20 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Account restricted" }, { status: 403 });
     }
 
-    // Generate unique order number (user ID + timestamp)
-    // We will extract the UUID from the order_number in the webhook
-    const orderNumber = `${userId}_${Date.now()}`;
+    const feeMultiplier = 0.005; // 0.5%
+    const cryptoFee = Number((amount * feeMultiplier).toFixed(2));
+    const totalAmount = amount + cryptoFee;
+
+    // Generate unique order number (user ID + timestamp + original amount)
+    // We will extract the UUID and original amount from the order_number in the webhook
+    const orderNumber = `${userId}_${Date.now()}_${amount}`;
     const baseUrl = new URL(req.url).origin;
 
     // Create Plisio Invoice
     const plisioApiUrl = new URL("https://api.plisio.net/api/v1/invoices/new");
     plisioApiUrl.searchParams.append("api_key", PLISIO_SECRET_KEY);
     plisioApiUrl.searchParams.append("source_currency", "EUR");
-    plisioApiUrl.searchParams.append("source_amount", amount.toString());
+    plisioApiUrl.searchParams.append("source_amount", totalAmount.toString());
     plisioApiUrl.searchParams.append("order_name", "LarpSense Balance Top-up");
     plisioApiUrl.searchParams.append("order_number", orderNumber);
     plisioApiUrl.searchParams.append("callback_url", `${baseUrl}/api/webhook/plisio`);

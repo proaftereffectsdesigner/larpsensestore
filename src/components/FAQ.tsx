@@ -28,6 +28,10 @@ export default function FAQ() {
       answer: "Non-Full Access accounts are high-quality, hand-verified profiles perfect for immediate matchmaking. While you don't own the original email, our token system ensures seamless and secure access."
     },
     {
+      question: "How do I log into the purchased account?",
+      answer: "Logging in is entirely automated through our proprietary LarpSense NFA Tool. Simply download the tool from your dashboard, drag and drop your token file into the client, and it will securely launch the game for you. It is 100% safe and bypasses the need for manual password entry."
+    },
+    {
       question: "How does the 6-hour automated warranty work?",
       answer: "If your token expires or the account goes down within the 6-hour window, our automated system verifies the status and instantly issues a 1:1 replacement to your email."
     },

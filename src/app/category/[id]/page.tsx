@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { products } from "@/lib/products";
 import { supabase } from "@/lib/supabase-client";
 import { User } from "@supabase/supabase-js";
-import { CheckCircle2, CreditCard, Wallet, ChevronDown, Minus, Plus, ShieldCheck, Gamepad2, Info, Bitcoin } from "lucide-react";
+import { CheckCircle2, CreditCard, Wallet, ChevronDown, Minus, Plus, ShieldCheck, Gamepad2, Info, Bitcoin, Zap, Lock, RefreshCcw } from "lucide-react";
 import { SiStripe } from "react-icons/si";
 import ParticlesBackground from "@/components/ParticlesBackground";
 import Image from "next/image";
@@ -159,16 +159,16 @@ export default function CategoryPage() {
             </h3>
             <ul className="space-y-3 text-sm leading-relaxed">
               <li className="flex items-start gap-2">
-                <CheckCircle2 className="w-4 h-4 text-green-400 mt-0.5 shrink-0" />
-                <span><strong>Instant Delivery:</strong> Account credentials are sent to your email immediately after purchase.</span>
+                <Zap className="w-4 h-4 text-green-400 mt-0.5 shrink-0" />
+                <span><strong>Instant Delivery:</strong> Secure token file dispatched to your email immediately after purchase.</span>
               </li>
               <li className="flex items-start gap-2">
-                <CheckCircle2 className="w-4 h-4 text-green-400 mt-0.5 shrink-0" />
-                <span><strong>No VAC Bans:</strong> Hand-verified accounts with a completely clean history.</span>
+                <Lock className="w-4 h-4 text-green-400 mt-0.5 shrink-0" />
+                <span><strong>NFA Format:</strong> Non-Full Access account. Log in seamlessly using the LarpSense NFA Tool. The original email is not provided.</span>
               </li>
               <li className="flex items-start gap-2">
-                <CheckCircle2 className="w-4 h-4 text-green-400 mt-0.5 shrink-0" />
-                <span><strong>Full Access:</strong> You receive the login, password, and the original email address.</span>
+                <RefreshCcw className="w-4 h-4 text-green-400 mt-0.5 shrink-0" />
+                <span><strong>Automated Warranty:</strong> Covered by our automated 1:1 replacement system if the token expires within the 6-hour window.</span>
               </li>
               {id === "premier" && (
                 <li className="flex items-start gap-2">

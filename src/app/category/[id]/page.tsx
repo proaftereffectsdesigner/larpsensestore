@@ -5,12 +5,22 @@ import { useParams, useRouter } from "next/navigation";
 import { products } from "@/lib/products";
 import { supabase } from "@/lib/supabase-client";
 import { User } from "@supabase/supabase-js";
-import { CheckCircle2, CreditCard, Wallet, ChevronDown, Minus, Plus, ShieldCheck, Gamepad2, Info } from "lucide-react";
+import { CheckCircle2, CreditCard, Wallet, ChevronDown, Minus, Plus, ShieldCheck, Gamepad2, Info, Bitcoin } from "lucide-react";
+import { SiStripe } from "react-icons/si";
 import ParticlesBackground from "@/components/ParticlesBackground";
+import Image from "next/image";
 
 export default function CategoryPage() {
   const { id } = useParams(); // 'prime' or 'premier'
   const router = useRouter();
+
+  const getStockColor = (stockAmount: number | null) => {
+    if (stockAmount === null) return "text-gray-500";
+    if (stockAmount === 0) return "text-red-400";
+    if (stockAmount >= 100) return "text-green-400";
+    if (stockAmount >= 50) return "text-yellow-400";
+    return "text-orange-400";
+  };
   
   const categoryProducts = products.filter(p => id === "prime" ? p.id === "prime" : p.id.startsWith("premier"));
   
@@ -18,13 +28,14 @@ export default function CategoryPage() {
   const selectedProduct = categoryProducts.find(p => p.id === selectedProductId);
 
   const [stock, setStock] = useState<number | null>(null);
+  const [allStockData, setAllStockData] = useState<any>(null);
   const [loadingStock, setLoadingStock] = useState(true);
   const [quantity, setQuantity] = useState(1);
   const [loadingCheckout, setLoadingCheckout] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [authChecked, setAuthChecked] = useState(false);
   
-  const [paymentMethod, setPaymentMethod] = useState<"stripe" | "balance">("stripe");
+  const [paymentMethod, setPaymentMethod] = useState<"stripe" | "crypto" | "balance">("stripe");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isVariantDropdownOpen, setIsVariantDropdownOpen] = useState(false);
 
@@ -36,20 +47,25 @@ export default function CategoryPage() {
   }, []);
 
   useEffect(() => {
-    if (!selectedProduct) return;
     setLoadingStock(true);
     fetch("/api/stock")
       .then((res) => res.json())
       .then((data) => {
         if (data.ok && data.stock && data.stock.cs2) {
-          const available = data.stock.cs2[selectedProduct.type]?.available || 0;
-          setStock(available);
-          setQuantity(1); // reset quantity when product changes
+          setAllStockData(data.stock.cs2);
         }
       })
       .catch((err) => console.error(err))
       .finally(() => setLoadingStock(false));
-  }, [selectedProduct]);
+  }, [id]);
+
+  useEffect(() => {
+    if (allStockData && selectedProduct) {
+      const available = allStockData[selectedProduct.type]?.available || 0;
+      setStock(available);
+      setQuantity(1); // reset quantity when product changes
+    }
+  }, [selectedProduct, allStockData]);
 
   if (categoryProducts.length === 0) {
     return <div className="p-20 text-center text-white">Category not found</div>;
@@ -79,7 +95,7 @@ export default function CategoryPage() {
 
   const handleCheckout = async () => {
     if (!user) {
-      router.push("/login");
+      window.dispatchEvent(new Event('open-auth'));
       return;
     }
     if (!selectedProduct) return;
@@ -102,6 +118,7 @@ export default function CategoryPage() {
       });
       const data = await res.json();
       if (data.url) {
+        window.dispatchEvent(new Event('balance-updated'));
         router.push(data.url);
       } else {
         alert("Checkout failed: " + data.error);
@@ -124,18 +141,18 @@ export default function CategoryPage() {
         {/* Lewa kolumna: Grafika i Opis */}
         <div className="flex flex-col gap-6">
           {/* Obrazek (Graphic Placeholder) */}
-          <div className={`w-full aspect-square relative flex flex-col items-center justify-center p-8 overflow-hidden rounded-3xl border border-white/5 shadow-2xl ${id === "prime" ? "bg-gradient-to-br from-indigo-900/40 to-[#111]" : "bg-gradient-to-br from-emerald-900/40 to-[#111]"}`}>
-            <div className="absolute inset-0 opacity-50"><ParticlesBackground /></div>
-            <Gamepad2 className="w-32 h-32 text-white/10 mb-4 relative z-10" />
-            <div className="absolute top-6 left-6 z-10">
-              <div className="text-xs uppercase tracking-wider font-bold bg-black/50 text-white px-4 py-2 rounded-full backdrop-blur-md border border-white/10">
-                CS2 {id === "prime" ? "Prime" : "Premier"} Ready
-              </div>
-            </div>
+          <div className="w-full aspect-[4/3] relative flex flex-col items-center justify-center overflow-hidden rounded-3xl border border-white/10 shadow-[0_0_40px_rgba(0,0,0,0.5)] group transition-all">
+            <Image 
+              src={id === "prime" ? "/prime-bg.png" : "/premier-bg.jpg"} 
+              alt={id === "prime" ? "CS2 Prime Ready" : "CS2 Premier Ready"} 
+              fill 
+              className="object-cover transition-transform duration-700 scale-[1.15] group-hover:scale-[1.20]" 
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#141414] via-black/20 to-transparent z-10 pointer-events-none" />
           </div>
 
           {/* Opis Produktu */}
-          <div className="bg-[#141414]/90 backdrop-blur-sm border border-white/5 rounded-3xl p-6 shadow-2xl text-gray-300">
+          <div className="bg-[#141414]/60 backdrop-blur-xl border border-white/10 rounded-3xl p-6 md:p-8 shadow-2xl text-gray-300">
             <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
               <Info className="w-5 h-5 text-accent" />
               Account Details
@@ -164,9 +181,9 @@ export default function CategoryPage() {
         </div>
 
         {/* Prawa kolumna: Konfigurator i Płatność */}
-        <div className="bg-[#141414]/90 backdrop-blur-sm border border-white/5 rounded-3xl p-6 md:p-8 w-full shadow-2xl relative lg:sticky lg:top-24">
+        <div className="bg-[#141414]/60 backdrop-blur-xl border border-white/10 rounded-3xl p-6 md:p-8 w-full shadow-[0_20px_60px_rgba(0,0,0,0.8)] relative lg:sticky lg:top-24 overflow-visible">
           
-          <h1 className="text-2xl font-bold text-white mb-8">Configure your order</h1>
+          <h1 className="text-2xl font-bold text-white mb-8 relative z-10">Configure your order</h1>
 
           {/* Sekcja Wybór Wariantu */}
           {categoryProducts.length > 1 && (
@@ -175,7 +192,7 @@ export default function CategoryPage() {
               <div className="relative">
                 <button 
                   onClick={() => setIsVariantDropdownOpen(!isVariantDropdownOpen)}
-                  className="w-full bg-[#1c1c1c] border border-white/5 rounded-xl px-4 py-3 text-white flex items-center justify-between hover:bg-[#222] transition-colors focus:outline-none focus:ring-2 focus:ring-white/20"
+                  className="w-full bg-[#0a0a0a]/50 border border-white/10 rounded-xl px-4 py-3.5 text-white flex items-center justify-between hover:border-emerald-500/50 hover:bg-white/5 transition-all shadow-inner focus:outline-none"
                 >
                   <div className="flex items-center gap-3">
                     <ShieldCheck className="w-5 h-5 text-accent" />
@@ -188,17 +205,34 @@ export default function CategoryPage() {
                 </button>
 
                 {isVariantDropdownOpen && (
-                  <div className="absolute top-full left-0 right-0 mt-2 bg-[#1c1c1c] border border-white/10 rounded-xl overflow-hidden shadow-2xl max-h-64 overflow-y-auto">
-                    {categoryProducts.map((p) => (
-                      <button 
-                        key={p.id}
-                        onClick={() => { setSelectedProductId(p.id); setIsVariantDropdownOpen(false); }}
-                        className={`w-full px-4 py-3 text-left hover:bg-white/5 transition-colors flex items-center justify-between border-b border-white/5 last:border-0 ${selectedProductId === p.id ? 'bg-white/5' : ''}`}
-                      >
-                        <div className="text-sm text-white">{p.name}</div>
-                        <div className="font-mono text-sm text-accent">€{p.price.toFixed(2)}</div>
-                      </button>
-                    ))}
+                  <div className="absolute top-full left-0 right-0 mt-2 bg-[#0a0a0a] border border-white/10 rounded-xl overflow-hidden shadow-2xl max-h-64 overflow-y-auto custom-scrollbar z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                    {categoryProducts.map((p) => {
+                      const variantStock = allStockData ? (allStockData[p.type]?.available || 0) : null;
+                      return (
+                        <button 
+                          key={p.id}
+                          onClick={() => { setSelectedProductId(p.id); setIsVariantDropdownOpen(false); }}
+                          disabled={variantStock === 0}
+                          className={`w-full px-4 py-3 text-left transition-colors flex items-center justify-between border-b border-white/5 last:border-0 ${
+                            variantStock === 0 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-white/5'
+                          } ${selectedProductId === p.id ? 'bg-white/5' : ''}`}
+                        >
+                          <div>
+                            <div className="text-sm text-white">{p.name}</div>
+                            <div className={`text-[10px] mt-0.5 font-bold uppercase tracking-wider flex items-center gap-1 ${getStockColor(variantStock)}`}>
+                              {variantStock === null ? (
+                                "Checking..."
+                              ) : variantStock > 0 ? (
+                                <><CheckCircle2 className="w-3 h-3" /> {variantStock} In Stock</>
+                              ) : (
+                                "Out of Stock"
+                              )}
+                            </div>
+                          </div>
+                          <div className="font-mono text-sm text-accent">€{p.price.toFixed(2)}</div>
+                        </button>
+                      );
+                    })}
                   </div>
                 )}
               </div>
@@ -219,16 +253,16 @@ export default function CategoryPage() {
           {/* Sekcja Email */}
           <div className="mb-6">
             <div className="text-[10px] font-bold text-gray-500 tracking-widest uppercase mb-2">Email for your order</div>
-            <div className="w-full bg-[#1c1c1c] border border-white/5 rounded-xl px-4 py-3 text-gray-300 text-sm">
+            <div className="w-full bg-[#0a0a0a]/50 border border-white/10 rounded-xl px-4 py-3 text-gray-300 text-sm shadow-inner">
               {authChecked ? (user?.email || "Not logged in") : "Loading..."}
             </div>
           </div>
 
           {/* Sekcja Ilości */}
-          <div className="mb-6 flex items-center justify-between bg-[#1c1c1c] border border-white/5 p-4 rounded-xl">
+          <div className="mb-6 flex items-center justify-between bg-[#0a0a0a]/50 border border-white/10 p-4 rounded-xl shadow-inner">
             <div className="text-[14px] font-bold text-white flex flex-col">
               Quantity
-              <span className={`text-[10px] uppercase tracking-widest mt-1 ${stock === 0 ? 'text-red-400' : 'text-gray-500'}`}>
+              <span className={`text-[10px] uppercase tracking-widest mt-1 ${getStockColor(stock)}`}>
                 {loadingStock ? "Checking..." : stock === 0 ? "Out of stock" : `${stock} In Stock`}
               </span>
             </div>
@@ -265,12 +299,16 @@ export default function CategoryPage() {
             <div className="relative">
               <button 
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="w-full bg-[#1c1c1c] border border-white/5 rounded-xl px-4 py-3 text-white flex items-center justify-between hover:bg-[#222] transition-colors focus:outline-none focus:ring-2 focus:ring-white/20"
+                className="w-full bg-[#0a0a0a]/50 border border-white/10 rounded-xl px-4 py-3.5 text-white flex items-center justify-between hover:border-emerald-500/50 hover:bg-white/5 transition-all shadow-inner focus:outline-none"
               >
                 <div className="flex items-center gap-3">
                   {paymentMethod === "stripe" ? (
-                    <div className="w-8 h-8 bg-indigo-500/10 rounded-full flex items-center justify-center">
-                      <CreditCard className="w-4 h-4 text-indigo-400" />
+                    <div className="w-8 h-8 bg-[#635BFF]/10 rounded-full flex items-center justify-center">
+                      <SiStripe className="w-5 h-5 text-[#635BFF]" />
+                    </div>
+                  ) : paymentMethod === "crypto" ? (
+                    <div className="w-8 h-8 bg-amber-500/10 rounded-full flex items-center justify-center">
+                      <Bitcoin className="w-4 h-4 text-amber-400" />
                     </div>
                   ) : (
                     <div className="w-8 h-8 bg-emerald-500/10 rounded-full flex items-center justify-center">
@@ -278,27 +316,54 @@ export default function CategoryPage() {
                     </div>
                   )}
                   <div className="text-left">
-                    <div className="text-sm font-medium">{paymentMethod === "stripe" ? "Stripe" : "Balance"}</div>
+                    <div className="text-sm font-medium">
+                      {paymentMethod === "stripe" ? "Debit / Credit Card" : paymentMethod === "crypto" ? "Cryptocurrency" : "Balance"}
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      {paymentMethod === "stripe" ? "Mastercard, Visa, Apple Pay etc. via Stripe (1.5% + €0.25 fee)" : paymentMethod === "crypto" ? "BTC, ETH, LTC, USDT (0% fee)" : "Pay with your NFA Store balance"}
+                    </div>
                   </div>
                 </div>
                 <ChevronDown className={`w-4 h-4 text-gray-500 transition-transform ${isDropdownOpen ? "rotate-180" : ""}`} />
               </button>
 
               {isDropdownOpen && (
-                <div className="absolute top-full left-0 right-0 mt-2 bg-[#1c1c1c] border border-white/10 rounded-xl overflow-hidden shadow-2xl">
+                <div className="absolute top-full left-0 right-0 mt-2 bg-[#0a0a0a] border border-white/10 rounded-xl overflow-hidden shadow-2xl z-50 animate-in fade-in slide-in-from-top-2 duration-200">
                   <button 
                     onClick={() => { setPaymentMethod("stripe"); setIsDropdownOpen(false); }}
                     className="w-full px-4 py-3 text-left hover:bg-white/5 transition-colors flex items-center gap-3 border-b border-white/5"
                   >
-                    <CreditCard className="w-4 h-4 text-indigo-400" />
-                    <span className="text-sm text-white">Stripe</span>
+                    <div className="flex items-center justify-center w-8 h-8 bg-[#635BFF]/10 rounded-full">
+                      <SiStripe className="w-5 h-5 text-[#635BFF]" />
+                    </div>
+                    <div>
+                      <div className="text-sm text-white">Debit / Credit Card</div>
+                      <div className="text-xs text-gray-500">Mastercard, Visa, Apple Pay etc. via Stripe <span className="text-indigo-400">(1.5% + €0.25 fee)</span></div>
+                    </div>
+                  </button>
+                  <button 
+                    onClick={() => { setPaymentMethod("crypto"); setIsDropdownOpen(false); }}
+                    className="w-full px-4 py-3 text-left hover:bg-white/5 transition-colors flex items-center gap-3 border-b border-white/5"
+                  >
+                    <div className="flex items-center justify-center w-8 h-8 bg-amber-500/10 rounded-full">
+                      <Bitcoin className="w-4 h-4 text-amber-400" />
+                    </div>
+                    <div>
+                      <div className="text-sm text-white">Cryptocurrency</div>
+                      <div className="text-xs text-gray-500">BTC, ETH, LTC, USDT <span className="text-amber-400">(0% fee)</span></div>
+                    </div>
                   </button>
                   <button 
                     onClick={() => { setPaymentMethod("balance"); setIsDropdownOpen(false); }}
                     className="w-full px-4 py-3 text-left hover:bg-white/5 transition-colors flex items-center gap-3"
                   >
-                    <Wallet className="w-4 h-4 text-emerald-400" />
-                    <span className="text-sm text-white">Balance</span>
+                    <div className="flex items-center justify-center w-8 h-8 bg-emerald-500/10 rounded-full">
+                      <Wallet className="w-4 h-4 text-emerald-400" />
+                    </div>
+                    <div>
+                      <div className="text-sm text-white">Balance</div>
+                      <div className="text-xs text-gray-500">Pay with your NFA Store balance <span className="text-emerald-400">(Instant)</span></div>
+                    </div>
                   </button>
                 </div>
               )}
@@ -308,8 +373,8 @@ export default function CategoryPage() {
           {/* Przycisk Płatności */}
           {authChecked && !user ? (
             <button 
-              onClick={() => router.push("/login")}
-              className="w-full bg-white text-black font-semibold rounded-2xl px-4 py-4 flex items-center justify-center gap-2 hover:bg-gray-200 transition-colors"
+              onClick={() => window.dispatchEvent(new Event('open-auth'))}
+              className="w-full bg-emerald-500 hover:bg-emerald-400 text-black font-bold rounded-2xl px-4 py-4 flex items-center justify-center gap-2 transition-all shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:shadow-[0_0_30px_rgba(16,185,129,0.5)] hover:-translate-y-0.5"
             >
               Sign in to pay
             </button>
@@ -317,7 +382,7 @@ export default function CategoryPage() {
             <button 
               onClick={handleCheckout}
               disabled={loadingCheckout || loadingStock || stock === 0}
-              className="w-full bg-white text-black font-semibold rounded-2xl px-4 py-4 flex items-center justify-center gap-2 hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-emerald-500 hover:bg-emerald-400 text-black font-bold rounded-2xl px-4 py-4 flex items-center justify-center gap-2 transition-all shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:shadow-[0_0_30px_rgba(16,185,129,0.5)] disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none hover:-translate-y-0.5 disabled:hover:translate-y-0"
             >
               {loadingCheckout ? (
                 <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin" />

@@ -28,20 +28,41 @@ export async function POST(req: Request) {
       }
     });
 
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user || user.id !== userId) {
+      return NextResponse.json({ error: "Unauthorized or invalid session token." }, { status: 401 });
+    }
+
+    const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+    const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+
+    // Check restrictions first
+    const { data: profileCheck } = await supabaseAdmin.from("profiles").select("is_banned, can_purchase").eq("id", userId).single();
+    if (profileCheck?.is_banned) {
+      return NextResponse.json({ error: "Your account has been banned." }, { status: 403 });
+    }
+    if (profileCheck?.can_purchase === false) {
+      return NextResponse.json({ error: "You are currently restricted from purchasing." }, { status: 403 });
+    }
+
     const totalPrice = product.price * quantity;
 
     if (paymentMethod === "balance") {
-      const { data: profile } = await supabase.from("profiles").select("balance").eq("id", userId).single();
+      const { data: profile } = await supabaseAdmin.from("profiles").select("balance").eq("id", userId).single();
       const currentBalance = profile ? Number(profile.balance) : 0;
       
       if (currentBalance < totalPrice) {
         return NextResponse.json({ error: "Insufficient balance" }, { status: 400 });
       }
 
-      const { error: updateError } = await supabase.from("profiles").update({ balance: currentBalance - totalPrice }).eq("id", userId);
+      const { error: updateError } = await supabaseAdmin.from("profiles").update({ balance: currentBalance - totalPrice }).eq("id", userId);
       if (updateError) {
         return NextResponse.json({ error: "Failed to deduct balance" }, { status: 500 });
       }
+    }
+
+    if (paymentMethod === "crypto") {
+      return NextResponse.json({ url: "/crypto-mock" });
     }
 
     let accountsStr = "";
@@ -52,6 +73,14 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing NFA_API_KEY in environment" }, { status: 500 });
     }
 
+    // TEMPORARY MOCK FOR NFA API
+    // TODO: Replace with real NFA API fetch when documentation and keys are ready
+    const nfaData = {
+      ok: true,
+      accounts: Array.from({ length: quantity }, (_, i) => `mock_account_${i + 1}@example.com:password123`)
+    };
+
+    /*
     // TRYB PRAWDZIWY: STRIPE / BALANCE -> NFA API
     const nfaRes = await fetch(`${NFA_API_URL}/cs2?type=${product.type}&quantity=${quantity}&result=json`, {
       method: "POST",
@@ -72,8 +101,9 @@ export async function POST(req: Request) {
     if (!nfaRes.ok || !nfaData.ok) {
       return NextResponse.json({ error: nfaData.error || nfaData.code || "Failed at NFA API" }, { status: 400 });
     }
+    */
 
-    accountsStr = nfaData.accounts.join("\\n");
+    accountsStr = nfaData.accounts.join("\n");
 
     // Zapis do Supabase używając prawdziwego ID użytkownika
     const { data: orderData, error: dbError } = await supabase
@@ -96,6 +126,13 @@ export async function POST(req: Request) {
         url: `/order/error?accounts=${encodeURIComponent(accountsStr)}` 
       });
     }
+
+    // Push updated metadata to Discord if user is linked
+    fetch(new URL('/api/discord/update-metadata', req.url).toString(), {
+      method: 'POST',
+      body: JSON.stringify({ userId }),
+      headers: { 'Content-Type': 'application/json' }
+    }).catch(console.error);
 
     // Przekierowanie na stronę zamówienia po "udanym powrocie ze Stripe"
     return NextResponse.json({ url: `/order/${orderData.id}` });

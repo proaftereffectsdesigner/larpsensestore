@@ -5,11 +5,20 @@ import { useParams, useRouter } from "next/navigation";
 import { products } from "@/lib/products";
 import { supabase } from "@/lib/supabase-client";
 import { User } from "@supabase/supabase-js";
-import { CheckCircle2, CreditCard, Wallet, ChevronDown, Minus, Plus, ShieldCheck } from "lucide-react";
+import { CheckCircle2, CreditCard, Wallet, ChevronDown, Minus, Plus, ShieldCheck, Bitcoin } from "lucide-react";
+import { SiStripe } from "react-icons/si";
 
 export default function ProductPage() {
   const { id } = useParams();
   const router = useRouter();
+
+  const getStockColor = (stockAmount: number | null) => {
+    if (stockAmount === null) return "text-gray-500";
+    if (stockAmount === 0) return "text-red-400";
+    if (stockAmount >= 100) return "text-green-400";
+    if (stockAmount >= 50) return "text-yellow-400";
+    return "text-orange-400";
+  };
   const product = products.find((p) => p.id === id);
 
   const [stock, setStock] = useState<number | null>(null);
@@ -19,7 +28,7 @@ export default function ProductPage() {
   const [user, setUser] = useState<User | null>(null);
   const [authChecked, setAuthChecked] = useState(false);
   
-  const [paymentMethod, setPaymentMethod] = useState<"stripe" | "balance">("stripe");
+  const [paymentMethod, setPaymentMethod] = useState<"stripe" | "crypto" | "balance">("stripe");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   useEffect(() => {
@@ -81,6 +90,7 @@ export default function ProductPage() {
       });
       const data = await res.json();
       if (data.url) {
+        window.dispatchEvent(new Event('balance-updated'));
         router.push(data.url);
       } else {
         alert("Checkout failed: " + data.error);
@@ -131,8 +141,12 @@ export default function ProductPage() {
             >
               <div className="flex items-center gap-3">
                 {paymentMethod === "stripe" ? (
-                  <div className="w-8 h-8 bg-indigo-500/10 rounded-full flex items-center justify-center">
-                    <CreditCard className="w-4 h-4 text-indigo-400" />
+                  <div className="w-8 h-8 bg-[#635BFF]/10 rounded-full flex items-center justify-center">
+                    <SiStripe className="w-5 h-5 text-[#635BFF]" />
+                  </div>
+                ) : paymentMethod === "crypto" ? (
+                  <div className="w-8 h-8 bg-amber-500/10 rounded-full flex items-center justify-center">
+                    <Bitcoin className="w-4 h-4 text-amber-400" />
                   </div>
                 ) : (
                   <div className="w-8 h-8 bg-emerald-500/10 rounded-full flex items-center justify-center">
@@ -140,9 +154,11 @@ export default function ProductPage() {
                   </div>
                 )}
                 <div className="text-left">
-                  <div className="text-sm font-medium">{paymentMethod === "stripe" ? "Stripe" : "Balance (Test Mode)"}</div>
-                  <div className="text-xs text-gray-500">
-                    {paymentMethod === "stripe" ? "Credit Card, BLIK, etc." : "Mock order without NFA balance"}
+                  <div className="text-sm font-medium">
+                    {paymentMethod === "stripe" ? "Debit / Credit Card" : paymentMethod === "crypto" ? "Cryptocurrency" : "Balance"}
+                  </div>
+                  <div className="text-xs text-gray-500 truncate block mt-0.5">
+                    {paymentMethod === "stripe" ? "Mastercard, Visa, Apple Pay etc. via Stripe (1.5% + €0.25 fee)" : paymentMethod === "crypto" ? "BTC, ETH, LTC, USDT (0% fee)" : "Pay with your NFA Store balance"}
                   </div>
                 </div>
               </div>
@@ -155,15 +171,37 @@ export default function ProductPage() {
                   onClick={() => { setPaymentMethod("stripe"); setIsDropdownOpen(false); }}
                   className="w-full px-4 py-3 text-left hover:bg-white/5 transition-colors flex items-center gap-3 border-b border-white/5"
                 >
-                  <CreditCard className="w-4 h-4 text-indigo-400" />
-                  <span className="text-sm text-white">Stripe</span>
+                  <div className="flex items-center justify-center w-8 h-8 bg-[#635BFF]/10 rounded-full">
+                    <SiStripe className="w-5 h-5 text-[#635BFF]" />
+                  </div>
+                  <div>
+                    <div className="text-sm text-white">Debit / Credit Card</div>
+                    <div className="text-xs text-gray-500">Mastercard, Visa, Apple Pay etc. via Stripe <span className="text-indigo-400">(1.5% + €0.25 fee)</span></div>
+                  </div>
+                </button>
+                <button 
+                  onClick={() => { setPaymentMethod("crypto"); setIsDropdownOpen(false); }}
+                  className="w-full px-4 py-3 text-left hover:bg-white/5 transition-colors flex items-center gap-3 border-b border-white/5"
+                >
+                  <div className="flex items-center justify-center w-8 h-8 bg-amber-500/10 rounded-full">
+                    <Bitcoin className="w-4 h-4 text-amber-400" />
+                  </div>
+                  <div>
+                    <div className="text-sm text-white">Cryptocurrency</div>
+                    <div className="text-xs text-gray-500">BTC, ETH, LTC, USDT <span className="text-amber-400">(0% fee)</span></div>
+                  </div>
                 </button>
                 <button 
                   onClick={() => { setPaymentMethod("balance"); setIsDropdownOpen(false); }}
                   className="w-full px-4 py-3 text-left hover:bg-white/5 transition-colors flex items-center gap-3"
                 >
-                  <Wallet className="w-4 h-4 text-emerald-400" />
-                  <span className="text-sm text-white">Balance (Test Mode)</span>
+                  <div className="flex items-center justify-center w-8 h-8 bg-emerald-500/10 rounded-full">
+                    <Wallet className="w-4 h-4 text-emerald-400" />
+                  </div>
+                  <div>
+                    <div className="text-sm text-white">Balance</div>
+                    <div className="text-xs text-gray-500">Pay with your NFA Store balance <span className="text-emerald-400">(Instant)</span></div>
+                  </div>
                 </button>
               </div>
             )}
@@ -174,8 +212,8 @@ export default function ProductPage() {
         <div className="mb-8 flex items-center justify-between">
           <div className="text-[14px] font-bold text-white flex flex-col">
             Quantity
-            <span className="text-[10px] text-gray-500 uppercase tracking-widest mt-1">
-              {loadingStock ? "Checking..." : `${stock || 0} In Stock`}
+            <span className={`text-[10px] uppercase tracking-widest mt-1 ${getStockColor(stock)}`}>
+              {loadingStock ? "Checking..." : stock === 0 ? "Out of stock" : `${stock} In Stock`}
             </span>
           </div>
           <div className="flex items-center bg-[#1c1c1c] border border-white/5 rounded-xl overflow-hidden">

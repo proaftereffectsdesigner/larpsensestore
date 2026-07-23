@@ -1,6 +1,14 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 export default function Footer() {
+  const pathname = usePathname();
+  if (pathname?.startsWith('/admin')) {
+    return null;
+  }
+
   return (
     <footer className="border-t border-white/5 bg-gradient-to-b from-[#0a0a0a]/50 to-[#000000] backdrop-blur-2xl mt-auto relative z-20 overflow-hidden">
       {/* Ozdobny gradient w tle */}
@@ -11,7 +19,16 @@ export default function Footer() {
           
           {/* Logo i Nazwa */}
           <div className="col-span-1 md:col-span-6 lg:col-span-5 flex flex-col items-start">
-            <Link href="/" className="flex items-center gap-4 text-2xl font-bold tracking-tight text-white mb-6 hover:opacity-80 transition-opacity">
+            <Link 
+              href="/" 
+              onClick={(e) => {
+                if (window.location.pathname === '/') {
+                  e.preventDefault();
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }
+              }}
+              className="flex items-center gap-4 text-2xl font-bold tracking-tight text-white mb-6 hover:opacity-80 transition-opacity"
+            >
               <div className="bg-white/5 p-2 rounded-2xl border border-white/10 shadow-xl">
                 <img src="/logo.png" alt="LarpSense Logo" className="h-10 w-auto object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]" />
               </div>
@@ -50,7 +67,7 @@ export default function Footer() {
           <div className="col-span-1 md:col-span-2 lg:col-span-2">
             <h3 className="text-white font-bold tracking-wider text-xs uppercase mb-6 text-gray-400">Join the Community</h3>
             <a 
-              href="#" 
+              href="https://discord.gg/larpsense" 
               target="_blank" 
               rel="noopener noreferrer" 
               className="inline-flex items-center justify-center gap-3 bg-[#5865F2]/10 hover:bg-[#5865F2]/20 border border-[#5865F2]/20 text-white rounded-xl px-5 py-3 transition-all hover:-translate-y-1 hover:shadow-[0_0_20px_rgba(88,101,242,0.3)] w-full sm:w-auto"

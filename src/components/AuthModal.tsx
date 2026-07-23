@@ -1,37 +1,83 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase-client";
 import { useRouter } from "next/navigation";
-import { Mail, Lock, User as UserIcon, ArrowRight, ArrowLeft } from "lucide-react";
+import { Mail, Lock, User as UserIcon, ArrowRight, ArrowLeft, X, Eye, EyeOff } from "lucide-react";
 
-export default function Login() {
+export default function AuthModal() {
+  const [isOpen, setIsOpen] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   
-  // 'login', 'signup', 'forgot'
   const [mode, setMode] = useState<"login" | "signup" | "forgot">("login");
   const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
+  const [successMsg, setSuccessMsg] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
+
+  useEffect(() => {
+    const handleOpen = () => {
+      setIsOpen(true);
+      setMode("login");
+      setEmail("");
+      setPassword("");
+      setErrorMsg("");
+      setSuccessMsg("");
+      setShowPassword(false);
+    };
+    window.addEventListener("open-auth", handleOpen);
+    return () => window.removeEventListener("open-auth", handleOpen);
+  }, []);
+
+  if (!isOpen) return null;
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setErrorMsg("");
+    setSuccessMsg("");
 
     try {
+      // Manual email validation
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        setErrorMsg("Please enter a valid email address.");
+        setLoading(false);
+        return;
+      }
+
       if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({ email, password });
+        // Zabezpieczenie przed zakładaniem nowych kont po IP (Ban Evasion)
+        const ipCheckRes = await fetch('/api/check-ip');
+        const ipCheckData = await ipCheckRes.json();
+        
+        if (ipCheckData.banned) {
+          setErrorMsg("You have been banned. No access allowed.");
+          setLoading(false);
+          return;
+        }
+
+        const { data, error } = await supabase.auth.signUp({ email, password });
         if (error) throw error;
-        alert("Check your email for confirmation link!");
-        setMode("login");
+        
+        if (data.session) {
+          // Jeśli potwierdzanie maila jest wyłączone w Supabase, użytkownik od razu jest zalogowany
+          setIsOpen(false);
+          router.refresh();
+        } else {
+          setSuccessMsg("Check your email for a confirmation link!");
+          setMode("login");
+        }
       } else if (mode === "login") {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        router.push("/");
+        setIsOpen(false);
         router.refresh();
       }
     } catch (err: any) {
-      alert(err.message);
+      setErrorMsg(err.message);
     } finally {
       setLoading(false);
     }
@@ -39,10 +85,15 @@ export default function Login() {
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email) {
-      alert("Please enter your email address.");
+    setErrorMsg("");
+    setSuccessMsg("");
+    
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setErrorMsg("Please enter a valid email address.");
       return;
     }
+
     setLoading(true);
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/`,
@@ -50,14 +101,16 @@ export default function Login() {
     setLoading(false);
 
     if (error) {
-      alert(error.message);
+      setErrorMsg(error.message);
     } else {
-      alert("Password reset email sent! Check your inbox.");
+      setSuccessMsg("Password reset email sent! Check your inbox.");
       setMode("login");
     }
   };
 
   const handleGoogleAuth = async () => {
+    setErrorMsg("");
+    setSuccessMsg("");
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
@@ -67,14 +120,28 @@ export default function Login() {
       });
       if (error) throw error;
     } catch (err: any) {
-      alert(err.message);
+      setErrorMsg(err.message);
     }
   };
 
+  const switchMode = (newMode: "login" | "signup" | "forgot") => {
+    setErrorMsg("");
+    setSuccessMsg("");
+    setMode(newMode);
+  };
+
   return (
-    <div className="flex items-center justify-center min-h-[calc(100vh-80px)] px-4 relative z-10">
-      <div className="w-full max-w-md bg-[#141414] border border-white/5 rounded-3xl p-8 shadow-2xl relative overflow-hidden">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+      <div className="absolute inset-0" onClick={() => setIsOpen(false)}></div>
+      <div className="w-full max-w-md bg-[#141414] border border-white/5 rounded-3xl p-8 shadow-2xl relative overflow-hidden animate-in fade-in zoom-in duration-200">
         
+        <button 
+          onClick={() => setIsOpen(false)}
+          className="absolute top-4 right-4 p-2 text-gray-500 hover:text-white bg-white/5 rounded-full hover:bg-white/10 transition-colors z-20"
+        >
+          <X className="w-4 h-4" />
+        </button>
+
         <div className="absolute -top-32 -right-32 w-64 h-64 bg-accent/20 rounded-full blur-[100px] pointer-events-none" />
 
         <div className="text-center mb-8 relative z-10">
@@ -84,15 +151,26 @@ export default function Login() {
           <h1 className="text-2xl font-bold text-white mb-2">
             {mode === "login" ? "Welcome back" : mode === "signup" ? "Create an account" : "Reset your password"}
           </h1>
-          <p className="text-gray-400 text-sm">
+          <p className="text-gray-400 text-sm mb-4">
             {mode === "login" ? "Enter your details to access your account." : 
              mode === "signup" ? "Sign up to start purchasing accounts." : 
              "Enter your email and we'll send you a reset link."}
           </p>
+
+          {errorMsg && (
+            <div className="bg-red-500/10 border border-red-500/20 text-red-400 text-sm px-4 py-3 rounded-xl mb-4 text-left">
+              {errorMsg}
+            </div>
+          )}
+          {successMsg && (
+            <div className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm px-4 py-3 rounded-xl mb-4 text-left">
+              {successMsg}
+            </div>
+          )}
         </div>
 
         {mode === "forgot" ? (
-          <form onSubmit={handleResetPassword} className="space-y-4 relative z-10">
+          <form onSubmit={handleResetPassword} className="space-y-4 relative z-10" noValidate>
             <div>
               <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Email address</label>
               <div className="relative">
@@ -121,7 +199,7 @@ export default function Login() {
             <div className="mt-6 text-center">
               <button 
                 type="button" 
-                onClick={() => setMode("login")} 
+                onClick={() => switchMode("login")} 
                 className="text-gray-400 hover:text-white text-sm transition-colors font-medium flex items-center justify-center gap-2 w-full"
               >
                 <ArrowLeft className="w-4 h-4" /> Back to login
@@ -129,7 +207,7 @@ export default function Login() {
             </div>
           </form>
         ) : (
-          <form onSubmit={handleAuth} className="space-y-4 relative z-10">
+          <form onSubmit={handleAuth} className="space-y-4 relative z-10" noValidate>
             <div>
               <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Email address</label>
               <div className="relative">
@@ -153,7 +231,7 @@ export default function Login() {
                 {mode === "login" && (
                   <button 
                     type="button" 
-                    onClick={() => setMode("forgot")}
+                    onClick={() => switchMode("forgot")}
                     className="text-xs text-accent hover:text-white transition-colors"
                   >
                     Forgot password?
@@ -165,13 +243,20 @@ export default function Login() {
                   <Lock className="h-5 w-5 text-gray-500" />
                 </div>
                 <input
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="block w-full pl-11 pr-4 py-3 bg-[#0a0a0a] border border-white/10 rounded-xl text-white placeholder-gray-600 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors"
+                  className="block w-full pl-11 pr-12 py-3 bg-[#0a0a0a] border border-white/10 rounded-xl text-white placeholder-gray-600 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors"
                   placeholder="••••••••"
                   required
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-500 hover:text-white transition-colors"
+                >
+                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                </button>
               </div>
             </div>
 
@@ -206,7 +291,7 @@ export default function Login() {
               {mode === "login" ? "Don't have an account? " : "Already have an account? "}
               <button 
                 type="button" 
-                onClick={() => setMode(mode === "login" ? "signup" : "login")} 
+                onClick={() => switchMode(mode === "login" ? "signup" : "login")} 
                 className="text-white hover:underline font-medium"
               >
                 {mode === "login" ? "Sign up" : "Sign in"}

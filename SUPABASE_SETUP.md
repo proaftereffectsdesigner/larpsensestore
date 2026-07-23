@@ -11,6 +11,16 @@ W panelu swojego projektu Supabase przejdź do zakładki **SQL Editor** i wykona
 create table public.profiles (
   id uuid references auth.users on delete cascade not null primary key,
   email text,
+  is_admin boolean default false,
+  is_banned boolean default false,
+  banned_at timestamp with time zone,
+  can_topup boolean default true,
+  can_purchase boolean default true,
+  can_update_profile boolean default true,
+  ban_reason text,
+  ban_type text default 'manual',
+  ban_expires_at timestamp with time zone,
+  ban_acknowledged boolean default false,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 

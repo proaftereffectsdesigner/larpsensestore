@@ -1,6 +1,9 @@
 import ProductCards from "@/components/ProductCards";
 import ParticlesBackground from "@/components/ParticlesBackground";
 import Hero from "@/components/Hero";
+import HowItWorks from "@/components/HowItWorks";
+import FAQ from "@/components/FAQ";
+import FinalCTA from "@/components/FinalCTA";
 
 export default function Home() {
   return (
@@ -10,9 +13,14 @@ export default function Home() {
 
       <div className="relative z-10 w-full flex flex-col items-center">
         <Hero />
+        
         <div id="products" className="w-full mt-12 scroll-mt-24">
           <ProductCards />
         </div>
+
+        <HowItWorks />
+        <FAQ />
+        <FinalCTA />
       </div>
     </div>
   );

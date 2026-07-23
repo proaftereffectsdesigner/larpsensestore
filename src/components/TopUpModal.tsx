@@ -12,6 +12,7 @@ export default function TopUpModal() {
   const [isOpen, setIsOpen] = useState(false);
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [amount, setAmount] = useState<number>(10);
+  const [rawAmount, setRawAmount] = useState<string>('10');
   const [method, setMethod] = useState<PaymentMethod>('card');
   const [selectedCryptoCoin, setSelectedCryptoCoin] = useState<string | null>(null);
   const [loadingText, setLoadingText] = useState("Initializing secure connection...");
@@ -28,6 +29,7 @@ export default function TopUpModal() {
       setIsOpen(true);
       setStep(1);
       setAmount(10);
+      setRawAmount('10');
       setMethod('card');
       setErrorMsg(null);
     };
@@ -153,7 +155,7 @@ export default function TopUpModal() {
                   {PRESETS.map(preset => (
                     <button
                       key={preset}
-                      onClick={() => setAmount(preset)}
+                    onClick={() => { setAmount(preset); setRawAmount(String(preset)); }}
                       className={`py-3 rounded-xl font-bold transition-all ${amount === preset ? 'bg-accent text-white shadow-[0_0_15px_rgba(255,255,255,0.1)]' : 'bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white'}`}
                     >
                       €{preset}
@@ -163,24 +165,23 @@ export default function TopUpModal() {
                 <div className="relative">
                   <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white font-bold">€</span>
                   <input 
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={amount === 0 ? '' : amount}
+                    type="text"
+                    inputMode="decimal"
+                    value={rawAmount}
                     onChange={(e) => {
                       const raw = e.target.value;
-                      if (raw === '' || raw === '0' || raw === '0.') {
-                        setAmount(0);
-                      } else {
+                      // Allow digits, one dot, and a leading zero
+                      if (/^\d*\.?\d*$/.test(raw)) {
+                        setRawAmount(raw);
                         const parsed = parseFloat(raw);
-                        if (!isNaN(parsed)) setAmount(parsed);
+                        setAmount(isNaN(parsed) ? 0 : parsed);
                       }
                     }}
                     className="w-full bg-[#141414] border border-white/10 rounded-xl py-4 pl-10 pr-4 text-white font-bold focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/50 transition-all text-lg shadow-inner"
                     placeholder="0.50"
                   />
                 </div>
-                <p className="text-xs text-gray-600 font-medium pl-1">Minimum deposit: <span className="text-gray-500">€0.50</span>. For Tether USDT minimum is <span className="text-gray-500">€5.00</span>.</p>
+                <p className="text-xs text-gray-600 font-medium pl-1">Minimum deposit: <span className="text-gray-500">€0.50</span>.</p>
               </div>
 
               {/* Payment Method */}

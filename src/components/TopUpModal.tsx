@@ -72,11 +72,6 @@ export default function TopUpModal() {
 
     try {
       if (method === 'crypto') {
-        if (amount < 10) {
-          setErrorMsg("Minimum amount for cryptocurrency is €10.00");
-          setStep(1);
-          return;
-        }
         if (!selectedCryptoCoin) {
           setErrorMsg("Please select a cryptocurrency");
           setStep(1);
@@ -276,7 +271,7 @@ export default function TopUpModal() {
 
                 <button
                   onClick={startPaymentSimulation}
-                  disabled={amount < 0.50}
+                  disabled={amount < 0.50 || (method === 'crypto' && amount < 10)}
                   className="w-full bg-accent hover:bg-accent/90 text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_20px_rgba(255,255,255,0.1)] hover:shadow-[0_0_30px_rgba(255,255,255,0.2)]"
                 >
                   Confirm Payment <ChevronRight className="w-5 h-5" />

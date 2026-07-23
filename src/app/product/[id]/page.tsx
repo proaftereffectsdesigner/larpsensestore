@@ -84,10 +84,6 @@ export default function ProductPage() {
     const totalPrice = product.price * quantity;
 
     if (paymentMethod === "crypto") {
-      if (totalPrice < 10) {
-        alert("Minimum amount for cryptocurrency is €10.00");
-        return;
-      }
       if (!selectedCryptoCoin) {
         alert("Please select a cryptocurrency");
         return;
@@ -234,30 +230,10 @@ export default function ProductPage() {
                     </div>
                     <div>
                       <div className="text-sm text-white">Cryptocurrency</div>
-                      <div className="text-xs text-gray-500">BTC, ETH, LTC, USDT <span className="text-amber-400">(0.5% fee)</span></div>
+                      <div className="text-xs text-gray-500">BTC, ETH, LTC, USDT, SOL <span className="text-amber-400">(0.5% fee)</span></div>
                     </div>
                   </div>
                 </button>
-                
-                {paymentMethod === 'crypto' && (
-                  <div className="p-3 bg-[#111] border-b border-white/5">
-                    <div className="text-[10px] font-bold text-gray-500 uppercase mb-2">Select Currency</div>
-                    <div className="grid grid-cols-2 gap-2">
-                      {CRYPTO_COINS.map(coin => (
-                        <button
-                          key={coin.id}
-                          onClick={() => { setSelectedCryptoCoin(coin.id); setIsDropdownOpen(false); }}
-                          className={`flex items-center gap-2 p-2 rounded-xl transition-all ${selectedCryptoCoin === coin.id ? 'bg-white/10 border border-white/20' : 'bg-[#1c1c1c] border border-white/5 hover:bg-white/5'}`}
-                        >
-                          <div className={`w-6 h-6 rounded-md flex items-center justify-center text-xs font-black ${coin.bg} ${coin.color}`}>
-                            {coin.icon}
-                          </div>
-                          <span className={`text-xs font-bold ${selectedCryptoCoin === coin.id ? 'text-white' : 'text-gray-400'}`}>{coin.name}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
                 <button 
                   onClick={() => { setPaymentMethod("balance"); setIsDropdownOpen(false); }}
                   className="w-full px-4 py-3 text-left hover:bg-white/5 transition-colors flex items-center gap-3"
@@ -270,6 +246,33 @@ export default function ProductPage() {
                     <div className="text-xs text-gray-500">Pay with your NFA Store balance <span className="text-emerald-400">(Instant)</span></div>
                   </div>
                 </button>
+              </div>
+            )}
+            
+            {/* INLINE CRYPTO SELECTION */}
+            {paymentMethod === 'crypto' && (
+              <div className="mt-2 p-4 bg-[#141414] border border-white/10 rounded-xl">
+                <div className="text-[10px] font-bold text-gray-500 uppercase mb-3">Select Currency</div>
+                <div className="grid grid-cols-2 gap-2">
+                  {CRYPTO_COINS.map(coin => (
+                    <button
+                      key={coin.id}
+                      onClick={() => setSelectedCryptoCoin(coin.id)}
+                      className={`flex items-center gap-2 p-3 rounded-xl transition-all ${selectedCryptoCoin === coin.id ? 'bg-white/10 border border-white/20 shadow-inner' : 'bg-[#0a0a0a] border border-white/5 hover:bg-white/5'}`}
+                    >
+                      <div className={`w-6 h-6 rounded-md flex items-center justify-center text-xs font-black ${coin.bg} ${coin.color}`}>
+                        {coin.icon}
+                      </div>
+                      <span className={`text-xs font-bold ${selectedCryptoCoin === coin.id ? 'text-white' : 'text-gray-400'}`}>{coin.name}</span>
+                    </button>
+                  ))}
+                </div>
+                {totalPrice < 10 && (
+                  <div className="mt-3 text-xs font-medium text-amber-400/90 bg-amber-400/10 p-3 rounded-xl flex items-center gap-2">
+                    <ShieldAlert className="w-4 h-4 shrink-0" />
+                    Minimum amount for cryptocurrency is €10.00
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -315,7 +318,7 @@ export default function ProductPage() {
         ) : (
           <button 
             onClick={handleCheckout}
-            disabled={loadingCheckout || loadingStock || stock === 0}
+            disabled={loadingCheckout || loadingStock || stock === 0 || (paymentMethod === 'crypto' && totalPrice < 10)}
             className="w-full bg-[#eeeeee] text-black font-semibold rounded-2xl px-4 py-4 flex items-center justify-center gap-2 hover:bg-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loadingCheckout ? (

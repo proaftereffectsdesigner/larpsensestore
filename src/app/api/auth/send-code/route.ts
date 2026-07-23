@@ -21,20 +21,41 @@ export async function POST(request: Request) {
 
     // HTML Email Template
     const htmlContent = `
-      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol'; background-color: #111111; color: #ffffff; padding: 40px 20px; text-align: center;">
-        <div style="max-width: 600px; margin: 0 auto; background-color: #1a1a1a; padding: 40px; border-radius: 12px; border: 1px solid #333;">
-          <h1 style="color: #ffffff; font-size: 24px; font-weight: 700; margin-bottom: 24px; letter-spacing: -0.5px;">Welcome to LarpSense NFA!</h1>
-          <p style="color: #a1a1aa; font-size: 16px; line-height: 24px; margin-bottom: 32px;">
-            You are almost there. To complete your sign-up, please enter the following verification code:
-          </p>
-          <div style="background-color: #000000; border: 1px solid #333; padding: 24px; border-radius: 8px; margin-bottom: 32px;">
-            <p style="font-size: 36px; font-weight: 800; color: #ffffff; letter-spacing: 8px; margin: 0;">${code}</p>
+      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #0a0a0a; color: #ffffff; padding: 40px 20px; text-align: center;">
+        <div style="max-width: 500px; margin: 0 auto; background-color: #141414; padding: 40px; border-radius: 16px; border: 1px solid #27272a; box-shadow: 0 4px 20px rgba(0,0,0,0.5);">
+          
+          <!-- Logo Section -->
+          <div style="margin-bottom: 32px;">
+            <h1 style="color: #ffffff; font-size: 28px; font-weight: 800; margin: 0; letter-spacing: -1px;">
+              Larp<span style="color: #3b82f6;">Sense</span>
+            </h1>
           </div>
-          <p style="color: #71717a; font-size: 14px; margin-bottom: 16px;">
-            This code will expire in 10 minutes. If you didn't request this email, you can safely ignore it.
+
+          <h2 style="color: #ffffff; font-size: 20px; font-weight: 600; margin-bottom: 16px;">Verify your email</h2>
+          <p style="color: #a1a1aa; font-size: 15px; line-height: 24px; margin-bottom: 32px;">
+            Please enter the following 6-digit verification code to complete your registration.
           </p>
-          <p style="color: #52525b; font-size: 12px; margin-top: 48px;">
+          
+          <!-- Code Box -->
+          <div style="background-color: #000000; border: 1px solid #3f3f46; padding: 20px; border-radius: 12px; margin-bottom: 32px;">
+            <p style="font-size: 32px; font-weight: 700; color: #ffffff; letter-spacing: 12px; margin: 0; text-indent: 12px;">${code}</p>
+          </div>
+          
+          <p style="color: #71717a; font-size: 13px; margin-bottom: 8px;">
+            This code will expire in 10 minutes.
+          </p>
+          <p style="color: #71717a; font-size: 13px; margin-bottom: 32px;">
+            If you didn't request this email, you can safely ignore it.
+          </p>
+
+          <hr style="border: 0; border-top: 1px solid #27272a; margin-bottom: 24px;" />
+          
+          <!-- Footer -->
+          <p style="color: #52525b; font-size: 12px; margin: 0;">
             © ${new Date().getFullYear()} LarpSense. All rights reserved.
+          </p>
+          <p style="color: #52525b; font-size: 12px; margin-top: 4px;">
+            <a href="https://larpsensestore.com" style="color: #3b82f6; text-decoration: none;">larpsensestore.com</a>
           </p>
         </div>
       </div>

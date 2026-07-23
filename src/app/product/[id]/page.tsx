@@ -38,7 +38,7 @@ export default function ProductPage() {
     { id: 'LTC', name: 'Litecoin', icon: 'Ł', color: 'text-blue-400', bg: 'bg-blue-500/10' },
     { id: 'SOL', name: 'Solana', icon: '◎', color: 'text-purple-400', bg: 'bg-purple-500/10' },
     { id: 'ETH', name: 'Ethereum', icon: 'Ξ', color: 'text-indigo-400', bg: 'bg-indigo-500/10' },
-    { id: 'BTC', name: 'Bitcoin', icon: '₿', color: 'text-amber-400', bg: 'bg-amber-500/10' },
+    { id: 'BTC', name: 'Bitcoin', icon: '₿', color: 'text-amber-400', bg: 'bg-amber-500/10', note: 'min €10' },
   ];
 
   useEffect(() => {
@@ -208,7 +208,7 @@ export default function ProductPage() {
             </button>
 
             {isDropdownOpen && (
-              <div className="absolute top-full left-0 right-0 mt-2 bg-[#1c1c1c] border border-white/10 rounded-xl overflow-y-auto z-20 shadow-xl max-h-[300px]">
+              <div className="absolute top-full left-0 right-0 mt-2 bg-[#1c1c1c] border border-white/10 rounded-xl overflow-y-auto custom-scrollbar z-20 shadow-xl max-h-[300px]">
                 <button 
                   onClick={() => { setPaymentMethod("stripe"); setIsDropdownOpen(false); }}
                   className="w-full px-4 py-3 text-left hover:bg-white/5 transition-colors flex items-center gap-3 border-b border-white/5"
@@ -260,7 +260,10 @@ export default function ProductPage() {
                           <div className={`w-8 h-8 rounded-md flex items-center justify-center text-sm font-black ${coin.bg} ${coin.color}`}>
                             {coin.icon}
                           </div>
-                          <span className={`text-sm font-bold ${selectedCryptoCoin === coin.id ? 'text-white' : 'text-gray-400'}`}>{coin.name}</span>
+                          <span className={`text-sm font-bold ${selectedCryptoCoin === coin.id ? 'text-white' : 'text-gray-400'}`}>
+                            {coin.name}
+                            {coin.note && <span className="text-[10px] ml-2 text-gray-500 font-medium">({coin.note})</span>}
+                          </span>
                         </button>
                       ))}
                     </div>
@@ -323,7 +326,7 @@ export default function ProductPage() {
         ) : (
           <button 
             onClick={handleCheckout}
-            disabled={loadingCheckout || loadingStock || stock === 0 || (paymentMethod === 'crypto' && totalPrice < 10)}
+            disabled={loadingCheckout || loadingStock || stock === 0 || (paymentMethod === 'crypto' && selectedCryptoCoin === 'BTC' && totalPrice < 10)}
             className="w-full bg-[#eeeeee] text-black font-semibold rounded-2xl px-4 py-4 flex items-center justify-center gap-2 hover:bg-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loadingCheckout ? (

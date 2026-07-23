@@ -125,10 +125,10 @@ export default function TopUpModal() {
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 overflow-y-auto">
       <div className="absolute inset-0 bg-black/80 backdrop-blur-md" onClick={() => step !== 2 && setIsOpen(false)}></div>
       
-      <div className={`bg-[#0a0a0a] border border-white/10 rounded-3xl w-full max-w-lg relative z-10 shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-hidden transition-all duration-500 ${step === 2 ? 'scale-95' : 'scale-100'}`}>
+      <div className={`bg-[#0a0a0a] border border-white/10 rounded-3xl w-full max-w-lg relative z-10 shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-y-auto max-h-[calc(100dvh-2rem)] my-auto transition-all duration-500 ${step === 2 ? 'scale-95' : 'scale-100'}`}>
         
         {/* Header */}
         <div className="p-6 md:p-8 pb-0 flex justify-between items-center relative z-20">

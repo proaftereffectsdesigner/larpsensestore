@@ -59,29 +59,47 @@ export default function TopUpModal() {
     }
 
     setStep(2);
-
     setLoadingText("Initializing Secure Gateway...");
 
-    // Process actual checkout via API
     try {
-      const res = await fetch("/api/create-checkout-session", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          userId: session.user.id,
-          token: session.access_token,
-          amount: amount,
-          paymentMethod: method,
-        })
-      });
+      if (method === 'crypto') {
+        const res = await fetch("/api/create-plisio-invoice", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userId: session.user.id,
+            token: session.access_token,
+            amount: amount,
+          })
+        });
 
-      const data = await res.json();
-      if (data.url) {
-        // Redirect to Stripe Checkout
-        window.location.href = data.url;
+        const data = await res.json();
+        if (data.url) {
+          window.location.href = data.url;
+        } else {
+          setErrorMsg("Failed to initialize crypto payment: " + (data.error || "Unknown error"));
+          setStep(1);
+        }
       } else {
-        setErrorMsg("Failed to initialize payment: " + (data.error || "Unknown error"));
-        setStep(1);
+        // Stripe Card
+        const res = await fetch("/api/create-checkout-session", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userId: session.user.id,
+            token: session.access_token,
+            amount: amount,
+            paymentMethod: method,
+          })
+        });
+
+        const data = await res.json();
+        if (data.url) {
+          window.location.href = data.url;
+        } else {
+          setErrorMsg("Failed to initialize payment: " + (data.error || "Unknown error"));
+          setStep(1);
+        }
       }
     } catch (err) {
       setErrorMsg("Error contacting payment gateway.");

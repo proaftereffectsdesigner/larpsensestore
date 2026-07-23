@@ -70,8 +70,8 @@ export async function POST(req: Request) {
     plisioApiUrl.searchParams.append("order_number", orderNumber);
     if (currency) {
       plisioApiUrl.searchParams.append("currency", currency);
-      // Force single-currency checkout — skips Plisio's "Choose Currency" screen
-      plisioApiUrl.searchParams.append("psys_cids", currency);
+      // Restrict to one currency so Plisio skips the "Choose Currency" screen
+      plisioApiUrl.searchParams.append("allowed_psys_cids", currency);
     }
     plisioApiUrl.searchParams.append("callback_url", `${baseUrl}/api/webhook/plisio`);
     // Redirect URLs

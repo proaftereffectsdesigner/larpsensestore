@@ -91,7 +91,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ url: plisioData.data.invoice_url });
     } else {
       console.error("Plisio Invoice Error:", plisioData);
-      return NextResponse.json({ error: "Failed to create crypto invoice" }, { status: 500 });
+      const errorMsg = plisioData?.data?.message || plisioData?.message || "Failed to create crypto invoice";
+      return NextResponse.json({ error: errorMsg }, { status: 500 });
     }
 
   } catch (err: any) {

@@ -177,7 +177,7 @@ export default function Navbar() {
                     </Link>
 
                     {isAdmin && (
-                      <Link href="/admin" onClick={() => setShowDropdown(false)} className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-xl transition-colors">
+                      <Link href="/7evenejoyer" onClick={() => setShowDropdown(false)} className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-xl transition-colors">
                         <Shield className="w-4 h-4" />
                         Admin Panel
                       </Link>

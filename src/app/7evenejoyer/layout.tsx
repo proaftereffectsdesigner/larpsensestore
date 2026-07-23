@@ -24,15 +24,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         {/* Navigation Tabs */}
         <div className="flex items-center gap-2 border-b border-white/10 pb-px overflow-x-auto hide-scrollbar">
           <Link 
-            href="/admin" 
-            className={`flex items-center gap-2 px-4 py-3 text-sm font-bold border-b-2 transition-all whitespace-nowrap ${pathname === '/admin' ? 'border-accent text-accent' : 'border-transparent text-gray-500 hover:text-gray-300 hover:border-white/20'}`}
+            href="/7evenejoyer" 
+            className={`flex items-center gap-2 px-4 py-3 text-sm font-bold border-b-2 transition-all whitespace-nowrap ${pathname === '/7evenejoyer' ? 'border-accent text-accent' : 'border-transparent text-gray-500 hover:text-gray-300 hover:border-white/20'}`}
           >
             <Users className="w-4 h-4" />
             Users & Balances
           </Link>
           <Link 
-            href="/admin/analytics" 
-            className={`flex items-center gap-2 px-4 py-3 text-sm font-bold border-b-2 transition-all whitespace-nowrap ${pathname?.startsWith('/admin/analytics') ? 'border-accent text-accent' : 'border-transparent text-gray-500 hover:text-gray-300 hover:border-white/20'}`}
+            href="/7evenejoyer/analytics" 
+            className={`flex items-center gap-2 px-4 py-3 text-sm font-bold border-b-2 transition-all whitespace-nowrap ${pathname?.startsWith('/7evenejoyer/analytics') ? 'border-accent text-accent' : 'border-transparent text-gray-500 hover:text-gray-300 hover:border-white/20'}`}
           >
             <BarChart3 className="w-4 h-4" />
             Analytics

@@ -36,7 +36,7 @@ export default function ProductPage() {
   const CRYPTO_COINS = [
     { id: 'SOL', name: 'Solana', icon: '◎', color: 'text-purple-400', bg: 'bg-purple-500/10' },
     { id: 'LTC', name: 'Litecoin', icon: 'Ł', color: 'text-blue-400', bg: 'bg-blue-500/10' },
-    { id: 'USDT_TON', name: 'Tether USDT', icon: '₮', color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
+    { id: 'USDT_TON', name: 'Tether USDT', icon: '₮', color: 'text-emerald-400', bg: 'bg-emerald-500/10', note: 'min €5' },
   ];
 
   useEffect(() => {
@@ -243,6 +243,12 @@ export default function ProductPage() {
                     </div>
                     <ChevronRight className={`w-4 h-4 text-gray-500 transition-transform ${isCryptoExpanded && paymentMethod === 'crypto' ? 'rotate-90' : ''}`} />
                   </div>
+                  {paymentMethod === 'crypto' && selectedCryptoCoin === 'USDT_TON' && totalPrice < 5 && (
+                    <div className="mt-4 text-xs font-medium text-emerald-400/90 bg-emerald-400/10 p-3 rounded-xl flex items-center gap-2">
+                      <ShieldAlert className="w-4 h-4 shrink-0" />
+                      Minimum total amount for Tether USDT is €5.00
+                    </div>
+                  )}
                 </button>
                 
                 {paymentMethod === 'crypto' && isCryptoExpanded && (
@@ -260,6 +266,7 @@ export default function ProductPage() {
                           </div>
                           <span className={`text-sm font-bold ${selectedCryptoCoin === coin.id ? 'text-white' : 'text-gray-400'}`}>
                             {coin.name}
+                            {coin.note && <span className="text-[10px] ml-2 text-gray-500 font-medium">({coin.note})</span>}
                           </span>
                         </button>
                       ))}
@@ -323,7 +330,7 @@ export default function ProductPage() {
         ) : (
           <button 
             onClick={handleCheckout}
-            disabled={loadingCheckout || loadingStock || stock === 0}
+            disabled={loadingCheckout || loadingStock || stock === 0 || (paymentMethod === 'crypto' && selectedCryptoCoin === 'USDT_TON' && totalPrice < 5)}
             className="w-full bg-[#eeeeee] text-black font-semibold rounded-2xl px-4 py-4 flex items-center justify-center gap-2 hover:bg-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loadingCheckout ? (

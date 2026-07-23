@@ -19,7 +19,7 @@ export default function TopUpModal() {
   const CRYPTO_COINS = [
     { id: 'SOL', name: 'Solana', icon: '◎', color: 'text-purple-400', bg: 'bg-purple-500/10' },
     { id: 'LTC', name: 'Litecoin', icon: 'Ł', color: 'text-blue-400', bg: 'bg-blue-500/10' },
-    { id: 'USDT_TON', name: 'Tether USDT', icon: '₮', color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
+    { id: 'USDT_TON', name: 'Tether USDT', icon: '₮', color: 'text-emerald-400', bg: 'bg-emerald-500/10', note: 'min €5' },
   ];
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
@@ -225,10 +225,17 @@ export default function TopUpModal() {
                               </div>
                             <span className={`text-sm font-bold ${selectedCryptoCoin === coin.id ? 'text-white' : 'text-gray-400'}`}>
                               {coin.name}
+                              {coin.note && <span className="text-[10px] ml-2 text-gray-500 font-medium">({coin.note})</span>}
                             </span>
                             </button>
                           ))}
                         </div>
+                        {amount < 5 && selectedCryptoCoin === 'USDT_TON' && (
+                          <div className="mt-4 text-xs font-medium text-emerald-400/90 bg-emerald-400/10 p-3 rounded-xl flex items-center gap-2">
+                            <ShieldAlert className="w-4 h-4 shrink-0" />
+                            Minimum amount for Tether USDT is €5.00
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
@@ -265,7 +272,7 @@ export default function TopUpModal() {
 
                 <button
                   onClick={startPaymentSimulation}
-                  disabled={amount < 0.50}
+                  disabled={amount < 0.50 || (method === 'crypto' && selectedCryptoCoin === 'USDT_TON' && amount < 5)}
                   className="w-full bg-accent hover:bg-accent/90 text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_20px_rgba(255,255,255,0.1)] hover:shadow-[0_0_30px_rgba(255,255,255,0.2)]"
                 >
                   Confirm Payment <ChevronRight className="w-5 h-5" />

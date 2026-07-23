@@ -65,6 +65,46 @@ export async function POST(req: Request) {
       return NextResponse.json({ url: "/crypto-mock" });
     }
 
+    if (paymentMethod === "stripe") {
+      const Stripe = require('stripe');
+      const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2025-01-27.acacia" as any });
+
+      const feeMultiplier = 0.015;
+      const fixedFee = 0.25;
+      const cardFee = Number((totalPrice * feeMultiplier + fixedFee).toFixed(2));
+      const finalAmount = totalPrice + cardFee;
+
+      const session = await stripe.checkout.sessions.create({
+        line_items: [
+          {
+            price_data: {
+              currency: 'eur',
+              product_data: {
+                name: `LarpSense Store - ${product.name} (x${quantity})`,
+              },
+              unit_amount: Math.round(finalAmount * 100),
+            },
+            quantity: 1,
+          },
+        ],
+        mode: 'payment',
+        client_reference_id: userId,
+        metadata: {
+          type: "product_checkout",
+          userId: userId,
+          productId: product.id,
+          quantity: quantity.toString(),
+          totalPrice: totalPrice.toString()
+        },
+        success_url: `${req.headers.get("origin")}/dashboard?order=success`,
+        cancel_url: `${req.headers.get("origin")}/category/${product.id}`,
+      });
+
+      return NextResponse.json({ url: session.url });
+    }
+
+    // Jeśli zapłacono przez Balance, kontynuujemy z realizacją natychmiastową
+
     let accountsStr = "";
     const NFA_API_KEY = process.env.NFA_API_KEY;
     const NFA_API_URL = process.env.NFA_API_URL || "https://www.nfa.pub/api/v1";

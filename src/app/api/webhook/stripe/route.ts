@@ -25,40 +25,62 @@ export async function POST(req: Request) {
   // Handle the event
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object as Stripe.Checkout.Session;
+    const type = session.metadata?.type || "topup"; // default to topup for backward compatibility
     
-    // Fulfill the purchase...
     const userId = session.metadata?.userId;
-    const addedAmount = Number(session.metadata?.addedAmount);
+    
+    if (!userId) {
+      console.error("No userId in session metadata", session.id);
+      return NextResponse.json({ received: true });
+    }
 
-    if (userId && addedAmount) {
-      console.log(`Fulfilling topup for user ${userId} amount ${addedAmount}`);
-      
-      const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-      const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!; // fallback to anon if service role not set (not ideal but works for testing)
+    const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+    const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+    const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-      // We need to bypass RLS here because this is a server-to-server webhook without a user's Auth token.
-      // We must use the SERVICE_ROLE_KEY to update the profile directly.
-      const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    if (type === "topup") {
+      const addedAmount = Number(session.metadata?.addedAmount);
+      if (addedAmount) {
+        console.log(`Fulfilling topup for user ${userId} amount ${addedAmount}`);
+        
+        const { data: profile } = await supabaseAdmin.from("profiles").select("balance").eq("id", userId).single();
+        const currentBalance = profile ? Number(profile.balance) : 0;
+        const newBalance = currentBalance + addedAmount;
 
-      // Fetch current balance
-      const { data: profile } = await supabaseAdmin
-        .from("profiles")
-        .select("balance")
-        .eq("id", userId)
-        .single();
+        const { error } = await supabaseAdmin.from("profiles").update({ balance: newBalance }).eq("id", userId);
+        if (error) console.error("Error updating balance in webhook:", error);
+      }
+    } else if (type === "product_checkout") {
+      const productId = session.metadata?.productId;
+      const quantity = Number(session.metadata?.quantity || 1);
+      const totalPrice = Number(session.metadata?.totalPrice || 0);
 
-      const currentBalance = profile ? Number(profile.balance) : 0;
-      const newBalance = currentBalance + addedAmount;
+      console.log(`Fulfilling product checkout for user ${userId}, product ${productId}, quantity ${quantity}`);
 
-      // Update balance
-      const { error } = await supabaseAdmin
-        .from("profiles")
-        .update({ balance: newBalance })
-        .eq("id", userId);
+      // TEMPORARY MOCK FOR NFA API (same as checkout route)
+      const accounts = Array.from({ length: quantity }, (_, i) => `mock_account_${i + 1}@example.com:password123`);
+      const accountsStr = accounts.join("\n");
 
-      if (error) {
-        console.error("Error updating balance in webhook:", error);
-        return NextResponse.json({ error: "Failed to update balance" }, { status: 500 });
+      const { error: dbError } = await supabaseAdmin
+        .from("orders")
+        .insert({
+          user_id: userId,
+          product_id: productId,
+          quantity: quantity,
+          total_price: totalPrice,
+          status: "completed",
+          accounts_data: accountsStr,
+        });
+
+      if (dbError) {
+        console.error("Supabase error saving order in webhook:", dbError);
+      } else {
+        // Push updated metadata to Discord if user is linked
+        fetch(new URL('/api/discord/update-metadata', req.url).toString(), {
+          method: 'POST',
+          body: JSON.stringify({ userId }),
+          headers: { 'Content-Type': 'application/json' }
+        }).catch(console.error);
       }
     }
   }

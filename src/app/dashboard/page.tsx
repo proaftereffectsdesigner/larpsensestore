@@ -232,6 +232,11 @@ function DashboardContent() {
             setTimeout(() => setProfileMessage(null), 5000);
         }
     } catch (err: any) {
+        if (err.message?.includes("User from sub claim") || err.message?.includes("JWT") || err.status === 401) {
+            await supabase.auth.signOut();
+            window.location.href = "/";
+            return;
+        }
         setProfileMessage({ type: 'error', text: "Error updating profile: " + err.message });
     }
     setProfileUpdating(false);

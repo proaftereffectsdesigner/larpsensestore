@@ -54,8 +54,28 @@ export async function POST(req: Request) {
       // "mismatch" can happen if they overpaid/underpaid, but Plisio completed it.
       // We will add the actual paid EUR amount to the balance.
       
-      const [userId, timestamp, originalAmountStr] = orderNumber.split('_'); 
-      const amountPaid = originalAmountStr ? Number(originalAmountStr) : Number(txData.source_amount);
+      let type = "TOPUP";
+      let userId = "";
+      let amountPaid = 0;
+      let productId = "";
+      let quantity = 1;
+
+      const orderParts = orderNumber.split('_');
+      if (orderParts[0] === "PROD") {
+        type = "PROD";
+        userId = orderParts[1];
+        amountPaid = Number(orderParts[3]);
+        productId = orderParts[4];
+        quantity = Number(orderParts[5] || 1);
+      } else if (orderParts[0] === "TOPUP") {
+        type = "TOPUP";
+        userId = orderParts[1];
+        amountPaid = Number(orderParts[3]);
+      } else {
+        type = "TOPUP"; // Old format
+        userId = orderParts[0];
+        amountPaid = Number(orderParts[2]) || Number(txData.source_amount);
+      }
 
       if (isNaN(amountPaid) || amountPaid <= 0) {
         return NextResponse.json({ error: "Invalid amount" }, { status: 400 });
@@ -64,7 +84,6 @@ export async function POST(req: Request) {
       const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE);
 
       // Check if this transaction was already processed
-      // We can use the 'orders' table to record the payment and prevent double-crediting
       const { data: existingTx } = await supabaseAdmin
         .from("orders")
         .select("id")
@@ -72,34 +91,104 @@ export async function POST(req: Request) {
         .single();
 
       if (existingTx) {
-        // Already processed
         return NextResponse.json({ received: true });
       }
 
-      // Add to balance
-      const { data: profile } = await supabaseAdmin
-        .from("profiles")
-        .select("balance")
-        .eq("id", userId)
-        .single();
-
-      if (profile) {
-        const newBalance = Number(profile.balance) + amountPaid;
-        await supabaseAdmin
+      if (type === "TOPUP") {
+        // Add to balance
+        const { data: profile } = await supabaseAdmin
           .from("profiles")
-          .update({ balance: newBalance })
-          .eq("id", userId);
+          .select("balance")
+          .eq("id", userId)
+          .single();
 
-        // Record the transaction
-        await supabaseAdmin
-          .from("orders")
-          .insert({
-            user_id: userId,
-            product_name: "Balance Top-up (Crypto)",
-            total_price: amountPaid,
-            status: "completed",
-            payment_intent_id: txnId
-          });
+        if (profile) {
+          const newBalance = Number(profile.balance) + amountPaid;
+          await supabaseAdmin
+            .from("profiles")
+            .update({ balance: newBalance })
+            .eq("id", userId);
+
+          // Record the transaction
+          await supabaseAdmin
+            .from("orders")
+            .insert({
+              user_id: userId,
+              product_name: "Balance Top-up (Crypto)",
+              total_price: amountPaid,
+              status: "completed",
+              payment_intent_id: txnId
+            });
+        }
+      } else if (type === "PROD") {
+        // Fulfill Product
+        // Determine product type
+        const { products } = await import("@/lib/products");
+        const product = products.find(p => p.id === productId);
+        
+        let fulfilled = false;
+
+        if (product) {
+          // Get stock
+          const { data: accountsData } = await supabaseAdmin
+            .from("accounts")
+            .select("id, login, pass, mail, mailpass, type")
+            .eq("type", product.type)
+            .eq("sold", false)
+            .limit(quantity);
+
+          if (accountsData && accountsData.length === quantity) {
+            // Mark as sold
+            const accountIds = accountsData.map(acc => acc.id);
+            await supabaseAdmin
+              .from("accounts")
+              .update({ sold: true })
+              .in("id", accountIds);
+
+            // Record order
+            const credentials = accountsData.map(acc => `${acc.login}:${acc.pass}:${acc.mail}:${acc.mailpass}`);
+            await supabaseAdmin
+              .from("orders")
+              .insert({
+                user_id: userId,
+                product_name: product.name,
+                total_price: amountPaid,
+                status: "completed",
+                payment_intent_id: txnId,
+                accounts_delivered: credentials,
+                quantity: quantity
+              });
+              
+            fulfilled = true;
+          }
+        }
+
+        if (!fulfilled) {
+          // Refund to balance if failed
+          const { data: profile } = await supabaseAdmin
+            .from("profiles")
+            .select("balance")
+            .eq("id", userId)
+            .single();
+
+          if (profile) {
+            const newBalance = Number(profile.balance) + amountPaid;
+            await supabaseAdmin
+              .from("profiles")
+              .update({ balance: newBalance })
+              .eq("id", userId);
+
+            await supabaseAdmin
+              .from("orders")
+              .insert({
+                user_id: userId,
+                product_name: `Refund for out of stock: ${product?.name || productId}`,
+                total_price: amountPaid,
+                status: "completed",
+                payment_intent_id: txnId
+              });
+          }
+        }
       }
     }
 

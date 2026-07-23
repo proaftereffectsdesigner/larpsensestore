@@ -36,8 +36,17 @@ export default function CategoryPage() {
   const [authChecked, setAuthChecked] = useState(false);
   
   const [paymentMethod, setPaymentMethod] = useState<"stripe" | "crypto" | "balance">("stripe");
+  const [selectedCryptoCoin, setSelectedCryptoCoin] = useState<string | null>(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isVariantDropdownOpen, setIsVariantDropdownOpen] = useState(false);
+
+  const CRYPTO_COINS = [
+    { id: 'USDT_TRX', name: 'USDT (Tron)', icon: '₮', color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
+    { id: 'LTC', name: 'Litecoin', icon: 'Ł', color: 'text-blue-400', bg: 'bg-blue-500/10' },
+    { id: 'SOL', name: 'Solana', icon: '◎', color: 'text-purple-400', bg: 'bg-purple-500/10' },
+    { id: 'ETH', name: 'Ethereum', icon: 'Ξ', color: 'text-indigo-400', bg: 'bg-indigo-500/10' },
+    { id: 'BTC', name: 'Bitcoin', icon: '₿', color: 'text-amber-400', bg: 'bg-amber-500/10' },
+  ];
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -100,29 +109,65 @@ export default function CategoryPage() {
     }
     if (!selectedProduct) return;
 
+    const totalPrice = selectedProduct.price * quantity;
+
+    if (paymentMethod === "crypto") {
+      if (totalPrice < 10) {
+        alert("Minimum amount for cryptocurrency is €10.00");
+        return;
+      }
+      if (!selectedCryptoCoin) {
+        alert("Please select a cryptocurrency");
+        return;
+      }
+    }
+
     setLoadingCheckout(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
       const token = session?.access_token;
 
-      const res = await fetch("/api/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          productId: selectedProduct.id, 
-          quantity, 
-          userId: user.id,
-          token,
-          paymentMethod
-        }),
-      });
-      const data = await res.json();
-      if (data.url) {
-        window.dispatchEvent(new Event('balance-updated'));
-        router.push(data.url);
+      if (paymentMethod === "crypto") {
+        const res = await fetch("/api/create-plisio-invoice", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userId: user.id,
+            token,
+            amount: totalPrice,
+            currency: selectedCryptoCoin,
+            type: "product_checkout",
+            productId: selectedProduct.id,
+            quantity: quantity
+          })
+        });
+        const data = await res.json();
+        if (data.url) {
+          window.location.href = data.url;
+        } else {
+          alert("Crypto Checkout failed: " + (data.error || "Unknown error"));
+          setLoadingCheckout(false);
+        }
       } else {
-        alert("Checkout failed: " + data.error);
-        setLoadingCheckout(false);
+        const res = await fetch("/api/checkout", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ 
+            productId: selectedProduct.id, 
+            quantity, 
+            userId: user.id,
+            token,
+            paymentMethod
+          }),
+        });
+        const data = await res.json();
+        if (data.url) {
+          window.dispatchEvent(new Event('balance-updated'));
+          router.push(data.url);
+        } else {
+          alert("Checkout failed: " + data.error);
+          setLoadingCheckout(false);
+        }
       }
     } catch (err) {
       alert("Error initiating checkout");
@@ -320,7 +365,7 @@ export default function CategoryPage() {
                       {paymentMethod === "stripe" ? "Debit / Credit Card" : paymentMethod === "crypto" ? "Cryptocurrency" : "Balance"}
                     </div>
                     <div className="text-xs text-gray-500">
-                      {paymentMethod === "stripe" ? "Mastercard, Visa, Apple Pay etc. via Stripe (1.5% + €0.25 fee)" : paymentMethod === "crypto" ? "BTC, ETH, LTC, USDT (0% fee)" : "Pay with your NFA Store balance"}
+                      {paymentMethod === "stripe" ? "Mastercard, Visa, Apple Pay etc. via Stripe (1.5% + €0.25 fee)" : paymentMethod === "crypto" ? (selectedCryptoCoin ? `${CRYPTO_COINS.find(c => c.id === selectedCryptoCoin)?.name} (0.5% fee)` : "BTC, ETH, LTC, USDT, SOL (0.5% fee)") : "Pay with your NFA Store balance"}
                     </div>
                   </div>
                 </div>
@@ -342,17 +387,39 @@ export default function CategoryPage() {
                     </div>
                   </button>
                   <button 
-                    onClick={() => { setPaymentMethod("crypto"); setIsDropdownOpen(false); }}
-                    className="w-full px-4 py-3 text-left hover:bg-white/5 transition-colors flex items-center gap-3 border-b border-white/5"
+                    onClick={() => { setPaymentMethod("crypto"); setIsDropdownOpen(false); if (!selectedCryptoCoin) setSelectedCryptoCoin(CRYPTO_COINS[0].id); }}
+                    className={`w-full px-4 py-3 text-left transition-colors flex flex-col border-b border-white/5 ${paymentMethod === "crypto" ? 'bg-white/5' : 'hover:bg-white/5'}`}
                   >
-                    <div className="flex items-center justify-center w-8 h-8 bg-amber-500/10 rounded-full">
-                      <Bitcoin className="w-4 h-4 text-amber-400" />
-                    </div>
-                    <div>
-                      <div className="text-sm text-white">Cryptocurrency</div>
-                      <div className="text-xs text-gray-500">BTC, ETH, LTC, USDT <span className="text-amber-400">(0% fee)</span></div>
+                    <div className="flex items-center gap-3 w-full">
+                      <div className="flex items-center justify-center w-8 h-8 bg-amber-500/10 rounded-full">
+                        <Bitcoin className="w-4 h-4 text-amber-400" />
+                      </div>
+                      <div>
+                        <div className="text-sm text-white">Cryptocurrency</div>
+                        <div className="text-xs text-gray-500">BTC, ETH, LTC, USDT, SOL <span className="text-amber-400">(0.5% fee)</span></div>
+                      </div>
                     </div>
                   </button>
+                  
+                  {paymentMethod === 'crypto' && (
+                    <div className="p-3 bg-[#111] border-b border-white/5">
+                      <div className="text-[10px] font-bold text-gray-500 uppercase mb-2">Select Currency</div>
+                      <div className="grid grid-cols-2 gap-2">
+                        {CRYPTO_COINS.map(coin => (
+                          <button
+                            key={coin.id}
+                            onClick={() => { setSelectedCryptoCoin(coin.id); setIsDropdownOpen(false); }}
+                            className={`flex items-center gap-2 p-2 rounded-xl transition-all ${selectedCryptoCoin === coin.id ? 'bg-white/10 border border-white/20' : 'bg-[#1c1c1c] border border-white/5 hover:bg-white/5'}`}
+                          >
+                            <div className={`w-6 h-6 rounded-md flex items-center justify-center text-xs font-black ${coin.bg} ${coin.color}`}>
+                              {coin.icon}
+                            </div>
+                            <span className={`text-xs font-bold ${selectedCryptoCoin === coin.id ? 'text-white' : 'text-gray-400'}`}>{coin.name}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                   <button 
                     onClick={() => { setPaymentMethod("balance"); setIsDropdownOpen(false); }}
                     className="w-full px-4 py-3 text-left hover:bg-white/5 transition-colors flex items-center gap-3"

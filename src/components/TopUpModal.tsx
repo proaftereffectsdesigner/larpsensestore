@@ -13,7 +13,16 @@ export default function TopUpModal() {
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [amount, setAmount] = useState<number>(10);
   const [method, setMethod] = useState<PaymentMethod>('card');
+  const [selectedCryptoCoin, setSelectedCryptoCoin] = useState<string | null>(null);
   const [loadingText, setLoadingText] = useState("Initializing secure connection...");
+
+  const CRYPTO_COINS = [
+    { id: 'USDT_TRX', name: 'USDT (Tron)', icon: '₮', color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
+    { id: 'LTC', name: 'Litecoin', icon: 'Ł', color: 'text-blue-400', bg: 'bg-blue-500/10' },
+    { id: 'SOL', name: 'Solana', icon: '◎', color: 'text-purple-400', bg: 'bg-purple-500/10' },
+    { id: 'ETH', name: 'Ethereum', icon: 'Ξ', color: 'text-indigo-400', bg: 'bg-indigo-500/10' },
+    { id: 'BTC', name: 'Bitcoin', icon: '₿', color: 'text-amber-400', bg: 'bg-amber-500/10' },
+  ];
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   useEffect(() => {
@@ -63,6 +72,17 @@ export default function TopUpModal() {
 
     try {
       if (method === 'crypto') {
+        if (amount < 10) {
+          setErrorMsg("Minimum amount for cryptocurrency is €10.00");
+          setStep(1);
+          return;
+        }
+        if (!selectedCryptoCoin) {
+          setErrorMsg("Please select a cryptocurrency");
+          setStep(1);
+          return;
+        }
+
         const res = await fetch("/api/create-plisio-invoice", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -70,6 +90,8 @@ export default function TopUpModal() {
             userId: session.user.id,
             token: session.access_token,
             amount: amount,
+            currency: selectedCryptoCoin,
+            type: "topup"
           })
         });
 
@@ -179,20 +201,48 @@ export default function TopUpModal() {
                   </button>
 
                   {/* Crypto */}
-                  <button onClick={() => setMethod('crypto')} className={`w-full flex items-center justify-between p-4 border rounded-2xl transition-all ${method === 'crypto' ? 'bg-white/10 border-white/20' : 'bg-[#141414] border-white/5 hover:bg-white/5'}`}>
-                    <div className="flex items-center gap-4">
-                      <div className="flex items-center justify-center w-10 h-10 bg-amber-500/10 rounded-xl">
-                        <Bitcoin className="w-5 h-5 text-amber-400" />
+                  <div className={`border rounded-2xl transition-all overflow-hidden ${method === 'crypto' ? 'bg-white/5 border-white/20' : 'bg-[#141414] border-white/5 hover:bg-white/5'}`}>
+                    <button onClick={() => { setMethod('crypto'); if (!selectedCryptoCoin) setSelectedCryptoCoin(CRYPTO_COINS[0].id); }} className="w-full flex items-center justify-between p-4">
+                      <div className="flex items-center gap-4">
+                        <div className="flex items-center justify-center w-10 h-10 bg-amber-500/10 rounded-xl">
+                          <Bitcoin className="w-5 h-5 text-amber-400" />
+                        </div>
+                        <div className="text-left">
+                          <div className={`font-bold text-sm ${method === 'crypto' ? 'text-white' : 'text-gray-300'}`}>Cryptocurrency</div>
+                          <div className="text-[11px] text-gray-500 font-medium">BTC, ETH, LTC, USDT, SOL <span className="text-amber-400 font-bold">(0.5% fee)</span></div>
+                        </div>
                       </div>
-                      <div className="text-left">
-                        <div className={`font-bold text-sm ${method === 'crypto' ? 'text-white' : 'text-gray-300'}`}>Cryptocurrency</div>
-                        <div className="text-[11px] text-gray-500 font-medium">BTC, ETH, LTC, USDT <span className="text-amber-400 font-bold">(0.5% fee)</span></div>
+                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${method === 'crypto' ? 'border-amber-400' : 'border-gray-600'}`}>
+                        {method === 'crypto' && <div className="w-2.5 h-2.5 bg-amber-400 rounded-full"></div>}
                       </div>
-                    </div>
-                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${method === 'crypto' ? 'border-amber-400' : 'border-gray-600'}`}>
-                      {method === 'crypto' && <div className="w-2.5 h-2.5 bg-amber-400 rounded-full"></div>}
-                    </div>
-                  </button>
+                    </button>
+                    
+                    {method === 'crypto' && (
+                      <div className="p-4 pt-0 border-t border-white/5 animate-in slide-in-from-top-2 duration-300">
+                        <div className="text-xs font-bold text-gray-500 uppercase mb-3 mt-3">Select Currency</div>
+                        <div className="grid grid-cols-2 gap-2">
+                          {CRYPTO_COINS.map(coin => (
+                            <button
+                              key={coin.id}
+                              onClick={() => setSelectedCryptoCoin(coin.id)}
+                              className={`flex items-center gap-3 p-3 rounded-xl transition-all ${selectedCryptoCoin === coin.id ? 'bg-white/10 border border-white/20 shadow-inner' : 'bg-[#0a0a0a] border border-white/5 hover:bg-white/5'}`}
+                            >
+                              <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm font-black ${coin.bg} ${coin.color}`}>
+                                {coin.icon}
+                              </div>
+                              <span className={`text-sm font-bold ${selectedCryptoCoin === coin.id ? 'text-white' : 'text-gray-400'}`}>{coin.name}</span>
+                            </button>
+                          ))}
+                        </div>
+                        {amount < 10 && (
+                          <div className="mt-4 text-xs font-medium text-amber-400/90 bg-amber-400/10 p-3 rounded-xl flex items-center gap-2">
+                            <ShieldAlert className="w-4 h-4 shrink-0" />
+                            Minimum amount for cryptocurrency is €10.00
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
 
                 </div>
               </div>

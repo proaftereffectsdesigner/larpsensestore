@@ -9,8 +9,10 @@ export default function AuthModal() {
   const [isOpen, setIsOpen] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [verificationCode, setVerificationCode] = useState("");
+  const [verificationJwt, setVerificationJwt] = useState("");
   
-  const [mode, setMode] = useState<"login" | "signup" | "forgot">("login");
+  const [mode, setMode] = useState<"login" | "signup" | "forgot" | "verify">("login");
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
@@ -26,6 +28,8 @@ export default function AuthModal() {
       setErrorMsg("");
       setSuccessMsg("");
       setShowPassword(false);
+      setVerificationCode("");
+      setVerificationJwt("");
     };
     window.addEventListener("open-auth", handleOpen);
     return () => window.removeEventListener("open-auth", handleOpen);
@@ -59,23 +63,53 @@ export default function AuthModal() {
           return;
         }
 
-        const { data, error } = await supabase.auth.signUp({ email, password });
-        if (error) throw error;
+        const res = await fetch('/api/auth/send-code', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email }),
+        });
+        const data = await res.json();
         
-        if (data.session) {
-          // Jeśli potwierdzanie maila jest wyłączone w Supabase, użytkownik od razu jest zalogowany
-          setIsOpen(false);
-          router.refresh();
-        } else {
-          setSuccessMsg("Check your email for a confirmation link!");
-          setMode("login");
-        }
+        if (!res.ok) throw new Error(data.error || 'Failed to send verification code');
+        
+        setVerificationJwt(data.token);
+        setSuccessMsg("Verification code sent to your email!");
+        setMode("verify");
       } else if (mode === "login") {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
         setIsOpen(false);
         router.refresh();
       }
+    } catch (err: any) {
+      setErrorMsg(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyCode = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setErrorMsg("");
+    setSuccessMsg("");
+
+    try {
+      const res = await fetch('/api/auth/verify-code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: verificationJwt, code: verificationCode, password }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) throw new Error(data.error || 'Verification failed');
+
+      // If successfully verified and created by API, log them in
+      const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+      if (signInError) throw signInError;
+      
+      setIsOpen(false);
+      router.refresh();
     } catch (err: any) {
       setErrorMsg(err.message);
     } finally {
@@ -124,7 +158,7 @@ export default function AuthModal() {
     }
   };
 
-  const switchMode = (newMode: "login" | "signup" | "forgot") => {
+  const switchMode = (newMode: "login" | "signup" | "forgot" | "verify") => {
     setErrorMsg("");
     setSuccessMsg("");
     setMode(newMode);
@@ -149,11 +183,12 @@ export default function AuthModal() {
             {mode === "forgot" ? <Lock className="w-6 h-6 text-accent" /> : <UserIcon className="w-6 h-6 text-accent" />}
           </div>
           <h1 className="text-2xl font-bold text-white mb-2">
-            {mode === "login" ? "Welcome back" : mode === "signup" ? "Create an account" : "Reset your password"}
+            {mode === "login" ? "Welcome back" : mode === "signup" ? "Create an account" : mode === "verify" ? "Verify Email" : "Reset your password"}
           </h1>
           <p className="text-gray-400 text-sm mb-4">
             {mode === "login" ? "Enter your details to access your account." : 
              mode === "signup" ? "Sign up to start purchasing accounts." : 
+             mode === "verify" ? "Enter the 6-digit code sent to your email." :
              "Enter your email and we'll send you a reset link."}
           </p>
 
@@ -203,6 +238,41 @@ export default function AuthModal() {
                 className="text-gray-400 hover:text-white text-sm transition-colors font-medium flex items-center justify-center gap-2 w-full"
               >
                 <ArrowLeft className="w-4 h-4" /> Back to login
+              </button>
+            </div>
+          </form>
+        ) : mode === "verify" ? (
+          <form onSubmit={handleVerifyCode} className="space-y-4 relative z-10" noValidate>
+            <div>
+              <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Verification Code</label>
+              <div className="relative">
+                <input
+                  type="text"
+                  maxLength={6}
+                  value={verificationCode}
+                  onChange={(e) => setVerificationCode(e.target.value.replace(/\\D/g, ''))}
+                  className="block w-full px-4 py-3 bg-[#0a0a0a] border border-white/10 rounded-xl text-white text-center tracking-[0.5em] text-2xl placeholder-gray-600 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors"
+                  placeholder="••••••"
+                  required
+                />
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading || verificationCode.length !== 6}
+              className="w-full bg-white text-black font-bold py-3 px-4 rounded-xl hover:bg-gray-200 transition-colors flex items-center justify-center gap-2 mt-2 disabled:opacity-50"
+            >
+              {loading ? "Verifying..." : <>Verify & Create Account <ArrowRight className="w-4 h-4" /></>}
+            </button>
+            
+            <div className="mt-6 text-center">
+              <button 
+                type="button" 
+                onClick={() => switchMode("signup")} 
+                className="text-gray-400 hover:text-white text-sm transition-colors font-medium flex items-center justify-center gap-2 w-full"
+              >
+                <ArrowLeft className="w-4 h-4" /> Back to sign up
               </button>
             </div>
           </form>

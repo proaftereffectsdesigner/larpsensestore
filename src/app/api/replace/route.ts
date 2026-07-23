@@ -75,18 +75,7 @@ export async function POST(req: Request) {
     const newAccountStr = nfaData.account;
 
     // 2. Aktualizacja w bazie danych (Supabase)
-    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-    
-    // Pobranie bieżącego zamówienia by zaktualizować właściwe konto w tablicy
-    const { data: orderData, error: fetchError } = await supabase
-      .from("orders")
-      .select("accounts_data")
-      .eq("id", orderId)
-      .single();
-
-    if (fetchError || !orderData) {
-      return NextResponse.json({ error: "Order not found in DB, but replaced at NFA." }, { status: 500 });
-    }
+    // Posiadamy już orderData z początku pliku, wystarczy je zmodyfikować.
 
     const accounts = orderData.accounts_data.split("\n");
     accounts[accountIdx] = newAccountStr; // Nadpisujemy wymienione konto

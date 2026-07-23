@@ -140,14 +140,20 @@ function DashboardContent() {
       }
     });
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) {
-        window.location.href = "/";
-        return;
-      }
-      setUser(session.user);
-      loadDashboardData(session.user);
-    });
+    const checkSession = () => {
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (!session) {
+          window.location.href = "/";
+          return;
+        }
+        setUser(session.user);
+        loadDashboardData(session.user);
+      });
+    };
+
+    checkSession();
+    window.addEventListener('focus', checkSession);
+    window.addEventListener('pageshow', checkSession);
 
     const handleBalanceUpdate = () => {
       supabase.auth.getSession().then(({ data: { session } }) => {
@@ -158,6 +164,8 @@ function DashboardContent() {
 
     return () => {
       window.removeEventListener('balance-updated', handleBalanceUpdate);
+      window.removeEventListener('focus', checkSession);
+      window.removeEventListener('pageshow', checkSession);
       subscription.unsubscribe();
     };
   }, [router]);

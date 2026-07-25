@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { ShoppingCart, LogOut, LayoutGrid, Plus, User as UserIcon, Lock, Shield } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase-client";
 import { User } from "@supabase/supabase-js";
 import ToolDownloadButton from "./ToolDownloadButton";
@@ -16,6 +16,7 @@ export default function Navbar() {
 
   const [isBanned, setIsBanned] = useState(false);
   const [profile, setProfile] = useState<any>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const fetchProfileData = async (userId: string) => {
     const { data } = await supabase
@@ -54,6 +55,19 @@ export default function Navbar() {
       window.removeEventListener('balance-updated', handleBalanceUpdate);
     };
   }, []);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setShowDropdown(false);
+      }
+    };
+    if (showDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showDropdown]);
 
   const handleSignOutClick = () => {
     setShowLogoutConfirm(true);
@@ -112,7 +126,7 @@ export default function Navbar() {
           )}
 
           {user ? (
-            <div className="relative">
+            <div ref={dropdownRef} className="relative">
               {/* User Pill Button */}
               <button 
                 onClick={() => setShowDropdown(!showDropdown)}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { products } from "@/lib/products";
 import { supabase } from "@/lib/supabase-client";
@@ -32,6 +32,18 @@ export default function ProductPage() {
   const [selectedCryptoCoin, setSelectedCryptoCoin] = useState<string | null>(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isCryptoExpanded, setIsCryptoExpanded] = useState(false);
+  const paymentDropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (paymentDropdownRef.current && !paymentDropdownRef.current.contains(e.target as Node)) {
+        setIsDropdownOpen(false);
+        setIsCryptoExpanded(false);
+      }
+    };
+    if (isDropdownOpen) document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isDropdownOpen]);
 
   const CRYPTO_COINS = [
     { id: 'SOL', name: 'Solana', icon: '◎', color: 'text-purple-400', bg: 'bg-purple-500/10' },
@@ -174,7 +186,7 @@ export default function ProductPage() {
         {/* Sekcja Metoda Płatności */}
         <div className="mb-6">
           <div className="text-[10px] font-bold text-gray-500 tracking-widest uppercase mb-2">Payment method</div>
-          <div className="relative">
+          <div ref={paymentDropdownRef} className="relative">
             <button 
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
               className="w-full bg-[#1c1c1c] border border-white/5 rounded-xl px-4 py-3 text-white flex items-center justify-between hover:bg-[#222] transition-colors"

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { createClient } from "@supabase/supabase-js";
+import { rateLimit, getClientIp } from "@/lib/rate-limit";
 
 // Initialize Stripe with the secret key from env
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
@@ -13,6 +14,15 @@ const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
 export async function POST(req: Request) {
   try {
+    // Rate limit: max 10 checkout sessions per minute per IP
+    const ip = getClientIp(req);
+    const rl = rateLimit(`checkout:${ip}`, { maxRequests: 10, windowMs: 60_000 });
+    if (!rl.allowed) {
+      return NextResponse.json(
+        { error: `Too many requests. Try again in ${rl.resetInSeconds}s.` },
+        { status: 429 }
+      );
+    }
     const { userId, amount, paymentMethod, token } = await req.json();
 
     if (!userId || !amount || amount < 0.50 || !token) {

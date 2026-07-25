@@ -1,14 +1,46 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { createHash } from "crypto";
+import { rateLimit, getClientIp } from "@/lib/rate-limit";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const SUPABASE_SERVICE_ROLE = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 const PLISIO_SECRET_KEY = process.env.PLISIO_SECRET_KEY;
 
+/**
+ * Plisio webhook signature verification.
+ * Plisio sends `verify_hash` = MD5 of all fields sorted alphabetically
+ * (excluding verify_hash itself), concatenated as a JSON string + secret key.
+ * Docs: https://plisio.net/documentation/endpoints/callback
+ */
+function verifyPlisioWebhook(body: Record<string, any>, secretKey: string): boolean {
+  const receivedHash = body.verify_hash;
+  if (!receivedHash) return false;
+
+  // Remove verify_hash from the object, sort remaining keys alphabetically
+  const { verify_hash: _, ...rest } = body;
+  const sortedKeys = Object.keys(rest).sort();
+  const sortedObj: Record<string, any> = {};
+  for (const key of sortedKeys) {
+    sortedObj[key] = rest[key];
+  }
+
+  const dataString = JSON.stringify(sortedObj);
+  const expectedHash = createHash('md5').update(dataString + secretKey).digest('hex');
+  return expectedHash === receivedHash;
+}
+
 export async function POST(req: Request) {
   try {
     if (!PLISIO_SECRET_KEY) {
       return NextResponse.json({ error: "Missing PLISIO_SECRET_KEY" }, { status: 500 });
+    }
+
+    // Rate limit webhook endpoint to prevent flood attacks (100 req/min)
+    const ip = getClientIp(req);
+    const rl = rateLimit(`plisio-webhook:${ip}`, { maxRequests: 100, windowMs: 60_000 });
+    if (!rl.allowed) {
+      return NextResponse.json({ error: "Too many requests" }, { status: 429 });
     }
 
     // Plisio can send webhooks as JSON or form data
@@ -23,6 +55,12 @@ export async function POST(req: Request) {
       params.forEach((val, key) => {
         body[key] = val;
       });
+    }
+
+    // ✅ Verify webhook signature — prevents fake payment confirmations
+    if (!verifyPlisioWebhook(body, PLISIO_SECRET_KEY)) {
+      console.warn("Plisio webhook: invalid signature from IP", ip);
+      return NextResponse.json({ error: "Invalid webhook signature" }, { status: 401 });
     }
 
     const txnId = body.txn_id;

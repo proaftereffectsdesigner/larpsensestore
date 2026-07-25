@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { rateLimit, getClientIp } from "@/lib/rate-limit";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const SUPABASE_SERVICE_ROLE = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -7,6 +8,16 @@ const PLISIO_SECRET_KEY = process.env.PLISIO_SECRET_KEY;
 
 export async function POST(req: Request) {
   try {
+    // Rate limit: max 10 invoice creations per minute per IP
+    const ip = getClientIp(req);
+    const rl = rateLimit(`plisio-invoice:${ip}`, { maxRequests: 10, windowMs: 60_000 });
+    if (!rl.allowed) {
+      return NextResponse.json(
+        { error: `Too many requests. Try again in ${rl.resetInSeconds}s.` },
+        { status: 429 }
+      );
+    }
+
     const { userId, token, amount, currency, type = "topup", productId, quantity } = await req.json();
 
     if (!userId || !token || !amount) {

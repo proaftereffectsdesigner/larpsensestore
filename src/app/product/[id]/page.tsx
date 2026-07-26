@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { products } from "@/lib/products";
 import { supabase } from "@/lib/supabase-client";
@@ -33,6 +33,28 @@ export default function ProductPage() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isCryptoExpanded, setIsCryptoExpanded] = useState(false);
   const paymentDropdownRef = useRef<HTMLDivElement>(null);
+  const paymentButtonRef = useRef<HTMLButtonElement>(null);
+  const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0, width: 0 });
+
+  // Recalculate dropdown position whenever it opens or window resizes
+  const updateDropdownPos = useCallback(() => {
+    if (paymentButtonRef.current) {
+      const rect = paymentButtonRef.current.getBoundingClientRect();
+      setDropdownPos({ top: rect.bottom + 8, left: rect.left, width: rect.width });
+    }
+  }, []);
+
+  useEffect(() => {
+    if (isDropdownOpen) {
+      updateDropdownPos();
+      window.addEventListener('resize', updateDropdownPos);
+      window.addEventListener('scroll', updateDropdownPos, true);
+    }
+    return () => {
+      window.removeEventListener('resize', updateDropdownPos);
+      window.removeEventListener('scroll', updateDropdownPos, true);
+    };
+  }, [isDropdownOpen, updateDropdownPos]);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -158,7 +180,7 @@ export default function ProductPage() {
 
   return (
     <div className="flex justify-center items-center py-12 px-4 relative z-10 min-h-[calc(100vh-80px)]">
-      <div className="bg-[#111111] border border-white/5 rounded-3xl p-6 md:p-8 w-full max-w-[420px] shadow-2xl relative">
+      <div className="bg-[#111111] border border-white/5 rounded-3xl p-6 md:p-8 w-full max-w-[min(420px,90vw)] shadow-2xl relative">
         
         {/* Cena i Tytuł */}
         <div className="mb-6">
@@ -186,8 +208,9 @@ export default function ProductPage() {
         {/* Sekcja Metoda Płatności */}
         <div className="mb-6">
           <div className="text-[10px] font-bold text-gray-500 tracking-widest uppercase mb-2">Payment method</div>
-          <div ref={paymentDropdownRef} className="relative">
-            <button 
+          <div ref={paymentDropdownRef}>
+            <button
+              ref={paymentButtonRef}
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
               className="w-full bg-[#1c1c1c] border border-white/5 rounded-xl px-4 py-3 text-white flex items-center justify-between hover:bg-[#222] transition-colors"
             >
@@ -218,7 +241,17 @@ export default function ProductPage() {
             </button>
 
             {isDropdownOpen && (
-              <div className="absolute top-full left-0 right-0 mt-2 bg-[#1c1c1c] border border-white/10 rounded-xl overflow-y-auto custom-scrollbar z-20 shadow-xl max-h-[300px]">
+              <div
+                className="fixed bg-[#1c1c1c] border border-white/10 rounded-xl overflow-y-auto custom-scrollbar z-[9999] shadow-2xl"
+                style={{
+                  top: dropdownPos.top,
+                  left: dropdownPos.left,
+                  width: dropdownPos.width,
+                  maxHeight: `calc(100vh - ${dropdownPos.top + 16}px)`,
+                }}
+                onWheel={e => e.stopPropagation()}
+                onTouchMove={e => e.stopPropagation()}
+              >
                 <button 
                   onClick={() => { setPaymentMethod("stripe"); setIsDropdownOpen(false); }}
                   className="w-full px-4 py-3 text-left hover:bg-white/5 transition-colors flex items-center gap-3 border-b border-white/5"

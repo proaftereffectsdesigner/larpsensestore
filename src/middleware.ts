@@ -21,14 +21,15 @@ export async function middleware(req: NextRequest) {
   // Supabase stores the access token in a cookie named sb-<project-ref>-auth-token
   let accessToken: string | undefined;
 
-  for (const [name, value] of req.cookies) {
+  for (const [name, cookie] of req.cookies) {
     if (name.startsWith("sb-") && name.endsWith("-auth-token")) {
+      const cookieValue = typeof cookie === "string" ? cookie : (cookie as any).value ?? "";
       try {
-        const parsed = JSON.parse(decodeURIComponent(value));
+        const parsed = JSON.parse(decodeURIComponent(cookieValue));
         accessToken = parsed?.access_token ?? parsed?.[0];
       } catch {
         // try raw value
-        accessToken = value;
+        accessToken = cookieValue;
       }
       break;
     }

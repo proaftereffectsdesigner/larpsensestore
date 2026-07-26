@@ -57,9 +57,23 @@ export async function POST(req: Request) {
 
       console.log(`Fulfilling product checkout for user ${userId}, product ${productId}, quantity ${quantity}`);
 
-      // TEMPORARY MOCK FOR NFA API (same as checkout route)
-      const accounts = Array.from({ length: quantity }, (_, i) => `mock_account_${i + 1}@example.com:password123`);
-      const accountsStr = accounts.join("\n");
+      // Use Stripe session ID as idempotency key — safe to retry
+      const { buyNfaAccounts } = await import("@/lib/nfa");
+      let accountsStr = "";
+      let fulfilled = false;
+
+      try {
+        const nfaResult = await buyNfaAccounts(
+          productId!, // NFA type matches our product type exactly
+          quantity,
+          `stripe-${session.id}` // unique per Stripe session → no double charges
+        );
+        accountsStr = nfaResult.accounts.join("\n");
+        fulfilled = nfaResult.accounts.length > 0;
+        console.log(`NFA delivered ${nfaResult.accounts.length} accounts for ${productId}`);
+      } catch (nfaErr) {
+        console.error("NFA API error during Stripe fulfillment:", nfaErr);
+      }
 
       const { error: dbError } = await supabaseAdmin
         .from("orders")
@@ -68,8 +82,8 @@ export async function POST(req: Request) {
           product_id: productId,
           quantity: quantity,
           total_price: totalPrice,
-          status: "completed",
-          accounts_data: accountsStr,
+          status: fulfilled ? "completed" : "failed",
+          accounts_data: accountsStr || null,
         });
 
       if (dbError) {

@@ -159,50 +159,47 @@ export async function POST(req: Request) {
             });
         }
       } else if (type === "PROD") {
-        // Fulfill Product
-        // Determine product type
+        // Fulfill Product via NFA Reseller API
         const { products } = await import("@/lib/products");
         const product = products.find(p => p.id === productId);
-        
+
         let fulfilled = false;
+        let accountsStr = "";
 
         if (product) {
-          // Get stock
-          const { data: accountsData } = await supabaseAdmin
-            .from("accounts")
-            .select("id, login, pass, mail, mailpass, type")
-            .eq("type", product.type)
-            .eq("sold", false)
-            .limit(quantity);
+          try {
+            const { buyNfaAccounts } = await import("@/lib/nfa");
+            // Use txnId as idempotency key — Plisio can retry webhooks,
+            // this prevents buying the same accounts twice
+            const nfaResult = await buyNfaAccounts(
+              product.type,
+              quantity,
+              `plisio-${txnId}`
+            );
 
-          if (accountsData && accountsData.length === quantity) {
-            // Mark as sold
-            const accountIds = accountsData.map(acc => acc.id);
-            await supabaseAdmin
-              .from("accounts")
-              .update({ sold: true })
-              .in("id", accountIds);
-
-            // Record order
-            const credentials = accountsData.map(acc => `${acc.login}:${acc.pass}:${acc.mail}:${acc.mailpass}`);
-            await supabaseAdmin
-              .from("orders")
-              .insert({
-                user_id: userId,
-                product_name: product.name,
-                total_price: amountPaid,
-                status: "completed",
-                payment_intent_id: txnId,
-                accounts_delivered: credentials,
-                quantity: quantity
-              });
-              
-            fulfilled = true;
+            accountsStr = nfaResult.accounts.join("\n");
+            fulfilled = nfaResult.accounts.length > 0;
+            console.log(`NFA delivered ${nfaResult.accounts.length} accounts for ${product.type}`);
+          } catch (nfaErr) {
+            console.error("NFA API error during Plisio fulfillment:", nfaErr);
           }
         }
 
-        if (!fulfilled) {
-          // Refund to balance if failed
+        if (fulfilled) {
+          await supabaseAdmin
+            .from("orders")
+            .insert({
+              user_id: userId,
+              product_id: productId,
+              product_name: product?.name || productId,
+              total_price: amountPaid,
+              status: "completed",
+              payment_intent_id: txnId,
+              accounts_data: accountsStr,
+              quantity: quantity,
+            });
+        } else {
+          // Refund to balance if NFA failed or returned no accounts
           const { data: profile } = await supabaseAdmin
             .from("profiles")
             .select("balance")
@@ -220,10 +217,10 @@ export async function POST(req: Request) {
               .from("orders")
               .insert({
                 user_id: userId,
-                product_name: `Refund for out of stock: ${product?.name || productId}`,
+                product_name: `Refund — out of stock: ${product?.name || productId}`,
                 total_price: amountPaid,
-                status: "completed",
-                payment_intent_id: txnId
+                status: "refunded",
+                payment_intent_id: txnId,
               });
           }
         }

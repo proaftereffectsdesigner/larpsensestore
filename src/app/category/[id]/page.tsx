@@ -37,21 +37,11 @@ export default function CategoryPage() {
   
   const [paymentMethod, setPaymentMethod] = useState<"stripe" | "crypto" | "balance">("stripe");
   const [selectedCryptoCoin, setSelectedCryptoCoin] = useState<string | null>(null);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isCryptoExpanded, setIsCryptoExpanded] = useState(false);
   const [isVariantDropdownOpen, setIsVariantDropdownOpen] = useState(false);
   const paymentDropdownRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (paymentDropdownRef.current && !paymentDropdownRef.current.contains(e.target as Node)) {
-        setIsDropdownOpen(false);
-        setIsCryptoExpanded(false);
-      }
-    };
-    if (isDropdownOpen) document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [isDropdownOpen]);
+
 
   const CRYPTO_COINS = [
     { id: 'SOL', name: 'Solana', icon: '◎', color: 'text-purple-400', bg: 'bg-purple-500/10' },
@@ -345,123 +335,97 @@ export default function CategoryPage() {
             </div>
           </div>
 
-          {/* Sekcja Metoda Płatności */}
-          <div className="mb-8 relative z-20">
+          {/* Sekcja Metoda Płatności — inline, nie dropdown */}
+          <div className="mb-8">
             <div className="text-[10px] font-bold text-gray-500 tracking-widest uppercase mb-2">Payment method</div>
-            <div ref={paymentDropdownRef} className="relative">
-              <button 
-                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="w-full bg-[#0a0a0a]/50 border border-white/10 rounded-xl px-4 py-3.5 text-white flex items-center justify-between hover:border-emerald-500/50 hover:bg-white/5 transition-all shadow-inner focus:outline-none"
+            <div ref={paymentDropdownRef} className="flex flex-col gap-2">
+
+              {/* Stripe */}
+              <button
+                onClick={() => { setPaymentMethod("stripe"); setIsCryptoExpanded(false); }}
+                className={`w-full px-4 py-3 rounded-xl text-left flex items-center gap-3 border transition-all ${paymentMethod === "stripe" ? "bg-white/5 border-white/20" : "bg-[#0a0a0a]/50 border-white/10 hover:bg-white/5 hover:border-white/20"}`}
               >
-                <div className="flex items-center gap-3">
-                  {paymentMethod === "stripe" ? (
-                    <div className="w-8 h-8 bg-[#635BFF]/10 rounded-full flex items-center justify-center">
-                      <SiStripe className="w-5 h-5 text-[#635BFF]" />
-                    </div>
-                  ) : paymentMethod === "crypto" ? (
-                    <div className="w-8 h-8 bg-amber-500/10 rounded-full flex items-center justify-center">
-                      <Bitcoin className="w-4 h-4 text-amber-400" />
-                    </div>
-                  ) : (
-                    <div className="w-8 h-8 bg-emerald-500/10 rounded-full flex items-center justify-center">
-                      <Wallet className="w-4 h-4 text-emerald-400" />
-                    </div>
-                  )}
-                  <div className="text-left">
-                    <div className="text-sm font-medium">
-                      {paymentMethod === "stripe" ? "Debit / Credit Card" : paymentMethod === "crypto" ? "Cryptocurrency" : "Balance"}
-                    </div>
-                    <div className="text-xs text-gray-500">
-                      {paymentMethod === "stripe" ? "Mastercard, Visa, Apple Pay etc. via Stripe (1.5% + €0.25 fee)" : paymentMethod === "crypto" ? (selectedCryptoCoin ? `${CRYPTO_COINS.find(c => c.id === selectedCryptoCoin)?.name} (0.5% fee)` : "SOL, LTC, USDT (0.5% fee)") : "Pay with your NFA Store balance"}
-                    </div>
-                  </div>
+                <div className="w-8 h-8 bg-[#635BFF]/10 rounded-full flex items-center justify-center shrink-0">
+                  <SiStripe className="w-5 h-5 text-[#635BFF]" />
                 </div>
-                <ChevronDown className={`w-4 h-4 text-gray-500 transition-transform ${isDropdownOpen ? "rotate-180" : ""}`} />
+                <div>
+                  <div className="text-sm text-white font-medium">Debit / Credit Card</div>
+                  <div className="text-xs text-gray-500">Mastercard, Visa, Apple Pay <span className="text-indigo-400">(1.5% + €0.25 fee)</span></div>
+                </div>
               </button>
 
-              {isDropdownOpen && (
-                <div className="absolute top-full left-0 right-0 mt-2 bg-[#1c1c1c] border border-white/10 rounded-xl overflow-y-auto custom-scrollbar z-20 shadow-xl max-h-[300px]">
-                  <button 
-                    onClick={() => { setPaymentMethod("stripe"); setIsDropdownOpen(false); }}
-                    className="w-full px-4 py-3 text-left hover:bg-white/5 transition-colors flex items-center gap-3 border-b border-white/5"
-                  >
-                    <div className="flex items-center justify-center w-8 h-8 bg-[#635BFF]/10 rounded-full">
-                      <SiStripe className="w-5 h-5 text-[#635BFF]" />
+              {/* Crypto */}
+              <div className={`rounded-xl border transition-all ${paymentMethod === "crypto" ? "border-white/20" : "border-white/10"}`}>
+                <button
+                  onClick={() => {
+                    if (paymentMethod !== "crypto") {
+                      setPaymentMethod("crypto");
+                      setIsCryptoExpanded(true);
+                      if (!selectedCryptoCoin) setSelectedCryptoCoin(CRYPTO_COINS[0].id);
+                    } else {
+                      setIsCryptoExpanded(!isCryptoExpanded);
+                    }
+                  }}
+                  className={`w-full px-4 py-3 rounded-xl text-left flex items-center justify-between transition-all ${paymentMethod === "crypto" ? "bg-white/5" : "bg-[#0a0a0a]/50 hover:bg-white/5"}`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-amber-500/10 rounded-full flex items-center justify-center shrink-0">
+                      <Bitcoin className="w-4 h-4 text-amber-400" />
                     </div>
                     <div>
-                      <div className="text-sm text-white">Debit / Credit Card</div>
-                      <div className="text-xs text-gray-500">Mastercard, Visa, Apple Pay etc. via Stripe <span className="text-indigo-400">(1.5% + €0.25 fee)</span></div>
-                    </div>
-                  </button>
-                  <button 
-                    onClick={() => { 
-                      if (paymentMethod === "crypto") {
-                        setIsCryptoExpanded(!isCryptoExpanded);
-                      } else {
-                        setPaymentMethod("crypto"); 
-                        setIsCryptoExpanded(true);
-                        if (!selectedCryptoCoin) setSelectedCryptoCoin(CRYPTO_COINS[0].id); 
-                      }
-                    }}
-                    className={`w-full px-4 py-3 text-left transition-colors flex flex-col border-b border-white/5 ${paymentMethod === "crypto" ? 'bg-white/5' : 'hover:bg-white/5'}`}
-                  >
-                    <div className="flex items-center justify-between w-full">
-                      <div className="flex items-center gap-3">
-                        <div className="flex items-center justify-center w-8 h-8 bg-amber-500/10 rounded-full">
-                          <Bitcoin className="w-4 h-4 text-amber-400" />
-                        </div>
-                        <div>
-                          <div className="text-sm text-white">Cryptocurrency</div>
-                          <div className="text-xs text-gray-500">SOL, LTC, USDT <span className="text-amber-400">(0.5% fee)</span></div>
-                        </div>
+                      <div className="text-sm text-white font-medium">Cryptocurrency</div>
+                      <div className="text-xs text-gray-500">
+                        {paymentMethod === "crypto" && selectedCryptoCoin
+                          ? `${CRYPTO_COINS.find(c => c.id === selectedCryptoCoin)?.name} selected`
+                          : "SOL, LTC, USDT"} <span className="text-amber-400">(0.5% fee)</span>
                       </div>
-                      <ChevronRight className={`w-4 h-4 text-gray-500 transition-transform ${isCryptoExpanded && paymentMethod === 'crypto' ? 'rotate-90' : ''}`} />
                     </div>
-                  </button>
-                  
-                  {paymentMethod === 'crypto' && isCryptoExpanded && (
-                    <div className="p-3 bg-[#111] border-b border-white/5 animate-in slide-in-from-top-2 duration-200">
-                      <div className="text-[10px] font-bold text-gray-500 uppercase mb-2">Select Currency</div>
-                      <div className="flex flex-col gap-1.5">
-                        {CRYPTO_COINS.map(coin => (
-                          <button
-                            key={coin.id}
-                            onClick={() => { setSelectedCryptoCoin(coin.id); setIsDropdownOpen(false); setIsCryptoExpanded(false); }}
-                            className={`flex items-center gap-3 p-3 rounded-xl transition-all ${selectedCryptoCoin === coin.id ? 'bg-white/10 border border-white/20' : 'bg-[#1c1c1c] border border-white/5 hover:bg-white/5'}`}
-                          >
-                            <div className={`w-8 h-8 rounded-md flex items-center justify-center text-sm font-black ${coin.bg} ${coin.color}`}>
-                              {coin.icon}
-                            </div>
-                            <span className={`text-sm font-bold ${selectedCryptoCoin === coin.id ? 'text-white' : 'text-gray-400'}`}>
-                              {coin.name}
-                              {coin.note && <span className="text-[10px] ml-2 text-gray-500 font-medium">({coin.note})</span>}
-                            </span>
-                          </button>
-                        ))}
+                  </div>
+                  <ChevronRight className={`w-4 h-4 text-gray-500 transition-transform shrink-0 ${isCryptoExpanded && paymentMethod === "crypto" ? "rotate-90" : ""}`} />
+                </button>
+
+                {paymentMethod === "crypto" && isCryptoExpanded && (
+                  <div className="px-3 pb-3 animate-in slide-in-from-top-2 duration-200">
+                    <div className="text-[10px] font-bold text-gray-500 uppercase mb-2 pt-1">Select Currency</div>
+                    <div className="flex flex-col gap-1.5">
+                      {CRYPTO_COINS.map(coin => (
+                        <button
+                          key={coin.id}
+                          onClick={() => setSelectedCryptoCoin(coin.id)}
+                          className={`flex items-center gap-3 p-3 rounded-xl transition-all ${selectedCryptoCoin === coin.id ? "bg-white/10 border border-white/20" : "bg-[#111] border border-white/5 hover:bg-white/5"}`}
+                        >
+                          <div className={`w-8 h-8 rounded-md flex items-center justify-center text-sm font-black shrink-0 ${coin.bg} ${coin.color}`}>{coin.icon}</div>
+                          <span className={`text-sm font-bold ${selectedCryptoCoin === coin.id ? "text-white" : "text-gray-400"}`}>
+                            {coin.name}
+                            {coin.note && <span className="text-[10px] ml-2 text-gray-500 font-medium">({coin.note})</span>}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                    {selectedCryptoCoin === "USDT_TON" && totalPrice < 5 && (
+                      <div className="mt-3 text-xs font-medium text-emerald-400/90 bg-emerald-400/10 p-3 rounded-xl flex items-center gap-2">
+                        <ShieldAlert className="w-4 h-4 shrink-0" />
+                        Minimum total amount for Tether USDT is €5.00
                       </div>
-                      {selectedCryptoCoin === 'USDT_TON' && totalPrice < 5 && (
-                        <div className="mt-4 text-xs font-medium text-emerald-400/90 bg-emerald-400/10 p-3 rounded-xl flex items-center gap-2">
-                          <ShieldAlert className="w-4 h-4 shrink-0" />
-                          Minimum total amount for Tether USDT is €5.00
-                        </div>
-                      )}
-                    </div>
-                  )}
-                  
-                  <button 
-                    onClick={() => { setPaymentMethod("balance"); setIsDropdownOpen(false); }}
-                    className="w-full px-4 py-3 text-left hover:bg-white/5 transition-colors flex items-center gap-3"
-                  >
-                    <div className="flex items-center justify-center w-8 h-8 bg-emerald-500/10 rounded-full">
-                      <Wallet className="w-4 h-4 text-emerald-400" />
-                    </div>
-                    <div>
-                      <div className="text-sm text-white">Balance</div>
-                      <div className="text-xs text-gray-500">Pay with your NFA Store balance <span className="text-emerald-400">(Instant)</span></div>
-                    </div>
-                  </button>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Balance */}
+              <button
+                onClick={() => { setPaymentMethod("balance"); setIsCryptoExpanded(false); }}
+                className={`w-full px-4 py-3 rounded-xl text-left flex items-center gap-3 border transition-all ${paymentMethod === "balance" ? "bg-white/5 border-white/20" : "bg-[#0a0a0a]/50 border-white/10 hover:bg-white/5 hover:border-white/20"}`}
+              >
+                <div className="w-8 h-8 bg-emerald-500/10 rounded-full flex items-center justify-center shrink-0">
+                  <Wallet className="w-4 h-4 text-emerald-400" />
                 </div>
-              )}
+                <div>
+                  <div className="text-sm text-white font-medium">Balance</div>
+                  <div className="text-xs text-gray-500">Pay with your NFA Store balance <span className="text-emerald-400">(Instant)</span></div>
+                </div>
+              </button>
+
             </div>
           </div>
 

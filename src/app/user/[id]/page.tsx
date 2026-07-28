@@ -86,6 +86,18 @@ export default function PublicProfile() {
     );
   }
 
+  if (profile.is_private && !isOwner) {
+    return (
+      <div className="flex flex-col justify-center items-center h-[60vh] text-center space-y-4 animate-in fade-in zoom-in duration-500">
+        <div className="w-20 h-20 bg-[#141414] border border-white/5 rounded-full flex items-center justify-center mb-4 shadow-[0_0_30px_rgba(0,0,0,0.5)]">
+          <Ghost className="w-8 h-8 text-gray-500" />
+        </div>
+        <h2 className="text-3xl font-bold text-white tracking-tight">Private Profile</h2>
+        <p className="text-gray-400 max-w-md mx-auto">This user has decided to keep their profile private.</p>
+      </div>
+    );
+  }
+
   const { display_name, avatar_url, bio, last_seen, created_at, total_spent, total_orders, is_banned, banned_at } = profile;
 
   const accountAgeDays = Math.floor((new Date().getTime() - new Date(created_at || new Date()).getTime()) / (1000 * 3600 * 24));

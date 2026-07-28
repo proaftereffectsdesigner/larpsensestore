@@ -61,6 +61,7 @@ function DashboardContent() {
   const [avatarBlobToUpload, setAvatarBlobToUpload] = useState<Blob | null>(null);
   const [profileMessage, setProfileMessage] = useState<{type: 'success'|'error', text: string} | null>(null);
   const [avatarError, setAvatarError] = useState("");
+  const [isPrivate, setIsPrivate] = useState(false);
   
   const [imgSrc, setImgSrc] = useState("");
   const [savedImgSrc, setSavedImgSrc] = useState("");
@@ -106,6 +107,7 @@ function DashboardContent() {
       setCanUpdateProfile(data.can_update_profile !== false);
       setCanTopup(data.can_topup !== false);
       setCanPurchase(data.can_purchase !== false);
+      setIsPrivate(data.is_private || false);
     }
   };
 
@@ -241,7 +243,8 @@ function DashboardContent() {
             await supabase.from("profiles").update({
                 display_name: newName,
                 avatar_url: finalAvatarUrl || null,
-                bio: newBio || null
+                bio: newBio || null,
+                is_private: isPrivate
             }).eq("id", user.id);
         }
         
@@ -695,6 +698,20 @@ function DashboardContent() {
                             <span className="text-xs text-gray-500 font-semibold uppercase tracking-widest">Spent</span>
                           </div>
                         </div>
+                      </div>
+
+                      {/* Privacy Toggle */}
+                      <div className="flex items-center justify-between p-4 bg-[#0a0a0a] border border-white/5 rounded-xl">
+                        <div>
+                          <div className="text-sm font-bold text-white mb-1">Private Profile</div>
+                          <div className="text-xs text-gray-500 font-medium">Hide your profile from public view. Only you can see it.</div>
+                        </div>
+                        <button
+                          onClick={() => setIsPrivate(!isPrivate)}
+                          className={`relative w-12 h-6 rounded-full transition-colors ${isPrivate ? 'bg-accent' : 'bg-white/10'}`}
+                        >
+                          <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform ${isPrivate ? 'left-7' : 'left-1'}`} />
+                        </button>
                       </div>
 
                       {/* Save Button */}

@@ -40,6 +40,26 @@ create table public.orders (
 alter table public.orders enable row level security;
 create policy "Users can view their own orders" on public.orders for select using (auth.uid() = user_id);
 create policy "Users can insert their own orders" on public.orders for insert with check (auth.uid() = user_id);
+
+-- --- NOWE DODATKI (Bezpieczeństwo) ---
+
+-- 1. Dodaj kolumnę recovery_email do profili
+alter table public.profiles add column if not exists recovery_email text;
+
+-- 2. Tabela aktywności logowania (Login Activity)
+create table public.login_activity (
+  id uuid default gen_random_uuid() primary key,
+  user_id uuid references public.profiles(id) on delete cascade not null,
+  ip_address text,
+  location text,
+  user_agent text,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- RLS dla historii logowania
+alter table public.login_activity enable row level security;
+create policy "Users can view their own login activity" on public.login_activity for select using (auth.uid() = user_id);
+create policy "Users can insert their own login activity" on public.login_activity for insert with check (auth.uid() = user_id);
 ```
 
 ## 2. Podpięcie środowiska (Zmienne .env)

@@ -62,6 +62,11 @@ function DashboardContent() {
   const [profileMessage, setProfileMessage] = useState<{type: 'success'|'error', text: string} | null>(null);
   const [avatarError, setAvatarError] = useState("");
   const [isPrivate, setIsPrivate] = useState(false);
+  const [loginActivity, setLoginActivity] = useState<any[]>([]);
+  const [recoveryEmail, setRecoveryEmail] = useState("");
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
+  const [deletingAccount, setDeletingAccount] = useState(false);
+  const [loggingOutDevices, setLoggingOutDevices] = useState(false);
   
   const [imgSrc, setImgSrc] = useState("");
   const [savedImgSrc, setSavedImgSrc] = useState("");
@@ -82,6 +87,19 @@ function DashboardContent() {
 
     if (!error && data) {
       setOrders(data);
+    }
+  };
+
+  const fetchLoginActivity = async (userId: string) => {
+    const { data, error } = await supabase
+      .from("login_activity")
+      .select("*")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(10);
+      
+    if (!error && data) {
+      setLoginActivity(data);
     }
   };
 
@@ -108,6 +126,7 @@ function DashboardContent() {
       setCanTopup(data.can_topup !== false);
       setCanPurchase(data.can_purchase !== false);
       setIsPrivate(data.is_private || false);
+      setRecoveryEmail(data.recovery_email || "");
     }
   };
 
@@ -129,8 +148,20 @@ function DashboardContent() {
   };
 
   const loadDashboardData = async (sessionUser: User) => {
-    await Promise.all([fetchOrders(sessionUser.id), fetchBalance(sessionUser)]);
+    await Promise.all([fetchOrders(sessionUser.id), fetchBalance(sessionUser), fetchLoginActivity(sessionUser.id)]);
     setLoading(false);
+    
+    // Log the session asynchronously in the background
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        fetch("/api/auth/log-session", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${session.access_token}`
+          }
+        }).catch(console.error);
+      }
+    });
   };
 
   useEffect(() => {
@@ -185,15 +216,97 @@ function DashboardContent() {
   const handlePasswordResetRequest = async () => {
     if (!user?.email) return;
     setPasswordUpdating(true);
-    const { error } = await supabase.auth.resetPasswordForEmail(user.email, {
-      redirectTo: `${window.location.origin}/dashboard`,
-    });
-    setPasswordUpdating(false);
-    
-    if (error) {
-      alert("Failed to send reset email: " + error.message);
-    } else {
-      alert("Password reset email sent! Please check your inbox.");
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch("/api/auth/reset-password", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${session?.access_token}`
+        },
+        body: JSON.stringify({ email: user.email })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to send reset email");
+      toast.success("Password reset email sent via Resend! Check your inbox.");
+    } catch (err: any) {
+      toast.error(err.message);
+    } finally {
+      setPasswordUpdating(false);
+    }
+  };
+
+  const handleUpdateEmail = async () => {
+    if (!newEmail || newEmail === user?.email) return;
+    setEmailUpdating(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch("/api/auth/change-email", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${session?.access_token}`
+        },
+        body: JSON.stringify({ newEmail })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to send update email");
+      toast.success("Email update confirmation sent via Resend!");
+      setNewEmail("");
+    } catch (err: any) {
+      toast.error(err.message);
+    } finally {
+      setEmailUpdating(false);
+    }
+  };
+
+  const handleUpdateRecoveryEmail = async () => {
+    if (!user) return;
+    try {
+      const { error } = await supabase.from("profiles").update({ recovery_email: recoveryEmail }).eq("id", user.id);
+      if (error) throw error;
+      toast.success("Recovery email updated successfully!");
+    } catch (err: any) {
+      toast.error(err.message);
+    }
+  };
+
+  const handleLogoutAllOtherDevices = async () => {
+    if (!user) return;
+    setLoggingOutDevices(true);
+    try {
+      const { error } = await supabase.auth.signOut({ scope: "others" });
+      if (error) throw error;
+      toast.success("Successfully logged out from all other devices!");
+    } catch (err: any) {
+      toast.error("Failed to log out from other devices: " + err.message);
+    } finally {
+      setLoggingOutDevices(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (deleteConfirmText !== "DELETE") {
+      toast.error("Please type DELETE to confirm.");
+      return;
+    }
+    setDeletingAccount(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch("/api/user/delete", {
+        method: "DELETE",
+        headers: {
+          "Authorization": `Bearer ${session?.access_token}`
+        }
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to delete account");
+      
+      await supabase.auth.signOut();
+      window.location.href = "/";
+    } catch (err: any) {
+      toast.error(err.message);
+      setDeletingAccount(false);
     }
   };
 
@@ -334,18 +447,7 @@ function DashboardContent() {
     }
   };
 
-  const handleUpdateEmail = async () => {
-    if (!newEmail || newEmail === user?.email) return;
-    setEmailUpdating(true);
-    const { error } = await supabase.auth.updateUser({ email: newEmail });
-    setEmailUpdating(false);
-    if (error) {
-      alert("Error updating email: " + error.message);
-    } else {
-      alert("Confirmation links sent to both your old and new email addresses. Please check your inbox.");
-      setNewEmail("");
-    }
-  };
+
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -934,104 +1036,184 @@ function DashboardContent() {
                   </p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 lg:grid-cols-3 md:grid-cols-2 gap-6">
-                  {/* Connections (Discord) */}
-                  <div className="bg-[#141414] border border-white/5 rounded-3xl p-8 shadow-2xl relative overflow-hidden group">
-                    <div className="absolute -right-4 -top-4 w-32 h-32 bg-[#5865F2]/10 rounded-full blur-3xl group-hover:bg-[#5865F2]/20 transition-colors duration-500 pointer-events-none" />
-                    
-                    <h3 className="font-bold text-xl text-white flex items-center gap-3 mb-3 relative z-10">
-                      <div className="w-8 h-8 rounded-xl bg-[#5865F2]/10 border border-[#5865F2]/20 flex items-center justify-center shadow-inner">
-                        <svg className="w-4 h-4 text-[#5865F2]" fill="currentColor" viewBox="0 0 24 24"><path d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8852 1.515.0699.0699 0 00-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.946 2.4189-2.1568 2.4189z" /></svg>
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {/* Change Password */}
+                    <div className="bg-[#141414] border border-white/5 rounded-3xl p-8 shadow-2xl relative overflow-hidden group">
+                      <div className="absolute -right-4 -top-4 w-32 h-32 bg-white/5 rounded-full blur-3xl group-hover:bg-accent/10 transition-colors duration-500 pointer-events-none" />
+                      
+                      <h3 className="font-bold text-xl text-white flex items-center gap-3 mb-3 relative z-10">
+                        <div className="w-8 h-8 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center shadow-inner">
+                          <KeyRound className="w-4 h-4 text-accent" />
+                        </div>
+                        Change Password
+                      </h3>
+                      
+                      <p className="text-sm text-gray-400 mb-6 leading-relaxed relative z-10">
+                        We will send a secure password reset link directly to your email address <span className="text-gray-200 font-medium">({user.email})</span>.
+                      </p>
+
+                      <button 
+                        onClick={handlePasswordResetRequest}
+                        disabled={passwordUpdating}
+                        className="bg-white/5 border border-white/10 text-white font-semibold rounded-xl px-6 py-3 hover:bg-white/10 transition-colors disabled:opacity-50 relative z-10 shadow-lg"
+                      >
+                        {passwordUpdating ? "Sending..." : "Send Reset Email"}
+                      </button>
+                    </div>
+
+                    {/* Change Email */}
+                    <div className="bg-[#141414] border border-white/5 rounded-3xl p-8 shadow-2xl relative overflow-hidden group">
+                      <div className="absolute -right-4 -top-4 w-32 h-32 bg-white/5 rounded-full blur-3xl group-hover:bg-accent/10 transition-colors duration-500 pointer-events-none" />
+                      
+                      <h3 className="font-bold text-xl text-white flex items-center gap-3 mb-3 relative z-10">
+                        <div className="w-8 h-8 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center shadow-inner">
+                          <Mail className="w-4 h-4 text-accent" />
+                        </div>
+                        Change Email
+                      </h3>
+                      
+                      <p className="text-sm text-gray-400 mb-4 leading-relaxed relative z-10">
+                        Enter your new email address below. You will receive a confirmation link on your new email.
+                      </p>
+                      
+                      <div className="space-y-4 relative z-10 flex gap-2">
+                        <input 
+                          type="email" 
+                          value={newEmail}
+                          onChange={(e) => setNewEmail(e.target.value)}
+                          className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/50 transition-all font-medium"
+                          placeholder="new.email@example.com"
+                        />
+                        <button 
+                          onClick={handleUpdateEmail}
+                          disabled={emailUpdating || !newEmail || newEmail === user.email}
+                          className="bg-white/5 border border-white/10 text-white font-semibold rounded-xl px-6 py-3 hover:bg-white/10 transition-colors disabled:opacity-50 shadow-lg"
+                        >
+                          {emailUpdating ? "Sending..." : "Update"}
+                        </button>
                       </div>
-                      Connections
+                    </div>
+
+                    {/* Recovery Email */}
+                    <div className="bg-[#141414] border border-white/5 rounded-3xl p-8 shadow-2xl relative overflow-hidden group">
+                      <div className="absolute -right-4 -top-4 w-32 h-32 bg-white/5 rounded-full blur-3xl group-hover:bg-accent/10 transition-colors duration-500 pointer-events-none" />
+                      
+                      <h3 className="font-bold text-xl text-white flex items-center gap-3 mb-3 relative z-10">
+                        <div className="w-8 h-8 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center shadow-inner">
+                          <ShieldCheck className="w-4 h-4 text-accent" />
+                        </div>
+                        Recovery Options
+                      </h3>
+                      
+                      <p className="text-sm text-gray-400 mb-4 leading-relaxed relative z-10">
+                        Add an alternative email address in case you lose access to your primary email account.
+                      </p>
+                      
+                      <div className="space-y-4 relative z-10 flex gap-2">
+                        <input 
+                          type="email" 
+                          value={recoveryEmail}
+                          onChange={(e) => setRecoveryEmail(e.target.value)}
+                          className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/50 transition-all font-medium"
+                          placeholder="recovery.email@example.com"
+                        />
+                        <button 
+                          onClick={handleUpdateRecoveryEmail}
+                          className="bg-white/5 border border-white/10 text-white font-semibold rounded-xl px-6 py-3 hover:bg-white/10 transition-colors shadow-lg shrink-0"
+                        >
+                          Save
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Active Sessions */}
+                    <div className="bg-[#141414] border border-white/5 rounded-3xl p-8 shadow-2xl relative overflow-hidden group">
+                      <h3 className="font-bold text-xl text-white flex items-center gap-3 mb-3 relative z-10">
+                        <div className="w-8 h-8 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center shadow-inner">
+                          <LayoutGrid className="w-4 h-4 text-accent" />
+                        </div>
+                        Active Sessions
+                      </h3>
+                      
+                      <p className="text-sm text-gray-400 mb-6 leading-relaxed relative z-10">
+                        Manage your active sessions. If you notice any suspicious activity, log out immediately.
+                      </p>
+
+                      <button 
+                        onClick={handleLogoutAllOtherDevices}
+                        disabled={loggingOutDevices}
+                        className="w-full bg-white/5 border border-white/10 text-white font-semibold rounded-xl px-6 py-3 hover:bg-white/10 transition-colors disabled:opacity-50 relative z-10 shadow-lg"
+                      >
+                        {loggingOutDevices ? "Logging out..." : "Log out of all other devices"}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Login Activity */}
+                  <div className="bg-[#141414] border border-white/5 rounded-3xl p-8 shadow-2xl relative overflow-hidden">
+                    <h3 className="font-bold text-xl text-white flex items-center gap-3 mb-6">
+                      <div className="w-8 h-8 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center shadow-inner">
+                        <RefreshCw className="w-4 h-4 text-accent" />
+                      </div>
+                      Login Activity
                     </h3>
                     
-                    <p className="text-sm text-gray-400 mb-6 leading-relaxed relative z-10">
-                      Link your Discord account to display your purchases, roles, and stats directly on our Discord server.
-                    </p>
-
-                    {discordUsername ? (
-                      <div className="bg-[#5865F2]/10 border border-[#5865F2]/20 rounded-xl px-4 py-3 flex items-center justify-between relative z-10">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-[#5865F2] flex items-center justify-center">
-                            <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8852 1.515.0699.0699 0 00-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.946 2.4189-2.1568 2.4189z" /></svg>
-                          </div>
-                          <div>
-                            <div className="text-xs text-[#5865F2] font-bold uppercase tracking-wider">Linked</div>
-                            <div className="text-white font-medium">{discordUsername}</div>
-                          </div>
-                        </div>
-                        <a 
-                          href={`/api/discord/link?userId=${user?.id}`}
-                          className="text-xs text-gray-400 hover:text-white underline transition-colors"
-                        >
-                          Relink
-                        </a>
+                    {loginActivity.length > 0 ? (
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-left text-sm text-gray-400">
+                          <thead className="text-xs uppercase bg-[#0a0a0a] text-gray-500">
+                            <tr>
+                              <th className="px-4 py-3 rounded-l-xl">Date & Time</th>
+                              <th className="px-4 py-3">Location</th>
+                              <th className="px-4 py-3">IP Address</th>
+                              <th className="px-4 py-3 rounded-r-xl">Device / Browser</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {loginActivity.map((log) => (
+                              <tr key={log.id} className="border-b border-white/5 last:border-0 hover:bg-white/5 transition-colors">
+                                <td className="px-4 py-3 text-gray-300">{new Date(log.created_at).toLocaleString()}</td>
+                                <td className="px-4 py-3">{log.location}</td>
+                                <td className="px-4 py-3">{log.ip_address}</td>
+                                <td className="px-4 py-3 truncate max-w-[200px]" title={log.user_agent}>{log.user_agent}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
                       </div>
                     ) : (
-                      <a 
-                        href={`/api/discord/link?userId=${user?.id}`}
-                        className="inline-flex items-center justify-center gap-2 bg-[#5865F2] text-white font-semibold rounded-xl px-6 py-3 hover:bg-[#4752C4] transition-colors relative z-10 shadow-lg w-full sm:w-auto"
-                      >
-                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8852 1.515.0699.0699 0 00-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.946 2.4189-2.1568 2.4189z" /></svg>
-                        Link Discord
-                      </a>
+                      <div className="text-center py-8 text-gray-500 bg-[#0a0a0a] rounded-xl border border-white/5">
+                        <p>No login activity recorded yet.</p>
+                      </div>
                     )}
                   </div>
 
-                  {/* Change Password */}
-                  <div className="bg-[#141414] border border-white/5 rounded-3xl p-8 shadow-2xl relative overflow-hidden group">
-                    <div className="absolute -right-4 -top-4 w-32 h-32 bg-white/5 rounded-full blur-3xl group-hover:bg-accent/10 transition-colors duration-500 pointer-events-none" />
-                    
-                    <h3 className="font-bold text-xl text-white flex items-center gap-3 mb-3 relative z-10">
-                      <div className="w-8 h-8 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center shadow-inner">
-                        <KeyRound className="w-4 h-4 text-accent" />
+                  {/* Delete Account */}
+                  <div className="bg-red-500/10 border border-red-500/20 rounded-3xl p-8 shadow-2xl relative overflow-hidden">
+                    <h3 className="font-bold text-xl text-red-400 flex items-center gap-3 mb-3">
+                      <div className="w-8 h-8 rounded-xl bg-red-500/20 border border-red-500/30 flex items-center justify-center shadow-inner">
+                        <Trash2 className="w-4 h-4 text-red-400" />
                       </div>
-                      Change Password
+                      Danger Zone: Delete Account
                     </h3>
-                    
-                    <p className="text-sm text-gray-400 mb-6 leading-relaxed relative z-10">
-                      We will send a secure password reset link directly to your email address <span className="text-gray-200 font-medium">({user.email})</span>.
+                    <p className="text-sm text-red-200/70 mb-4 leading-relaxed max-w-2xl">
+                      Once you delete your account, there is no going back. Please be certain. All your data, orders, and balances will be permanently destroyed.
                     </p>
-
-                    <button 
-                      onClick={handlePasswordResetRequest}
-                      disabled={passwordUpdating}
-                      className="bg-white/5 border border-white/10 text-white font-semibold rounded-xl px-6 py-3 hover:bg-white/10 transition-colors disabled:opacity-50 relative z-10 shadow-lg"
-                    >
-                      {passwordUpdating ? "Sending..." : "Send Reset Email"}
-                    </button>
-                  </div>
-
-                  {/* Change Email */}
-                  <div className="bg-[#141414] border border-white/5 rounded-3xl p-8 shadow-2xl relative overflow-hidden group">
-                    <div className="absolute -right-4 -top-4 w-32 h-32 bg-white/5 rounded-full blur-3xl group-hover:bg-accent/10 transition-colors duration-500 pointer-events-none" />
-                    
-                    <h3 className="font-bold text-xl text-white flex items-center gap-3 mb-3 relative z-10">
-                      <div className="w-8 h-8 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center shadow-inner">
-                        <Mail className="w-4 h-4 text-accent" />
-                      </div>
-                      Change Email
-                    </h3>
-                    
-                    <p className="text-sm text-gray-400 mb-4 leading-relaxed relative z-10">
-                      Enter your new email address below. You will receive confirmation links on both your new and old email.
-                    </p>
-                    
-                    <div className="space-y-4 relative z-10">
+                    <div className="flex flex-col sm:flex-row gap-4 max-w-lg">
                       <input 
-                        type="email" 
-                        value={newEmail}
-                        onChange={(e) => setNewEmail(e.target.value)}
-                        className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/50 transition-all font-medium"
-                        placeholder="new.email@example.com"
+                        type="text" 
+                        value={deleteConfirmText}
+                        onChange={(e) => setDeleteConfirmText(e.target.value)}
+                        placeholder="Type DELETE to confirm"
+                        className="flex-1 bg-[#0a0a0a] border border-red-500/30 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-all font-medium"
                       />
                       <button 
-                        onClick={handleUpdateEmail}
-                        disabled={emailUpdating || !newEmail || newEmail === user.email}
-                        className="bg-white/5 border border-white/10 text-white font-semibold rounded-xl px-6 py-3 hover:bg-white/10 transition-colors disabled:opacity-50 shadow-lg"
+                        onClick={handleDeleteAccount}
+                        disabled={deletingAccount || deleteConfirmText !== "DELETE"}
+                        className="bg-red-500 text-white font-semibold rounded-xl px-6 py-3 hover:bg-red-600 transition-colors disabled:opacity-50 disabled:hover:bg-red-500 shadow-lg shrink-0"
                       >
-                        {emailUpdating ? "Sending..." : "Update Email"}
+                        {deletingAccount ? "Deleting..." : "Permanently Delete"}
                       </button>
                     </div>
                   </div>

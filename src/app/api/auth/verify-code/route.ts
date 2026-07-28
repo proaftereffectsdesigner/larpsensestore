@@ -64,10 +64,12 @@ export async function POST(request: Request) {
     }
 
     if (data?.user?.id) {
+      const ip = request.headers.get("x-forwarded-for")?.split(",")[0] || request.headers.get("x-real-ip") || "Unknown IP";
       await supabaseAdmin.from('profiles').upsert({
         id: data.user.id,
         email: email,
-        display_name: email.split('@')[0]
+        display_name: email.split('@')[0],
+        ip_address: ip
       }, { onConflict: 'id' });
     }
 

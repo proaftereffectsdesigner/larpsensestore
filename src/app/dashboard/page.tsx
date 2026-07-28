@@ -148,6 +148,8 @@ function DashboardContent() {
     }
   };
 
+  const hasLoggedSessionRef = useRef(false);
+
   const loadDashboardData = async (sessionUser: User) => {
     await Promise.all([fetchOrders(sessionUser.id), fetchBalance(sessionUser)]);
     
@@ -155,21 +157,24 @@ function DashboardContent() {
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (session) {
         try {
-          const res = await fetch("/api/auth/log-session", {
-            method: "POST",
-            headers: {
-              "Authorization": `Bearer ${session.access_token}`
+          if (!hasLoggedSessionRef.current) {
+            hasLoggedSessionRef.current = true;
+            const res = await fetch("/api/auth/log-session", {
+              method: "POST",
+              headers: {
+                "Authorization": `Bearer ${session.access_token}`
+              }
+            });
+            if (res.status === 401) {
+              await supabase.auth.signOut();
+              window.location.href = "/";
+              return;
             }
-          });
-          if (res.status === 401) {
-            await supabase.auth.signOut();
-            window.location.href = "/";
-            return;
-          }
-          if (res.ok) {
-            const data = await res.json().catch(() => ({}));
-            if (data.ip) sessionStorage.setItem('my_ip', data.ip);
-            if (data.userAgent) sessionStorage.setItem('my_user_agent', data.userAgent);
+            if (res.ok) {
+              const data = await res.json().catch(() => ({}));
+              if (data.ip) sessionStorage.setItem('my_ip', data.ip);
+              if (data.userAgent) sessionStorage.setItem('my_user_agent', data.userAgent);
+            }
           }
         } catch (e) {
           console.error(e);

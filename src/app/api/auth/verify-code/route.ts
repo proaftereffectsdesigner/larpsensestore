@@ -63,6 +63,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
+    if (data?.user?.id) {
+      await supabaseAdmin.from('profiles').upsert({
+        id: data.user.id,
+        email: email,
+        display_name: email.split('@')[0]
+      }, { onConflict: 'id' });
+    }
+
     return NextResponse.json({ success: true, message: 'Account verified and created successfully' });
   } catch (error: any) {
     console.error('Verification error:', error);

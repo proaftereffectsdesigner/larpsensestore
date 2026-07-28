@@ -41,20 +41,47 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Could not generate email change link." }, { status: 500 });
     }
 
+    const htmlContent = `
+      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #050505; color: #ffffff; padding: 60px 20px; text-align: center;">
+        <div style="max-width: 500px; margin: 0 auto; background-color: #0f0f11; padding: 48px 40px; border-radius: 24px; border: 1px solid #27272a; box-shadow: 0 10px 40px -10px rgba(0,0,0,0.8);">
+          
+          <!-- Logo Section -->
+          <div style="margin-bottom: 40px;">
+            <img src="https://larpsensestore.com/logo.png" alt="LarpSense Logo" style="height: 60px; width: auto; object-fit: contain; margin: 0 auto; display: block;" />
+          </div>
+
+          <h2 style="color: #ffffff; font-size: 24px; font-weight: 700; margin-bottom: 16px; letter-spacing: -0.5px;">Change Email Address</h2>
+          <p style="color: #a1a1aa; font-size: 15px; line-height: 24px; margin-bottom: 40px;">
+            You recently requested to change your email address for your LarpSense Store account. Click the button below to confirm your new email address.
+          </p>
+          
+          <a href="${linkData.properties.action_link}" style="display: inline-block; padding: 14px 28px; background-color: #ffffff; color: #000000; text-decoration: none; border-radius: 12px; font-weight: 700; font-size: 15px; margin-bottom: 40px; letter-spacing: -0.2px;">Confirm New Email</a>
+          
+          <div style="background-color: rgba(255, 255, 255, 0.03); border-radius: 12px; padding: 16px; margin-bottom: 32px;">
+            <p style="color: #71717a; font-size: 13px; margin: 0;">
+              If you didn't request this email change, you can safely ignore this email.
+            </p>
+          </div>
+
+          <hr style="border: 0; border-top: 1px solid #27272a; margin-bottom: 32px;" />
+          
+          <!-- Footer -->
+          <p style="color: #52525b; font-size: 12px; margin: 0 0 8px 0;">
+            © ${new Date().getFullYear()} LarpSense. All rights reserved.
+          </p>
+          <p style="color: #52525b; font-size: 12px; margin: 0;">
+            <a href="https://larpsensestore.com" style="color: #3b82f6; text-decoration: none;">larpsensestore.com</a> • <a href="mailto:support@larpsensestore.com" style="color: #52525b; text-decoration: underline;">Contact Support</a>
+          </p>
+        </div>
+      </div>
+    `;
+
     // Send email via Resend to the new email address
     const { error: sendError } = await resend.emails.send({
-      from: `LarpSense Store <${resendFromEmail}>`,
-      to: [newEmail],
+      from: 'LarpSense NFA <noreply@larpsensestore.com>',
+      to: newEmail,
       subject: "Confirm your new email address",
-      html: `
-        <div style="font-family: sans-serif; max-w: 600px; margin: 0 auto; padding: 20px; background-color: #0a0a0a; color: #fff; border-radius: 12px; border: 1px solid #333;">
-          <h2 style="color: #10b981; margin-bottom: 20px;">LarpSense Store - Email Change</h2>
-          <p style="color: #ccc; font-size: 16px; line-height: 1.5;">You recently requested to change your email address for your LarpSense Store account.</p>
-          <p style="color: #ccc; font-size: 16px; line-height: 1.5;">Click the button below to confirm your new email address.</p>
-          <a href="${linkData.properties.action_link}" style="display: inline-block; padding: 12px 24px; background-color: #10b981; color: #fff; text-decoration: none; border-radius: 8px; font-weight: bold; margin: 20px 0;">Confirm New Email</a>
-          <p style="color: #888; font-size: 14px; line-height: 1.5;">If you did not request this, please ignore this email or contact support.</p>
-        </div>
-      `
+      html: htmlContent
     });
 
     if (sendError) {

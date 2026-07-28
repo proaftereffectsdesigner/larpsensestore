@@ -18,18 +18,28 @@ export async function middleware(req: NextRequest) {
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
   // Extract the Supabase session token from cookies
-  // Supabase stores the access token in a cookie named sb-<project-ref>-auth-token
   let accessToken: string | undefined;
 
-  for (const [name, cookie] of req.cookies) {
-    if (name.startsWith("sb-") && name.endsWith("-auth-token")) {
-      const cookieValue = typeof cookie === "string" ? cookie : (cookie as any).value ?? "";
+  const allCookies = req.cookies.getAll();
+  for (const cookie of allCookies) {
+    if (cookie.name.startsWith("sb-") && cookie.name.endsWith("-auth-token")) {
+      const cookieValue = cookie.value;
       try {
-        const parsed = JSON.parse(decodeURIComponent(cookieValue));
-        accessToken = parsed?.access_token ?? parsed?.[0];
+        // The custom storage adapter might double encode or just JSON encode
+        const decoded = decodeURIComponent(cookieValue);
+        const parsed = JSON.parse(decoded);
+        accessToken = parsed?.access_token ?? parsed?.[0] ?? parsed;
       } catch {
-        // try raw value
-        accessToken = cookieValue;
+        try {
+          const parsed = JSON.parse(cookieValue);
+          accessToken = parsed?.access_token ?? parsed?.[0] ?? parsed;
+        } catch {
+          accessToken = cookieValue;
+        }
+      }
+      // If it's a JSON object but access_token is missing, we might have accidentally parsed the raw token
+      if (typeof accessToken === 'object' && accessToken !== null) {
+        accessToken = (accessToken as any).access_token;
       }
       break;
     }

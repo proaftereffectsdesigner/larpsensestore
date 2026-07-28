@@ -21,8 +21,19 @@ export async function POST(req: NextRequest) {
     }
 
     const userId = payload.sub;
-    if (!userId) {
+    if (!userId || !payload.email) {
       return NextResponse.json({ error: "Invalid token payload." }, { status: 400 });
+    }
+
+    // Check if the new password is the same as the old one by trying to sign in with it
+    const { data: signInData } = await supabaseAdmin.auth.signInWithPassword({
+      email: payload.email,
+      password: password,
+    });
+
+    if (signInData?.session) {
+      // If sign in succeeds, the new password matches the current one!
+      return NextResponse.json({ error: "New password cannot be the same as your current password." }, { status: 400 });
     }
 
     // Update the user's password using the Admin API
@@ -33,6 +44,23 @@ export async function POST(req: NextRequest) {
     if (updateError) {
       console.error("Failed to update password:", updateError);
       return NextResponse.json({ error: "Failed to update password. Please try again." }, { status: 500 });
+    }
+
+    // Log out of all devices by signing in with the new password, then calling global signout
+    const { data: newSessionData } = await supabaseAdmin.auth.signInWithPassword({
+      email: payload.email,
+      password: password,
+    });
+
+    if (newSessionData?.session) {
+      // Create a client with the new user session
+      const tempClient = createClient(supabaseUrl, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
+        global: {
+          headers: { Authorization: `Bearer ${newSessionData.session.access_token}` }
+        }
+      });
+      // Sign out of all devices globally
+      await tempClient.auth.signOut({ scope: 'global' });
     }
 
     return NextResponse.json({ success: true });

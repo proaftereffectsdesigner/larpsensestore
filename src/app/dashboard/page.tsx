@@ -1152,8 +1152,10 @@ function DashboardContent() {
                           <div className="w-2 h-2 rounded-full bg-accent animate-pulse" />
                           Current Session
                         </div>
-                        <p className="text-xs text-gray-400 break-all">
-                          Your current browser and IP address.
+                        <p className="text-xs text-gray-400">
+                          {loginActivity.length > 0 
+                            ? `${loginActivity[0].user_agent} • ${loginActivity[0].ip_address} • ${loginActivity[0].location}`
+                            : "Your current browser and IP address."}
                         </p>
                         <button 
                           onClick={async () => {

@@ -17,17 +17,34 @@ export async function POST(req: NextRequest) {
     if (userError || !user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const ip = req.headers.get("x-forwarded-for")?.split(",")[0] || req.headers.get("x-real-ip") || "Unknown IP";
-    const userAgent = req.headers.get("user-agent") || "Unknown Device";
+    
+    // Parse User Agent
+    const userAgentStr = req.headers.get("user-agent") || "";
+    let userAgent = "Unknown Device";
+    if (userAgentStr.includes("Windows")) userAgent = "Windows PC";
+    else if (userAgentStr.includes("Mac OS")) userAgent = "Mac";
+    else if (userAgentStr.includes("iPhone")) userAgent = "iPhone";
+    else if (userAgentStr.includes("iPad")) userAgent = "iPad";
+    else if (userAgentStr.includes("Android") && userAgentStr.includes("Mobile")) userAgent = "Android Phone";
+    else if (userAgentStr.includes("Android")) userAgent = "Android Tablet";
+    else if (userAgentStr.includes("Linux")) userAgent = "Linux PC";
+    else userAgent = userAgentStr.substring(0, 30); // fallback snippet
 
-    // Basic Geo-lookup using free API
+    if (userAgentStr.includes("Chrome") && !userAgentStr.includes("Edg") && !userAgentStr.includes("OPR")) userAgent += " (Chrome)";
+    else if (userAgentStr.includes("Safari") && !userAgentStr.includes("Chrome")) userAgent += " (Safari)";
+    else if (userAgentStr.includes("Firefox")) userAgent += " (Firefox)";
+    else if (userAgentStr.includes("Edg")) userAgent += " (Edge)";
+    else if (userAgentStr.includes("OPR") || userAgentStr.includes("Opera")) userAgent += " (Opera)";
+
+    // Geo-lookup using free API that allows datacenter requests (Vercel)
     let location = "Unknown Location";
     if (ip !== "Unknown IP" && ip !== "::1" && ip !== "127.0.0.1") {
       try {
-        const geoRes = await fetch(`http://ip-api.com/json/${ip}?fields=country,city`);
+        const geoRes = await fetch(`https://freeipapi.com/api/json/${ip}`);
         if (geoRes.ok) {
           const geo = await geoRes.json();
-          if (geo.city && geo.country) {
-            location = `${geo.city}, ${geo.country}`;
+          if (geo.cityName && geo.countryName) {
+            location = `${geo.cityName}, ${geo.countryName}`;
           }
         }
       } catch (err) {

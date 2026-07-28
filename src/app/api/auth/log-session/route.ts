@@ -73,7 +73,7 @@ export async function POST(req: NextRequest) {
 
     if (recentActivity && recentActivity.action === action) {
       // Already logged this state for this device recently, ignore
-      return NextResponse.json({ success: true, skipped: true });
+      return NextResponse.json({ success: true, skipped: true, ip, userAgent });
     }
 
     const { error: insertError } = await supabaseAdmin.from("login_activity").insert({
@@ -89,7 +89,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Failed to log" }, { status: 500 });
     }
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, ip, userAgent });
   } catch (err: any) {
     console.error("Log session error", err);
     return NextResponse.json({ error: "Internal error" }, { status: 500 });

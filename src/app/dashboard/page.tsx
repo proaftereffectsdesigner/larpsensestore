@@ -155,12 +155,22 @@ function DashboardContent() {
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (session) {
         try {
-          await fetch("/api/auth/log-session", {
+          const res = await fetch("/api/auth/log-session", {
             method: "POST",
             headers: {
               "Authorization": `Bearer ${session.access_token}`
             }
           });
+          if (res.status === 401) {
+            await supabase.auth.signOut();
+            window.location.href = "/";
+            return;
+          }
+          if (res.ok) {
+            const data = await res.json().catch(() => ({}));
+            if (data.ip) sessionStorage.setItem('my_ip', data.ip);
+            if (data.userAgent) sessionStorage.setItem('my_user_agent', data.userAgent);
+          }
         } catch (e) {
           console.error(e);
         }
@@ -305,6 +315,14 @@ function DashboardContent() {
             action: 'logout'
          });
       }
+      
+      // Broadcast force logout to other tabs
+      const myDeviceId = sessionStorage.getItem('device_id');
+      await supabase.channel('online_users').send({
+        type: 'broadcast',
+        event: 'force_logout',
+        payload: { scope: 'others', userId: user.id, exceptDeviceId: myDeviceId }
+      });
       
       await fetchLoginActivity(user.id);
       toast.success("Successfully logged out from all other devices!");
@@ -1291,6 +1309,14 @@ function DashboardContent() {
                                           user_agent: session.user_agent,
                                           action: 'logout'
                                         });
+                                        
+                                        // Broadcast force logout to that specific device
+                                        await supabase.channel('online_users').send({
+                                          type: 'broadcast',
+                                          event: 'force_logout',
+                                          payload: { scope: 'device', userId: user.id, ipAddress: session.ip_address, userAgent: session.user_agent }
+                                        });
+                                        
                                         fetchLoginActivity(user.id);
                                       }
                                     }}

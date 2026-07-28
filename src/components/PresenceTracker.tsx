@@ -20,6 +20,10 @@ export default function PresenceTracker({ children }: { children?: React.ReactNo
     let channel: ReturnType<typeof supabase.channel>;
 
     const initPresence = async () => {
+      if (typeof window !== 'undefined' && !sessionStorage.getItem('device_id')) {
+        sessionStorage.setItem('device_id', Math.random().toString(36).substring(2));
+      }
+      
       const { data: { session } } = await supabase.auth.getSession();
 
       // Track instant online status via WebSockets
@@ -39,6 +43,27 @@ export default function PresenceTracker({ children }: { children?: React.ReactNo
       channel.subscribe(async (status) => {
         if (status === 'SUBSCRIBED' && session) {
           await channel.track({ online_at: new Date().toISOString() });
+        }
+      });
+      
+      // Listen for force_logout events
+      channel.on('broadcast', { event: 'force_logout' }, async ({ payload }) => {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session && session.user.id === payload.userId) {
+          if (payload.scope === 'others') {
+            const myDeviceId = sessionStorage.getItem('device_id');
+            if (payload.exceptDeviceId !== myDeviceId) {
+              await supabase.auth.signOut();
+              window.location.href = "/";
+            }
+          } else if (payload.scope === 'device') {
+            const myIp = sessionStorage.getItem('my_ip');
+            const myUa = sessionStorage.getItem('my_user_agent');
+            if (myIp === payload.ipAddress && myUa === payload.userAgent) {
+              await supabase.auth.signOut();
+              window.location.href = "/";
+            }
+          }
         }
       });
 

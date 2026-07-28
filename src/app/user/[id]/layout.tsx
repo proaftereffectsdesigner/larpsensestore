@@ -16,17 +16,37 @@ export async function generateMetadata(
   const resolvedParams = await params;
   const id = resolvedParams.id;
   
-  const { data: profile } = await supabase.rpc("get_public_profile", { p_id: id });
+  const { data: profile } = await supabase.from("profiles").select("*").eq("id", id).single();
   
   if (!profile) {
     return {
       title: 'LarpSense Store | Profile Not Found',
     };
   }
+
+  if (profile.is_private) {
+    return {
+      title: 'Private Profile',
+      description: 'This user has decided to keep their profile private.',
+      openGraph: {
+        title: 'Private Profile',
+        description: 'This user has decided to keep their profile private.',
+        type: 'profile',
+      },
+      twitter: {
+        card: 'summary',
+        title: 'Private Profile',
+        description: 'This user has decided to keep their profile private.',
+      }
+    };
+  }
   
   const displayName = profile.display_name || 'LarpSense Member';
-  const spent = (profile.total_spent || 0).toFixed(2);
-  const orders = profile.total_orders || 0;
+  
+  // Calculate total spent manually using admin key since we're replacing the RPC
+  const { data: ordersData } = await supabase.from("orders").select("total_price").eq("user_id", id).in("status", ["completed", "pending"]);
+  const orders = ordersData?.length || 0;
+  const spent = (ordersData?.reduce((sum, order) => sum + Number(order.total_price), 0) || 0).toFixed(2);
   
   return {
     title: `${displayName}'s LarpSense Profile`,

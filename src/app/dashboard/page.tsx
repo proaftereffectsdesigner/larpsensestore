@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { supabase } from "@/lib/supabase-client";
 import ParticlesBackground from "@/components/ParticlesBackground";
 import { User } from "@supabase/supabase-js";
-import { Copy, Search, RefreshCw, Lock, Package, KeyRound, Wallet, Plus, Eye, EyeOff, TrendingUp, Gamepad, ShoppingBag, User as UserIcon, LayoutGrid, Shield, Mail, Upload, X, Crop, Trash2, Crown, ShieldCheck, MessageSquare, Award, Syringe, FlaskConical, Ghost, Unlock, ShieldAlert, Crosshair, Gem, Zap, ExternalLink, ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
+import { Copy, Search, RefreshCw, Lock, Package, KeyRound, Wallet, Plus, Eye, EyeOff, TrendingUp, Gamepad, ShoppingBag, User as UserIcon, LayoutGrid, Shield, Mail, Upload, X, Crop, Trash2, Crown, ShieldCheck, MessageSquare, Award, Syringe, FlaskConical, Ghost, Unlock, ShieldAlert, Crosshair, Gem, Zap, ExternalLink, ArrowRight, ChevronLeft, ChevronRight, Smartphone, Monitor } from "lucide-react";
 import Cropper from 'react-easy-crop';
 import getCroppedImg from '@/lib/cropImage';
 import { products } from "@/lib/products";
@@ -1134,87 +1134,124 @@ function DashboardContent() {
                       </div>
                     </div>
 
-                    {/* Active Sessions */}
+                    {/* Login Activity (History) */}
                     <div className="bg-[#141414] border border-white/5 rounded-3xl p-8 shadow-2xl relative overflow-hidden group">
                       <h3 className="font-bold text-xl text-white flex items-center gap-3 mb-3 relative z-10">
                         <div className="w-8 h-8 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center shadow-inner">
-                          <LayoutGrid className="w-4 h-4 text-accent" />
+                          <RefreshCw className="w-4 h-4 text-accent" />
                         </div>
-                        Active Sessions
+                        Login History
                       </h3>
-                      
                       <p className="text-sm text-gray-400 mb-6 leading-relaxed relative z-10">
-                        Manage your active sessions. If you notice any suspicious activity, log out immediately.
+                        History of your recent logins and logouts.
                       </p>
-
-                      <div className="mb-6 p-4 rounded-xl border border-accent/20 bg-accent/5 flex flex-col gap-2 relative z-10">
-                        <div className="flex items-center gap-2 text-accent font-semibold text-sm">
-                          <div className="w-2 h-2 rounded-full bg-accent animate-pulse" />
-                          Current Session
-                        </div>
-                        <p className="text-xs text-gray-400">
-                          {loginActivity.length > 0 
-                            ? `${loginActivity[0].user_agent} • ${loginActivity[0].ip_address} • ${loginActivity[0].location}`
-                            : "Your current browser and IP address."}
-                        </p>
-                        <button 
-                          onClick={async () => {
-                            await supabase.auth.signOut();
-                            window.location.href = "/";
-                          }}
-                          className="mt-2 w-full bg-accent/10 border border-accent/20 text-accent font-semibold rounded-lg px-4 py-2 hover:bg-accent/20 transition-colors shadow-sm"
-                        >
-                          Log out of this device
-                        </button>
+                      
+                      <div className="space-y-3 max-h-64 overflow-y-auto pr-2 custom-scrollbar relative z-10">
+                        {loginActivity.length > 0 ? (
+                          loginActivity.map(log => (
+                            <div key={log.id} className="flex justify-between items-center text-sm border-b border-white/5 pb-3 pt-1 last:border-0 last:pb-0">
+                              <span className="text-gray-300 truncate w-32 font-medium">{log.user_agent}</span>
+                              <span className="text-gray-500 text-xs text-center flex-1">{new Date(log.created_at).toLocaleDateString()}</span>
+                              <span className={`text-xs font-bold uppercase tracking-wider ${log.action === 'logout' ? 'text-red-400' : 'text-accent'}`}>{log.action || 'login'}</span>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="text-center py-6 text-gray-500 text-sm bg-[#0a0a0a] rounded-xl border border-white/5">
+                            <p>No history found.</p>
+                            <p className="text-xs text-red-400 mt-2 font-bold">SQL SCRIPT NOT EXECUTED!</p>
+                            <p className="text-xs mt-1">Please run the login_activity script from SUPABASE_SETUP.md in your Supabase SQL Editor.</p>
+                          </div>
+                        )}
                       </div>
+                    </div>
+                  </div>
 
+                  {/* Active Sessions (HBO Style List) */}
+                  <div className="bg-[#141414] border border-white/5 rounded-3xl p-8 shadow-2xl relative overflow-hidden">
+                    <h3 className="font-bold text-xl text-white flex items-center gap-3 mb-6">
+                      <div className="w-8 h-8 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center shadow-inner">
+                        <LayoutGrid className="w-4 h-4 text-accent" />
+                      </div>
+                      Active Sessions
+                    </h3>
+                    
+                    <div className="bg-[#0a0a0a] rounded-xl border border-white/5 overflow-hidden">
+                      {loginActivity.filter(log => log.action !== 'logout').length > 0 ? (
+                        <div className="divide-y divide-white/5">
+                          {loginActivity.filter(log => log.action !== 'logout').map((session, index) => (
+                            <div key={session.id} className="p-4 flex items-center justify-between hover:bg-white/5 transition-colors group">
+                              <div className="flex items-center gap-5">
+                                <div className="text-gray-400 bg-white/5 p-3 rounded-xl border border-white/5">
+                                  {session.user_agent.toLowerCase().includes('phone') || session.user_agent.toLowerCase().includes('iphone') 
+                                    ? <Smartphone className="w-6 h-6" /> 
+                                    : <Monitor className="w-6 h-6" />}
+                                </div>
+                                <div>
+                                  <div className="font-bold text-gray-200 text-base flex items-center gap-3">
+                                    {session.user_agent} 
+                                    {index === 0 && <span className="text-[10px] bg-accent/20 text-accent px-2 py-0.5 rounded-full uppercase tracking-widest font-bold">Current</span>}
+                                  </div>
+                                  <div className="flex items-center gap-3 text-xs text-gray-500 mt-1.5">
+                                    <div className="flex items-center gap-1.5 text-gray-400">
+                                      <div className="w-4 h-4 rounded-full bg-accent/20 flex items-center justify-center overflow-hidden">
+                                        {profile?.avatar_url ? (
+                                          <img src={profile.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+                                        ) : (
+                                          <UserIcon className="w-2.5 h-2.5 text-accent" />
+                                        )}
+                                      </div>
+                                      {user?.email?.split('@')[0]}
+                                    </div>
+                                    <span>•</span>
+                                    <span>{new Date(session.created_at).toLocaleDateString()}</span>
+                                    <span>•</span>
+                                    <span className="uppercase font-medium">{session.location.split(', ').pop()}</span>
+                                  </div>
+                                </div>
+                              </div>
+                              <button 
+                                onClick={async () => {
+                                  if (index === 0) {
+                                    // Log out of current device
+                                    await fetch("/api/auth/log-session", {
+                                      method: "POST",
+                                      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}` },
+                                      body: JSON.stringify({ action: "logout" })
+                                    }).catch(() => {});
+                                    await supabase.auth.signOut();
+                                    window.location.href = "/";
+                                  } else {
+                                    // Remove this session from history visually
+                                    await supabase.from('login_activity').delete().eq('id', session.id);
+                                    fetchLoginActivity(user.id);
+                                  }
+                                }}
+                                className="text-gray-500 hover:text-red-400 transition-colors p-3 hover:bg-white/5 rounded-xl"
+                                title={index === 0 ? "Log out of current device" : "Remove session"}
+                              >
+                                <X className="w-5 h-5" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-center py-10 text-gray-500">
+                          <p className="text-lg mb-2">No active sessions found.</p>
+                          <p className="text-xs text-red-400 font-bold">SQL SCRIPT NOT EXECUTED!</p>
+                          <p className="text-xs mt-1">Please run the login_activity script from SUPABASE_SETUP.md in your Supabase SQL Editor.</p>
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className="mt-6 flex justify-end">
                       <button 
                         onClick={handleLogoutAllOtherDevices}
                         disabled={loggingOutDevices}
-                        className="w-full bg-white/5 border border-white/10 text-white font-semibold rounded-xl px-6 py-3 hover:bg-white/10 transition-colors disabled:opacity-50 relative z-10 shadow-lg"
+                        className="bg-white/5 border border-white/10 text-white font-semibold rounded-xl px-8 py-3 hover:bg-white/10 transition-colors disabled:opacity-50 shadow-lg"
                       >
                         {loggingOutDevices ? "Logging out..." : "Log out of all other devices"}
                       </button>
                     </div>
-                  </div>
-
-                  {/* Login Activity */}
-                  <div className="bg-[#141414] border border-white/5 rounded-3xl p-8 shadow-2xl relative overflow-hidden">
-                    <h3 className="font-bold text-xl text-white flex items-center gap-3 mb-6">
-                      <div className="w-8 h-8 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center shadow-inner">
-                        <RefreshCw className="w-4 h-4 text-accent" />
-                      </div>
-                      Login Activity
-                    </h3>
-                    
-                    {loginActivity.length > 0 ? (
-                      <div className="overflow-x-auto">
-                        <table className="w-full text-left text-sm text-gray-400">
-                          <thead className="text-xs uppercase bg-[#0a0a0a] text-gray-500">
-                            <tr>
-                              <th className="px-4 py-3 rounded-l-xl">Date & Time</th>
-                              <th className="px-4 py-3">Location</th>
-                              <th className="px-4 py-3">IP Address</th>
-                              <th className="px-4 py-3 rounded-r-xl">Device / Browser</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {loginActivity.map((log) => (
-                              <tr key={log.id} className="border-b border-white/5 last:border-0 hover:bg-white/5 transition-colors">
-                                <td className="px-4 py-3 text-gray-300">{new Date(log.created_at).toLocaleString()}</td>
-                                <td className="px-4 py-3">{log.location}</td>
-                                <td className="px-4 py-3">{log.ip_address}</td>
-                                <td className="px-4 py-3 truncate max-w-[200px]" title={log.user_agent}>{log.user_agent}</td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    ) : (
-                      <div className="text-center py-8 text-gray-500 bg-[#0a0a0a] rounded-xl border border-white/5">
-                        <p>No login activity recorded yet.</p>
-                      </div>
-                    )}
                   </div>
 
                   {/* Delete Account */}

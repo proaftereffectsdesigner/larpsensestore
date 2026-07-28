@@ -52,11 +52,20 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    let action = "login";
+    try {
+      if (req.method === "POST" && req.headers.get("content-type")?.includes("application/json")) {
+        const body = await req.json().catch(() => ({}));
+        if (body.action) action = body.action;
+      }
+    } catch (e) {}
+
     const { error: insertError } = await supabaseAdmin.from("login_activity").insert({
       user_id: user.id,
       ip_address: ip,
       location,
-      user_agent: userAgent
+      user_agent: userAgent,
+      action
     });
 
     if (insertError) {

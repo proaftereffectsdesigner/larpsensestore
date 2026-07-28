@@ -241,6 +241,7 @@ function DashboardContent() {
       const urlParams = new URLSearchParams(window.location.search);
       const recoveryToken = urlParams.get('confirmRecoveryToken');
       const emailToken = urlParams.get('confirmEmailToken');
+      const deleteToken = urlParams.get('confirmDeleteToken');
       
       if (recoveryToken) {
         try {
@@ -290,6 +291,29 @@ function DashboardContent() {
           }
         } catch (e: any) {
           toast.error("Error confirming email change.");
+        }
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+
+      if (deleteToken) {
+        try {
+          const { data: { session } } = await supabase.auth.getSession();
+          const res = await fetch('/api/user/delete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token}` },
+            body: JSON.stringify({ confirmDeleteToken: deleteToken })
+          });
+          const data = await res.json();
+          if (res.ok) {
+            toast.success("Account successfully deleted.");
+            await supabase.auth.signOut();
+            window.location.href = "/";
+            return;
+          } else {
+            toast.error(data.error || "Failed to confirm account deletion.");
+          }
+        } catch (e: any) {
+          toast.error("Error confirming account deletion.");
         }
         window.history.replaceState({}, document.title, window.location.pathname);
       }
@@ -416,19 +440,20 @@ function DashboardContent() {
     setDeletingAccount(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      const res = await fetch("/api/user/delete", {
-        method: "DELETE",
+      const res = await fetch("/api/auth/request-delete", {
+        method: "POST",
         headers: {
           "Authorization": `Bearer ${session?.access_token}`
         }
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to delete account");
+      if (!res.ok) throw new Error(data.error || "Failed to request account deletion");
       
-      await supabase.auth.signOut();
-      window.location.href = "/";
+      toast.success("Confirmation email sent! Please check your inbox to complete the deletion.");
+      setDeleteConfirmText("");
     } catch (err: any) {
       toast.error(err.message);
+    } finally {
       setDeletingAccount(false);
     }
   };

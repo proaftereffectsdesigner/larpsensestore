@@ -148,19 +148,26 @@ function DashboardContent() {
   };
 
   const loadDashboardData = async (sessionUser: User) => {
-    await Promise.all([fetchOrders(sessionUser.id), fetchBalance(sessionUser), fetchLoginActivity(sessionUser.id)]);
-    setLoading(false);
+    await Promise.all([fetchOrders(sessionUser.id), fetchBalance(sessionUser)]);
     
-    // Log the session asynchronously in the background
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    // Log the session asynchronously in the background, then fetch activity so it shows immediately
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (session) {
-        fetch("/api/auth/log-session", {
-          method: "POST",
-          headers: {
-            "Authorization": `Bearer ${session.access_token}`
-          }
-        }).catch(console.error);
+        try {
+          await fetch("/api/auth/log-session", {
+            method: "POST",
+            headers: {
+              "Authorization": `Bearer ${session.access_token}`
+            }
+          });
+        } catch (e) {
+          console.error(e);
+        }
+        await fetchLoginActivity(sessionUser.id);
+      } else {
+        await fetchLoginActivity(sessionUser.id);
       }
+      setLoading(false);
     });
   };
 
@@ -1139,6 +1146,25 @@ function DashboardContent() {
                       <p className="text-sm text-gray-400 mb-6 leading-relaxed relative z-10">
                         Manage your active sessions. If you notice any suspicious activity, log out immediately.
                       </p>
+
+                      <div className="mb-6 p-4 rounded-xl border border-accent/20 bg-accent/5 flex flex-col gap-2 relative z-10">
+                        <div className="flex items-center gap-2 text-accent font-semibold text-sm">
+                          <div className="w-2 h-2 rounded-full bg-accent animate-pulse" />
+                          Current Session
+                        </div>
+                        <p className="text-xs text-gray-400 break-all">
+                          Your current browser and IP address.
+                        </p>
+                        <button 
+                          onClick={async () => {
+                            await supabase.auth.signOut();
+                            window.location.href = "/";
+                          }}
+                          className="mt-2 w-full bg-accent/10 border border-accent/20 text-accent font-semibold rounded-lg px-4 py-2 hover:bg-accent/20 transition-colors shadow-sm"
+                        >
+                          Log out of this device
+                        </button>
+                      </div>
 
                       <button 
                         onClick={handleLogoutAllOtherDevices}

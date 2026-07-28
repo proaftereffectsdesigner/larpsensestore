@@ -232,16 +232,18 @@ function DashboardContent() {
   }, [isBadgesModalOpen]);
 
   useEffect(() => {
-    const confirmRecovery = async () => {
+    const confirmRecoveryAndEmail = async () => {
       const urlParams = new URLSearchParams(window.location.search);
-      const token = urlParams.get('confirmRecoveryToken');
-      if (token) {
+      const recoveryToken = urlParams.get('confirmRecoveryToken');
+      const emailToken = urlParams.get('confirmEmailToken');
+      
+      if (recoveryToken) {
         try {
           const { data: { session } } = await supabase.auth.getSession();
           const res = await fetch('/api/auth/confirm-recovery-change', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token}` },
-            body: JSON.stringify({ confirmToken: token })
+            body: JSON.stringify({ confirmToken: recoveryToken })
           });
           const data = await res.json();
           if (res.ok) {
@@ -253,13 +255,42 @@ function DashboardContent() {
         } catch (e: any) {
           toast.error("Error confirming recovery email.");
         }
-        
-        // Remove token from URL without refreshing the page
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+
+      if (emailToken) {
+        try {
+          const { data: { session } } = await supabase.auth.getSession();
+          const res = await fetch('/api/auth/confirm-email-change', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token}` },
+            body: JSON.stringify({ confirmToken: emailToken })
+          });
+          const data = await res.json();
+          if (res.ok) {
+            toast.success("Email address successfully changed! Please log in again.");
+            
+            // Force log out everyone including this device
+            const myDeviceId = sessionStorage.getItem('device_id');
+            await supabase.channel('online_users').send({
+              type: 'broadcast',
+              event: 'force_logout',
+              payload: { scope: 'others', userId: user?.id || session?.user?.id, exceptDeviceId: null }
+            });
+            await supabase.auth.signOut();
+            window.location.href = "/";
+            return;
+          } else {
+            toast.error(data.error || "Failed to confirm email change.");
+          }
+        } catch (e: any) {
+          toast.error("Error confirming email change.");
+        }
         window.history.replaceState({}, document.title, window.location.pathname);
       }
     };
-    confirmRecovery();
-  }, []);
+    confirmRecoveryAndEmail();
+  }, [user]);
 
   const handlePasswordResetRequest = async () => {
     if (!user?.email) return;

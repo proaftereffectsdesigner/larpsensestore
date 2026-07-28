@@ -26,20 +26,17 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Resend API Key is not configured." }, { status: 500 });
     }
 
-    // Generate link for the new email
-    const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
-      type: "email_change_new",
-      email: user.email!,
-      newEmail: newEmail,
-      options: {
-        redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://larpsensestore.com'}/dashboard`
+    const tokenString = crypto.randomUUID();
+
+    // Store the pending email and token in user_metadata
+    await supabaseAdmin.auth.admin.updateUserById(user.id, {
+      user_metadata: {
+        pending_email: newEmail,
+        pending_email_token: tokenString
       }
     });
 
-    if (linkError) {
-      console.error("Failed to generate link", linkError);
-      return NextResponse.json({ error: "Could not generate email change link." }, { status: 500 });
-    }
+    const actionLink = `${process.env.NEXT_PUBLIC_SITE_URL || 'https://larpsensestore.com'}/dashboard?confirmEmailToken=${tokenString}`;
 
     const htmlContent = `
       <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #050505; color: #ffffff; padding: 60px 20px; text-align: center;">
@@ -52,10 +49,10 @@ export async function POST(req: NextRequest) {
 
           <h2 style="color: #ffffff; font-size: 24px; font-weight: 700; margin-bottom: 16px; letter-spacing: -0.5px;">Change Email Address</h2>
           <p style="color: #a1a1aa; font-size: 15px; line-height: 24px; margin-bottom: 40px;">
-            You recently requested to change your email address for your LarpSense Store account. Click the button below to confirm your new email address.
+            You recently requested to change your email address to <strong>${newEmail}</strong> for your LarpSense Store account. Click the button below to confirm this change.
           </p>
           
-          <a href="${linkData.properties.action_link}" style="display: inline-block; padding: 14px 28px; background-color: #ffffff; color: #000000; text-decoration: none; border-radius: 12px; font-weight: 700; font-size: 15px; margin-bottom: 40px; letter-spacing: -0.2px;">Confirm New Email</a>
+          <a href="${actionLink}" style="display: inline-block; padding: 14px 28px; background-color: #ffffff; color: #000000; text-decoration: none; border-radius: 12px; font-weight: 700; font-size: 15px; margin-bottom: 40px; letter-spacing: -0.2px;">Confirm New Email</a>
           
           <div style="background-color: rgba(255, 255, 255, 0.03); border-radius: 12px; padding: 16px; margin-bottom: 32px;">
             <p style="color: #71717a; font-size: 13px; margin: 0;">

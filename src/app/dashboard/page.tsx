@@ -240,12 +240,13 @@ function DashboardContent() {
         if (error) throw new Error(error.message);
         
         if (user) {
-            await supabase.from("profiles").update({
+            const { error: profileError } = await supabase.from("profiles").update({
                 display_name: newName,
                 avatar_url: finalAvatarUrl || null,
                 bio: newBio || null,
                 is_private: isPrivate
             }).eq("id", user.id);
+            if (profileError) throw new Error(profileError.message);
         }
         
         if (data.user && saveVersionRef.current === currentVersion) {

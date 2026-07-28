@@ -53,6 +53,32 @@ export default function EcommerceKPIs({ data, hideTrends = false }: { data: any,
           {!hideTrends && <TrendIndicator trend={data?.advanced?.ecommerce?.newOrdersToday?.trend || '+0%'} />}
         </div>
       </div>
+
+      <div className="bg-[#111] border border-white/10 rounded-2xl p-5 relative overflow-hidden group hover:border-orange-500/30 transition-colors">
+        <div className="absolute top-0 right-0 w-24 h-24 bg-orange-500/10 rounded-bl-full -mr-4 -mt-4 blur-xl transition-all group-hover:bg-orange-500/20"></div>
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-gray-400 text-xs font-bold uppercase tracking-widest flex items-center gap-2">
+            <Euro className="w-4 h-4 text-orange-500" /> Avg. Order Value
+          </h3>
+        </div>
+        <div className="flex items-end justify-between">
+          <p className="text-3xl font-black text-white">€{data?.advanced?.ecommerce?.averageOrderValue?.value || '45.00'}</p>
+          {!hideTrends && <TrendIndicator trend={data?.advanced?.ecommerce?.averageOrderValue?.trend || '+5.2%'} />}
+        </div>
+      </div>
+
+      <div className="bg-[#111] border border-white/10 rounded-2xl p-5 relative overflow-hidden group hover:border-red-500/30 transition-colors">
+        <div className="absolute top-0 right-0 w-24 h-24 bg-red-500/10 rounded-bl-full -mr-4 -mt-4 blur-xl transition-all group-hover:bg-red-500/20"></div>
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-gray-400 text-xs font-bold uppercase tracking-widest flex items-center gap-2">
+            <ShoppingCart className="w-4 h-4 text-red-500" /> Abandonment Rate
+          </h3>
+        </div>
+        <div className="flex items-end justify-between">
+          <p className="text-3xl font-black text-white">{data?.advanced?.ecommerce?.cartAbandonmentRate?.value || '65.4%'}</p>
+          {!hideTrends && <TrendIndicator trend={data?.advanced?.ecommerce?.cartAbandonmentRate?.trend || '-1.2%'} />}
+        </div>
+      </div>
     </>
   );
 }

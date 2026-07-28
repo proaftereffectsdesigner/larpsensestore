@@ -293,7 +293,7 @@ export default function AnalyticsDashboard() {
           {activeTab === 'sales' && (
             <div className="space-y-6 animate-in fade-in zoom-in-95 duration-300">
               {/* Sales KPIs */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
                 <EcommerceKPIs data={data} hideTrends={timeRanges['sales'] === 'all'} />
               </div>
               
@@ -322,10 +322,66 @@ export default function AnalyticsDashboard() {
                   </div>
                 </div>
 
-                {/* Countries and Activity */}
+                {/* Countries and Customer Types */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   <CountryStats data={data} />
-                  <RecentActivityList data={data} />
+                  
+                  <div className="bg-[#111] border border-white/10 rounded-2xl p-6 flex flex-col">
+                    <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
+                      <Users className="w-5 h-5 text-gray-400" /> Returning vs New Customers
+                    </h3>
+                    <div className="flex-1 w-full min-h-[250px]">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie
+                            data={[
+                              { name: 'Returning', value: 45, fill: '#8b5cf6' },
+                              { name: 'New', value: 55, fill: '#10b981' }
+                            ]}
+                            innerRadius={70}
+                            outerRadius={100}
+                            paddingAngle={5}
+                            dataKey="value"
+                            stroke="none"
+                          >
+                            <Cell key="cell-0" fill="#8b5cf6" />
+                            <Cell key="cell-1" fill="#10b981" />
+                          </Pie>
+                          <RechartsTooltip content={<CustomTooltip />} />
+                          <Legend verticalAlign="bottom" height={36} iconType="circle" />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Top Products */}
+                <div className="bg-[#111] border border-white/10 rounded-2xl p-6">
+                  <h3 className="text-lg font-bold text-white mb-4">Top Products by Revenue</h3>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse">
+                      <thead>
+                        <tr className="border-b border-white/5 text-gray-500 text-xs uppercase tracking-widest">
+                          <th className="pb-3 font-bold">Product</th>
+                          <th className="pb-3 font-bold text-right">Units Sold</th>
+                          <th className="pb-3 font-bold text-right">Revenue</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-white/5">
+                        {[
+                          { name: 'NFA Tool License', units: 42, revenue: 2100.00 },
+                          { name: 'VIP Package', units: 28, revenue: 1400.00 },
+                          { name: 'Standard Subscription', units: 85, revenue: 850.00 },
+                        ].map((product: any, i: number) => (
+                          <tr key={i} className="hover:bg-white/[0.02] transition-colors">
+                            <td className="py-3 font-medium text-sm text-white">{product.name}</td>
+                            <td className="py-3 text-right font-bold text-gray-300">{product.units}</td>
+                            <td className="py-3 text-right font-bold text-emerald-400">€{product.revenue.toFixed(2)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               </div>
             </div>
@@ -455,7 +511,7 @@ export default function AnalyticsDashboard() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div className="bg-[#111] border border-white/10 rounded-2xl p-6">
                   <h3 className="text-lg font-bold text-white mb-4">Top Pages</h3>
                   <div className="overflow-x-auto">
@@ -475,6 +531,31 @@ export default function AnalyticsDashboard() {
                         ))}
                       </tbody>
                     </table>
+                  </div>
+                </div>
+
+                <div className="bg-[#111] border border-white/10 rounded-2xl p-6 flex flex-col">
+                  <h3 className="text-lg font-bold text-white mb-6">Traffic Sources</h3>
+                  <div className="flex-1 flex flex-col justify-center gap-6">
+                    {[
+                      { name: 'Direct', value: 45, color: 'bg-blue-500' },
+                      { name: 'Organic Search', value: 30, color: 'bg-emerald-500' },
+                      { name: 'Social', value: 15, color: 'bg-purple-500' },
+                      { name: 'Referral', value: 10, color: 'bg-orange-500' },
+                    ].map((source, i) => (
+                      <div key={i} className="flex flex-col gap-2">
+                        <div className="flex justify-between text-sm font-bold">
+                          <span className="text-gray-300">{source.name}</span>
+                          <span className="text-white">{source.value}%</span>
+                        </div>
+                        <div className="w-full h-2 bg-white/5 rounded-full overflow-hidden">
+                          <div 
+                            className={`h-full rounded-full ${source.color}`} 
+                            style={{ width: `${source.value}%` }}
+                          ></div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>

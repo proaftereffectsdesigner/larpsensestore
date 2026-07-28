@@ -74,6 +74,21 @@ export default function Navbar() {
   };
 
   const confirmSignOut = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+         await fetch("/api/auth/log-session", {
+           method: "POST",
+           headers: {
+             "Content-Type": "application/json",
+             "Authorization": `Bearer ${session.access_token}`
+           },
+           body: JSON.stringify({ action: "logout" })
+         });
+      }
+    } catch (e) {
+      console.error(e);
+    }
     await supabase.auth.signOut();
     setShowLogoutConfirm(false);
     window.location.reload();

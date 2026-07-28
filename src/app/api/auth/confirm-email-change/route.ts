@@ -38,6 +38,7 @@ export async function POST(req: NextRequest) {
     // Force update the email directly! This bypasses Supabase dual-confirmation.
     const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(user.id, {
       email: newEmail,
+      email_confirm: true,
       user_metadata: {
         pending_email: null,
         pending_email_token: null,

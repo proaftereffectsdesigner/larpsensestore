@@ -26,13 +26,23 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Resend API Key is not configured." }, { status: 500 });
     }
 
+    const metadata = user.user_metadata || {};
+    const lastRequest = metadata.pending_email_requested_at;
+    const now = Date.now();
+
+    if (lastRequest && (now - lastRequest) < 5 * 60 * 1000) {
+      const remainingTime = Math.ceil((5 * 60 * 1000 - (now - lastRequest)) / 1000 / 60);
+      return NextResponse.json({ error: `Please wait ${remainingTime} minutes before requesting another email change.` }, { status: 429 });
+    }
+
     const tokenString = crypto.randomUUID();
 
     // Store the pending email and token in user_metadata
     await supabaseAdmin.auth.admin.updateUserById(user.id, {
       user_metadata: {
         pending_email: newEmail,
-        pending_email_token: tokenString
+        pending_email_token: tokenString,
+        pending_email_requested_at: now
       }
     });
 

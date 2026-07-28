@@ -21,7 +21,13 @@ export async function POST(req: NextRequest) {
     const metadata = user.user_metadata || {};
     
     if (metadata.pending_recovery_token !== confirmToken) {
-      return NextResponse.json({ error: "Invalid or expired confirmation token." }, { status: 400 });
+      return NextResponse.json({ error: "Invalid confirmation token." }, { status: 400 });
+    }
+
+    const requestedAt = metadata.pending_recovery_requested_at;
+    const now = Date.now();
+    if (!requestedAt || (now - requestedAt) > 5 * 60 * 1000) {
+      return NextResponse.json({ error: "Confirmation link has expired (valid for 5 minutes)." }, { status: 400 });
     }
 
     const newRecoveryEmail = metadata.pending_recovery_email;
@@ -44,7 +50,8 @@ export async function POST(req: NextRequest) {
     await supabaseAdmin.auth.admin.updateUserById(user.id, {
       user_metadata: {
         pending_recovery_email: null,
-        pending_recovery_token: null
+        pending_recovery_token: null,
+        pending_recovery_requested_at: null
       }
     });
 

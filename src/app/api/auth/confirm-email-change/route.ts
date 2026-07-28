@@ -21,7 +21,13 @@ export async function POST(req: NextRequest) {
     const metadata = user.user_metadata || {};
     
     if (metadata.pending_email_token !== confirmToken) {
-      return NextResponse.json({ error: "Invalid or expired confirmation token." }, { status: 400 });
+      return NextResponse.json({ error: "Invalid confirmation token." }, { status: 400 });
+    }
+
+    const requestedAt = metadata.pending_email_requested_at;
+    const now = Date.now();
+    if (!requestedAt || (now - requestedAt) > 5 * 60 * 1000) {
+      return NextResponse.json({ error: "Confirmation link has expired (valid for 5 minutes)." }, { status: 400 });
     }
 
     const newEmail = metadata.pending_email;
@@ -34,7 +40,8 @@ export async function POST(req: NextRequest) {
       email: newEmail,
       user_metadata: {
         pending_email: null,
-        pending_email_token: null
+        pending_email_token: null,
+        pending_email_requested_at: null
       }
     });
 

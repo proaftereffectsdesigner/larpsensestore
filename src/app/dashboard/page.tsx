@@ -231,6 +231,36 @@ function DashboardContent() {
     return () => { document.body.style.overflow = 'unset'; };
   }, [isBadgesModalOpen]);
 
+  useEffect(() => {
+    const confirmRecovery = async () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const token = urlParams.get('confirmRecoveryToken');
+      if (token) {
+        try {
+          const { data: { session } } = await supabase.auth.getSession();
+          const res = await fetch('/api/auth/confirm-recovery-change', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token}` },
+            body: JSON.stringify({ confirmToken: token })
+          });
+          const data = await res.json();
+          if (res.ok) {
+            toast.success("Recovery email successfully updated!");
+            if (data.newEmail) setRecoveryEmail(data.newEmail);
+          } else {
+            toast.error(data.error || "Failed to confirm recovery email.");
+          }
+        } catch (e: any) {
+          toast.error("Error confirming recovery email.");
+        }
+        
+        // Remove token from URL without refreshing the page
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+    };
+    confirmRecovery();
+  }, []);
+
   const handlePasswordResetRequest = async () => {
     if (!user?.email) return;
     setPasswordUpdating(true);
@@ -279,11 +309,20 @@ function DashboardContent() {
   };
 
   const handleUpdateRecoveryEmail = async () => {
-    if (!user) return;
+    if (!user || !recoveryEmail) return;
     try {
-      const { error } = await supabase.from("profiles").update({ recovery_email: recoveryEmail }).eq("id", user.id);
-      if (error) throw error;
-      toast.success("Recovery email updated successfully!");
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch("/api/auth/request-recovery-change", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${session?.access_token}`
+        },
+        body: JSON.stringify({ newRecoveryEmail: recoveryEmail })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to send update email");
+      toast.success("Confirmation sent to your original email address!");
     } catch (err: any) {
       toast.error(err.message);
     }

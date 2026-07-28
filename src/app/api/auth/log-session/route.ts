@@ -60,6 +60,22 @@ export async function POST(req: NextRequest) {
       }
     } catch (e) {}
 
+    // Check the most recent activity for this device to prevent spamming duplicate actions (like refreshing page)
+    const { data: recentActivity } = await supabaseAdmin
+      .from("login_activity")
+      .select("action")
+      .eq("user_id", user.id)
+      .eq("ip_address", ip)
+      .eq("user_agent", userAgent)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (recentActivity && recentActivity.action === action) {
+      // Already logged this state for this device recently, ignore
+      return NextResponse.json({ success: true, skipped: true });
+    }
+
     const { error: insertError } = await supabaseAdmin.from("login_activity").insert({
       user_id: user.id,
       ip_address: ip,

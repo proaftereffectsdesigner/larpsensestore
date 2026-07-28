@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
       email: user.email!,
       newEmail: newEmail,
       options: {
-        redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/dashboard`
+        redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://larpsensestore.com'}/dashboard`
       }
     });
 

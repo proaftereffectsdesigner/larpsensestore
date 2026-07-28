@@ -51,7 +51,9 @@ export async function POST(req: NextRequest) {
     if (targetUser) {
       // Create a JWT valid for 5 minutes
       const token = jwt.sign({ sub: targetUser.id, email: targetUser.email }, JWT_SECRET, { expiresIn: '5m' });
-      const resetLink = `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/reset-password?token=${token}`;
+      // Use NEXT_PUBLIC_SITE_URL, fallback to larpsensestore.com for production
+      const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://larpsensestore.com';
+      const resetLink = `${baseUrl}/reset-password?token=${token}`;
 
       const htmlContent = `
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #050505; color: #ffffff; padding: 60px 20px; text-align: center;">

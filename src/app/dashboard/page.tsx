@@ -285,6 +285,28 @@ function DashboardContent() {
     try {
       const { error } = await supabase.auth.signOut({ scope: "others" });
       if (error) throw error;
+      
+      // Visually log out other devices by inserting 'logout' records for them
+      const map = new Map();
+      loginActivity.forEach(log => {
+        const key = `${log.user_agent}-${log.ip_address}`;
+        if (!map.has(key)) map.set(key, log);
+      });
+      const active = Array.from(map.values()).filter(log => log.action !== 'logout');
+      
+      // All except index 0 (which is current)
+      const others = active.slice(1);
+      for (const s of others) {
+         await supabase.from('login_activity').insert({
+            user_id: user.id,
+            ip_address: s.ip_address,
+            location: s.location,
+            user_agent: s.user_agent,
+            action: 'logout'
+         });
+      }
+      
+      await fetchLoginActivity(user.id);
       toast.success("Successfully logged out from all other devices!");
     } catch (err: any) {
       toast.error("Failed to log out from other devices: " + err.message);
@@ -1261,14 +1283,21 @@ function DashboardContent() {
                                         await supabase.auth.signOut();
                                         window.location.href = "/";
                                       } else {
-                                        await supabase.from('login_activity').delete().eq('id', session.id);
+                                        // Insert logout record for this specific device
+                                        await supabase.from('login_activity').insert({
+                                          user_id: user.id,
+                                          ip_address: session.ip_address,
+                                          location: session.location,
+                                          user_agent: session.user_agent,
+                                          action: 'logout'
+                                        });
                                         fetchLoginActivity(user.id);
                                       }
                                     }}
-                                    className="text-gray-500 hover:text-red-400 transition-colors p-3 hover:bg-white/5 rounded-xl"
-                                    title={index === 0 ? "Log out of current device" : "Remove session"}
+                                    className="text-xs font-bold uppercase tracking-wider bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white transition-colors px-4 py-2 rounded-lg border border-white/10 shrink-0"
+                                    title={index === 0 ? "Log out of current device" : "Log out of this device"}
                                   >
-                                    <X className="w-5 h-5" />
+                                    {index === 0 ? "Log out (Current)" : "Log out device"}
                                   </button>
                                 </div>
                               ))}

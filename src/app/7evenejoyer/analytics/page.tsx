@@ -97,18 +97,6 @@ export default function AnalyticsDashboard() {
     fetchAnalytics();
   }, [activeTab, timeRanges, customDateRanges]);
 
-  // Simulate real-time fluctuations
-  useEffect(() => {
-    if (!data) return;
-    const interval = setInterval(() => {
-      setRealtimeUsers(prev => {
-        const change = Math.random() > 0.5 ? 1 : -1;
-        const next = prev + change;
-        return next > 0 ? next : 1;
-      });
-    }, 4500);
-    return () => clearInterval(interval);
-  }, [data]);
 
   const handleExportCSV = async () => {
     if (!data) return;

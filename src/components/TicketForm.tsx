@@ -127,23 +127,25 @@ export default function TicketForm() {
         </div>
 
         {/* Order Selection */}
-        <div>
-          <label className="block text-xs font-bold tracking-widest text-gray-500 mb-2 uppercase flex items-center gap-2">
-            <ShoppingBag className="w-3 h-3" /> Related Order (Optional)
-          </label>
-          <select 
-            value={orderId}
-            onChange={(e) => setOrderId(e.target.value)}
-            className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/50 transition-all appearance-none"
-          >
-            <option value="">No specific order (or order not listed)</option>
-            {orders.map(o => (
-              <option key={o.id} value={o.id}>
-                Order #{o.id.split('-')[0]} - {new Date(o.created_at).toLocaleDateString()} ({o.status})
-              </option>
-            ))}
-          </select>
-        </div>
+        {(issueType === 'payment_issue' || issueType === 'missing_delivery' || issueType === 'invalid_token') && (
+          <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+            <label className="block text-xs font-bold tracking-widest text-gray-500 mb-2 uppercase flex items-center gap-2">
+              <ShoppingBag className="w-3 h-3" /> Related Order (Optional)
+            </label>
+            <select 
+              value={orderId}
+              onChange={(e) => setOrderId(e.target.value)}
+              className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/50 transition-all appearance-none"
+            >
+              <option value="">No specific order (or order not listed)</option>
+              {orders.map(o => (
+                <option key={o.id} value={o.id}>
+                  Order #{o.id.split('-')[0]} - {new Date(o.created_at).toLocaleDateString()} ({o.status})
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
 
         {/* Extra Information based on Issue Type */}
         {(issueType === 'payment_issue' || issueType === 'missing_delivery' || issueType === 'invalid_token') && (

@@ -102,7 +102,7 @@ export default function TicketForm() {
         Open a Support Ticket
       </h2>
       <p className="text-gray-400 mb-8 text-sm leading-relaxed">
-        To receive fast support, you <strong className="text-white">must link your Discord to your account</strong>. We do not provide support via email. If you prefer not to link your Discord account, you must join our server and create a ticket directly there, otherwise your support channel will not be created.
+        To receive fast support, you <strong className="text-white">must link your Discord to your account</strong>. We do not provide support via email — all communication regarding your ticket will happen exclusively on our Discord server. If you prefer not to link your Discord account, you must join our server and create a ticket directly there, otherwise your support channel will not be created.
       </p>
 
       <form onSubmit={handleSubmit} className="space-y-6">

@@ -19,7 +19,7 @@ export default function SupportPage() {
             Support Center
           </h1>
           <p className="text-gray-400 text-lg max-w-2xl mx-auto leading-relaxed">
-            Need help with your purchase? Check our FAQ below or reach out to our team directly. We're here to help.
+            Need help with your purchase? Check our FAQ page or reach out to our team directly. We're here to help.
           </p>
         </div>
 

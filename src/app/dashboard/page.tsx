@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { supabase } from "@/lib/supabase-client";
 import ParticlesBackground from "@/components/ParticlesBackground";
 import { User } from "@supabase/supabase-js";
-import { Copy, Search, RefreshCw, Lock, Package, KeyRound, Wallet, Plus, Eye, EyeOff, TrendingUp, Gamepad, ShoppingBag, User as UserIcon, LayoutGrid, Shield, Mail, Upload, X, Crop, Trash2, Crown, ShieldCheck, MessageSquare, Award, Gem, Zap, ExternalLink, ArrowRight, ChevronLeft, ChevronRight, Smartphone, Monitor, UserPlus, CalendarCheck, Medal, Coins } from "lucide-react";
+import { Copy, Search, RefreshCw, Lock, Package, KeyRound, Wallet, Plus, Eye, EyeOff, TrendingUp, Gamepad, ShoppingBag, User as UserIcon, LayoutGrid, Shield, Mail, Upload, X, Crop, Trash2, Crown, ShieldCheck, MessageSquare, Award, Gem, Zap, ExternalLink, ArrowRight, ChevronLeft, ChevronRight, Smartphone, Monitor, UserPlus, CalendarCheck, Medal, Coins, ShieldAlert } from "lucide-react";
 import Cropper from 'react-easy-crop';
 import getCroppedImg from '@/lib/cropImage';
 import { products } from "@/lib/products";

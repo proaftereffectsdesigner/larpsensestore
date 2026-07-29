@@ -46,9 +46,6 @@ export default function TicketForm() {
     setSubmitting(true);
     
     // Append extra info to description
-    let finalDescription = description;
-    if (paymentMethod) finalDescription = `**Payment Method:** ${paymentMethod}\n` + finalDescription;
-    if (transactionId) finalDescription = `**Transaction ID:** ${transactionId}\n` + finalDescription;
     try {
       const { data: { session } } = await supabase.auth.getSession();
       const res = await fetch("/api/tickets", {
@@ -60,7 +57,9 @@ export default function TicketForm() {
         body: JSON.stringify({
           issueType,
           orderId: orderId || null,
-          description: finalDescription
+          description,
+          transactionId,
+          paymentMethod
         })
       });
 

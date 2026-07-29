@@ -15,7 +15,8 @@ import {
   Box, 
   Play,
   Check,
-  ArrowLeft
+  ArrowLeft,
+  Package
 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";

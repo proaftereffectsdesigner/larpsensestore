@@ -4,7 +4,7 @@ import { createClient } from '@supabase/supabase-js';
 
 export async function POST(req: Request) {
   try {
-    const { issueType, orderId, description } = await req.json();
+    const { issueType, orderId, description, transactionId, paymentMethod } = await req.json();
     const token = req.headers.get("authorization")?.replace("Bearer ", "");
 
     if (!token || !issueType || !description) {
@@ -42,6 +42,10 @@ export async function POST(req: Request) {
       .eq('id', user.id)
       .single();
 
+    let dbDescription = description;
+    if (paymentMethod) dbDescription = `Payment Method: ${paymentMethod}\n` + dbDescription;
+    if (transactionId) dbDescription = `Transaction ID: ${transactionId}\n` + dbDescription;
+
     // Create the ticket in Supabase
     const { data: ticketData, error: ticketError } = await authenticatedSupabase
       .from('tickets')
@@ -49,7 +53,7 @@ export async function POST(req: Request) {
         user_id: user.id,
         order_id: orderId || null,
         issue_type: issueType,
-        description: description,
+        description: dbDescription,
         status: 'open'
       })
       .select()
@@ -119,7 +123,9 @@ export async function POST(req: Request) {
                 color: 0x3498db,
                 fields: [
                   { name: 'User Email', value: profile?.email || user.email || 'Unknown', inline: true },
-                  { name: 'Order ID', value: orderId ? orderId.split('-')[0] : 'N/A', inline: true },
+                  { name: 'Order ID', value: orderId || 'N/A', inline: true },
+                  ...(transactionId ? [{ name: 'Transaction ID', value: transactionId, inline: false }] : []),
+                  ...(paymentMethod ? [{ name: 'Payment Method', value: paymentMethod, inline: true }] : []),
                   { name: 'Description', value: description, inline: false }
                 ],
                 footer: { text: `Ticket #${ticketData.ticket_number} • Delete this channel to close` }

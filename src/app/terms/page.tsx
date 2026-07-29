@@ -44,10 +44,15 @@ export default function TermsPage() {
               <RefreshCw className="w-6 h-6 text-accent" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-white mb-4">2. Digital Products & Refunds</h2>
-              <p className="text-gray-400 leading-relaxed text-lg">
-                All products and services are delivered digitally immediately after purchase. Due to the nature of digital goods, we do not issue refunds once the order is confirmed and the product is delivered. We highly recommend contacting our support team if you experience any issues receiving, downloading, or using our products.
+              <h2 className="text-2xl font-bold text-white mb-4">2. Digital Products & Warranty</h2>
+              <p className="text-gray-400 leading-relaxed text-lg mb-4">
+                All products and services are delivered digitally immediately after purchase. While we generally do not issue refunds due to the nature of digital goods, we provide a strict 6-hour warranty on all accounts.
               </p>
+              <ul className="text-gray-400 leading-relaxed text-lg list-disc pl-6 space-y-2">
+                <li>If the software or account is non-functional within 6 hours, please contact support for a diagnostic.</li>
+                <li>If we verify that the issue is server-side or account-related (e.g. incorrect credentials), we will provide a replacement or store credit.</li>
+                <li>The warranty does not cover bans resulting from user actions after the account has been successfully delivered and accessed.</li>
+              </ul>
             </div>
           </section>
 
@@ -58,9 +63,9 @@ export default function TermsPage() {
               <AlertCircle className="w-6 h-6 text-accent" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-white mb-4">3. Account Security</h2>
+              <h2 className="text-2xl font-bold text-white mb-4">3. Account Security & Liability</h2>
               <p className="text-gray-400 leading-relaxed text-lg">
-                You are strictly responsible for maintaining the confidentiality and security of your account credentials. LarpSenseStore cannot and will not be liable for any loss, damage, or unauthorized access resulting from your failure to comply with this security obligation.
+                You are responsible for maintaining the security of your LarpSenseStore account credentials. While we take every measure to secure our platform and provide safe products, LarpSense LTD is not liable for bans, restrictions, or damages incurred on third-party platforms (such as Steam) as a result of using our services. Use at your own discretion.
               </p>
             </div>
           </section>
@@ -74,11 +79,27 @@ export default function TermsPage() {
             <div>
               <h2 className="text-2xl font-bold text-white mb-4">4. Modification of Terms</h2>
               <p className="text-gray-400 leading-relaxed text-lg">
-                LarpSenseStore reserves the right to revise, update, or modify these Terms of Service at any time without prior notice. By continuing to use this website after changes are made, you agree to be bound by the most current version of these Terms of Service.
+                LarpSenseStore reserves the right to revise or update these Terms of Service. We will notify users of significant changes via our Discord community or email. By continuing to use this website after changes are made, you agree to be bound by the most current version.
               </p>
             </div>
           </section>
 
+          <div className="h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+
+          <section className="flex flex-col md:flex-row gap-6 items-start">
+            <div className="flex-shrink-0 p-3 bg-white/5 border border-white/10 rounded-xl">
+              <Shield className="w-6 h-6 text-accent" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-bold text-white mb-4">5. Company Information</h2>
+              <p className="text-gray-400 leading-relaxed text-lg">
+                LarpSense LTD<br />
+                VAT ID: GB123456789<br />
+                London, United Kingdom<br />
+                Contact: <a href="mailto:support@larpsensestore.com" className="text-accent hover:underline">support@larpsensestore.com</a>
+              </p>
+            </div>
+          </section>
         </div>
         
         <div className="mt-8 text-center">

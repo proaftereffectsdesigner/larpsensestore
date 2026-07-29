@@ -18,7 +18,7 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-12 gap-12 lg:gap-8">
           
           {/* Logo i Nazwa */}
-          <div className="col-span-1 md:col-span-6 lg:col-span-5 flex flex-col items-start">
+          <div className="col-span-1 md:col-span-12 lg:col-span-4 flex flex-col items-start">
             <Link 
               href="/" 
               onClick={(e) => {
@@ -37,16 +37,43 @@ export default function Footer() {
                 <span className="font-light tracking-wide text-gray-500 ml-1">Store</span>
               </div>
             </Link>
-            <p className="text-gray-400 text-sm leading-relaxed max-w-sm">
+            <p className="text-gray-400 text-sm leading-relaxed max-w-sm mb-6">
               Your trusted destination for premium, instantly delivered digital accounts. Experience gaming without limits, backed by our lifetime guarantee.
             </p>
+            <div className="text-xs text-gray-500 space-y-1">
+              <p className="font-semibold text-gray-400">LarpSense LTD</p>
+              <p>VAT ID: GB123456789</p>
+              <p>London, United Kingdom</p>
+              <a href="mailto:support@larpsensestore.com" className="text-accent hover:text-white transition-colors mt-2 inline-block">support@larpsensestore.com</a>
+            </div>
           </div>
 
-          <div className="col-span-1 md:col-span-2 lg:col-span-3"></div> {/* Spacer */}
+          <div className="col-span-1 md:col-span-4 lg:col-span-2 lg:col-start-6">
+            <h3 className="text-white font-bold tracking-wider text-xs uppercase mb-6 text-gray-400">Quick Links</h3>
+            <ul className="space-y-4">
+              <li>
+                <Link href="/support" className="text-sm text-gray-400 hover:text-white transition-colors flex items-center gap-2 group">
+                  <span className="w-1.5 h-1.5 rounded-full bg-white/20 group-hover:bg-white transition-colors"></span>
+                  Support & FAQ
+                </Link>
+              </li>
+              <li>
+                <Link href="/about" className="text-sm text-gray-400 hover:text-white transition-colors flex items-center gap-2 group">
+                  <span className="w-1.5 h-1.5 rounded-full bg-white/20 group-hover:bg-white transition-colors"></span>
+                  About Us
+                </Link>
+              </li>
+              <li>
+                <a href="mailto:support@larpsensestore.com" className="text-sm text-gray-400 hover:text-white transition-colors flex items-center gap-2 group">
+                  <span className="w-1.5 h-1.5 rounded-full bg-white/20 group-hover:bg-white transition-colors"></span>
+                  Contact Us
+                </a>
+              </li>
+            </ul>
+          </div>
 
-          {/* Szybkie linki */}
-          <div className="col-span-1 md:col-span-2 lg:col-span-2">
-            <h3 className="text-white font-bold tracking-wider text-xs uppercase mb-6 text-gray-400">Legal Information</h3>
+          <div className="col-span-1 md:col-span-4 lg:col-span-2">
+            <h3 className="text-white font-bold tracking-wider text-xs uppercase mb-6 text-gray-400">Legal Info</h3>
             <ul className="space-y-4">
               <li>
                 <Link href="/terms" className="text-sm text-gray-400 hover:text-white transition-colors flex items-center gap-2 group">
@@ -63,8 +90,7 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Socials */}
-          <div className="col-span-1 md:col-span-2 lg:col-span-2">
+          <div className="col-span-1 md:col-span-4 lg:col-span-3">
             <h3 className="text-white font-bold tracking-wider text-xs uppercase mb-6 text-gray-400">Join the Community</h3>
             <a 
               href="https://discord.gg/larpsense" 

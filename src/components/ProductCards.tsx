@@ -55,24 +55,40 @@ export default function ProductCards() {
     {
       id: "prime", // Maps to /category/prime
       title: "Prime Ready",
+      desc: "Standard Prime accounts for matchmaking. No bans, instantly delivered.",
       products: primeProducts,
-      imagePlaceholder: "bg-gradient-to-br from-indigo-900/40 to-[#111]"
+      img: "/prime-bg.png"
     },
     {
       id: "premier", // Maps to /category/premier
       title: "Premier Ready",
+      desc: "Accounts ready for Premier mode. Choose your exact rating or medals.",
       products: premierProducts,
-      imagePlaceholder: "bg-gradient-to-br from-emerald-900/40 to-[#111]"
+      img: "/premier-bg.jpg"
+    },
+    {
+      id: "software", // Dummy
+      title: "Private Tools",
+      desc: "Exclusive software and private tools for advanced users. Coming soon.",
+      products: [],
+      img: "/prime-bg.png" // fallback
+    },
+    {
+      id: "configs", // Dummy
+      title: "Pro Configs",
+      desc: "Optimized configurations used by the pros. Coming soon.",
+      products: [],
+      img: "/premier-bg.jpg" // fallback
     }
   ];
 
   return (
-    <div className="w-full max-w-5xl mx-auto p-6 relative z-10" id="products" ref={containerRef}>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 max-w-4xl mx-auto">
+    <div className="w-full max-w-7xl mx-auto p-6 relative z-10" id="products" ref={containerRef}>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-full mx-auto">
         {cards.map((card, index) => {
-          const minPrice = Math.min(...card.products.map(p => p.price));
-          const maxPrice = Math.max(...card.products.map(p => p.price));
-          const priceRange = minPrice === maxPrice ? `€${minPrice.toFixed(2)}` : `€${minPrice.toFixed(2)} - €${maxPrice.toFixed(2)}`;
+          const minPrice = card.products.length > 0 ? Math.min(...card.products.map(p => p.price)) : 0;
+          const maxPrice = card.products.length > 0 ? Math.max(...card.products.map(p => p.price)) : 0;
+          const priceRange = card.products.length === 0 ? "Coming Soon" : minPrice === maxPrice ? `€${minPrice.toFixed(2)}` : `€${minPrice.toFixed(2)} - €${maxPrice.toFixed(2)}`;
           
           let totalStock = 0;
           if (stockData) {
@@ -91,10 +107,10 @@ export default function ProductCards() {
                 {/* Obrazek (Graphic Placeholder) */}
                 <div className="w-full aspect-square relative flex flex-col items-center justify-center overflow-hidden">
                   <Image 
-                    src={card.id === "prime" ? "/prime-bg.png" : "/premier-bg.jpg"} 
+                    src={card.img} 
                     alt={card.title} 
                     fill 
-                    className="object-cover transition-transform duration-700 scale-[1.15] group-hover:scale-[1.20]" 
+                    className={`object-cover transition-transform duration-700 scale-[1.15] group-hover:scale-[1.20] ${card.products.length === 0 ? 'grayscale opacity-50' : ''}`} 
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-[#1a1a1a] via-[#1a1a1a]/20 to-transparent z-10 pointer-events-none" />
                   
@@ -127,9 +143,7 @@ export default function ProductCards() {
                 <div className="px-6 pb-6 pt-2 md:px-8 md:pb-8 flex flex-col flex-1 bg-[#1a1a1a] relative z-20">
                   <h2 className="text-2xl font-bold text-white group-hover:text-white transition-colors">{card.title}</h2>
                   <p className="text-sm text-gray-400 mt-2 mb-6 line-clamp-2">
-                    {card.id === "prime" 
-                      ? "Standard Prime accounts for matchmaking. No bans, instantly delivered."
-                      : "Accounts ready for Premier mode. Choose your exact rating or medals."}
+                    {card.desc}
                   </p>
                   
                   <div className="mt-8 flex items-center justify-between border-t border-white/5 pt-6">

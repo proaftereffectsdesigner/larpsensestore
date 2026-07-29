@@ -32,8 +32,8 @@ export default function FAQ() {
       answer: "Logging in is entirely automated through our proprietary LarpSense NFA Tool. Simply download the tool from your dashboard, drag and drop your token file into the client, and it will securely launch the game for you. It is 100% safe and bypasses the need for manual password entry."
     },
     {
-      question: "How does the 6-hour automated warranty work?",
-      answer: "If your token expires or the account goes down within the 6-hour window, our automated system verifies the status and instantly issues a 1:1 replacement to your email."
+      question: "How does the 6-hour warranty work?",
+      answer: "If your token expires or the account is inaccessible within 6 hours of purchase, please contact support for a diagnostic. If we verify that the issue is on our end, we will provide a 1:1 replacement. Please note this covers initial access and delivery, but does not cover bans resulting from user actions."
     },
     {
       question: "Is my main Steam account safe?",
@@ -41,7 +41,7 @@ export default function FAQ() {
     },
     {
       question: "Are these accounts VAC clean?",
-      answer: "Yes. Every account is hand-verified before dispatch. We guarantee a clean history with no VAC bans or cheating records during the leveling process."
+      answer: "Every account is hand-verified before dispatch. While we maintain a highly undetectable environment and test our systems daily, we cannot guarantee immunity from future bans once the account is in your possession. We do not offer refunds if a ban occurs outside of our control."
     }
   ];
 

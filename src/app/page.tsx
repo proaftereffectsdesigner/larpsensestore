@@ -4,6 +4,7 @@ import Hero from "@/components/Hero";
 import HowItWorks from "@/components/HowItWorks";
 import FAQ from "@/components/FAQ";
 import FinalCTA from "@/components/FinalCTA";
+import SocialProof from "@/components/SocialProof";
 
 export default function Home() {
   return (
@@ -18,6 +19,7 @@ export default function Home() {
           <ProductCards />
         </div>
 
+        <SocialProof />
         <HowItWorks />
         <FAQ />
         <FinalCTA />

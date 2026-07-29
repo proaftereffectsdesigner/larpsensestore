@@ -113,6 +113,13 @@ export default function Navbar() {
             <span className="font-light tracking-wide text-gray-400 ml-1">Store</span>
           </div>
         </Link>
+        
+        <div className="hidden md:flex items-center gap-6 ml-6 mr-auto">
+          <Link href="/support" className="text-sm font-medium text-gray-400 hover:text-white transition-colors">Support</Link>
+          <Link href="/support#faq" className="text-sm font-medium text-gray-400 hover:text-white transition-colors">FAQ</Link>
+          <Link href="/about" className="text-sm font-medium text-gray-400 hover:text-white transition-colors">About Us</Link>
+        </div>
+
         <div className="flex items-center gap-3 sm:gap-4">
           
           {/* GitHub Download Tool Button */}

@@ -96,7 +96,7 @@ export default function Footer() {
           <div className="col-span-1 md:col-span-4 lg:col-span-3">
             <h3 className="text-white font-bold tracking-wider text-xs uppercase mb-6 text-gray-400">Join the Community</h3>
             <a 
-              href="https://discord.gg/larpsense" 
+              href="https://discord.gg/qVxdgvdTSK" 
               target="_blank" 
               rel="noopener noreferrer" 
               className="inline-flex items-center justify-center gap-3 bg-[#5865F2]/10 hover:bg-[#5865F2]/20 border border-[#5865F2]/20 text-white rounded-xl px-5 py-3 transition-all hover:-translate-y-1 hover:shadow-[0_0_20px_rgba(88,101,242,0.3)] w-full sm:w-auto"

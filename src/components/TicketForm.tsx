@@ -102,7 +102,7 @@ export default function TicketForm() {
         Open a Support Ticket
       </h2>
       <p className="text-gray-400 mb-8 text-sm">
-        We reply fastest via Discord. Once you submit a ticket here, a private channel will be automatically created on our Discord server for you if your account is linked. Otherwise, we will reach out to you via email.
+        We reply fastest via Discord. Once you submit a ticket here, a private channel will be automatically created on our Discord server for you if your account is linked. Otherwise, we will reach out to you via email at <span className="text-white font-medium">support@larpsensestore.com</span>.
       </p>
 
       <form onSubmit={handleSubmit} className="space-y-6">

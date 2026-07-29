@@ -23,17 +23,8 @@ export default function SupportPage() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-16">
-          <a href="mailto:support@larpsensestore.com" className="flex flex-col items-center justify-center p-8 bg-[#111]/80 backdrop-blur-xl border border-white/10 hover:border-accent/30 rounded-3xl transition-all group">
-            <div className="w-16 h-16 bg-white/5 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-              <Mail className="w-8 h-8 text-white group-hover:text-accent transition-colors" />
-            </div>
-            <h2 className="text-xl font-bold text-white mb-2">Email Support</h2>
-            <p className="text-gray-400 text-center mb-4">For general inquiries and quick questions.</p>
-            <span className="text-accent font-medium">support@larpsensestore.com</span>
-          </a>
-
-          <a href="https://discord.gg/larpsense" target="_blank" rel="noopener noreferrer" className="flex flex-col items-center justify-center p-8 bg-[#111]/80 backdrop-blur-xl border border-white/10 hover:border-[#5865F2]/30 rounded-3xl transition-all group">
+        <div className="flex justify-center mb-16">
+          <a href="https://discord.gg/qVxdgvdTSK" target="_blank" rel="noopener noreferrer" className="w-full max-w-md flex flex-col items-center justify-center p-8 bg-[#111]/80 backdrop-blur-xl border border-white/10 hover:border-[#5865F2]/30 rounded-3xl transition-all group">
             <div className="w-16 h-16 bg-[#5865F2]/10 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
               <img src="/discord.png" alt="Discord" className="w-8 h-8 object-contain" />
             </div>

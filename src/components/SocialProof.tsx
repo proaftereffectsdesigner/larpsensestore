@@ -50,14 +50,14 @@ export default function SocialProof() {
   });
 
   const nextSlide = () => {
-    if (currentIndex + 2 < sortedReviews.length) {
-      setCurrentIndex(currentIndex + 2);
+    if (currentIndex + 4 < sortedReviews.length) {
+      setCurrentIndex(currentIndex + 4);
     }
   };
 
   const prevSlide = () => {
-    if (currentIndex - 2 >= 0) {
-      setCurrentIndex(currentIndex - 2);
+    if (currentIndex - 4 >= 0) {
+      setCurrentIndex(currentIndex - 4);
     }
   };
 
@@ -104,7 +104,7 @@ export default function SocialProof() {
             </button>
             <button 
               onClick={nextSlide} 
-              disabled={currentIndex + 2 >= sortedReviews.length}
+              disabled={currentIndex + 4 >= sortedReviews.length}
               className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center text-white bg-[#141414] hover:bg-white/10 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
@@ -114,7 +114,7 @@ export default function SocialProof() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {sortedReviews.length > 0 ? (
-            sortedReviews.slice(currentIndex, currentIndex + 2).map((review, i) => (
+            sortedReviews.slice(currentIndex, currentIndex + 4).map((review, i) => (
               <div key={i} className="p-6 bg-[#0f0f0f] border border-white/5 rounded-2xl hover:border-white/10 transition-colors shadow-xl">
                 <div className="flex items-center gap-2 mb-4">
                   <div className="flex text-yellow-500">

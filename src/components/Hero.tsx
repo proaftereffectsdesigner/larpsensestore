@@ -120,12 +120,14 @@ export default function Hero() {
 
           {/* Action Button */}
           <div className={`w-full sm:w-auto transition-all duration-700 delay-500 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-            <button 
-              onClick={() => document.getElementById('products')?.scrollIntoView({ behavior: 'smooth' })}
-              className="w-full sm:w-auto bg-accent text-white px-10 py-4 rounded-xl font-bold text-lg hover:bg-accent/90 hover:scale-105 shadow-[0_0_30px_rgba(34,197,94,0.3)] flex items-center justify-center gap-2 transition-all duration-300"
-            >
-              View Accounts <ChevronDown className="w-5 h-5" />
-            </button>
+            <div className="p-8 -m-8">
+              <button 
+                onClick={() => document.getElementById('products')?.scrollIntoView({ behavior: 'smooth' })}
+                className="w-full sm:w-auto bg-accent text-white px-10 py-4 rounded-xl font-bold text-lg hover:bg-accent/90 hover:scale-105 shadow-[0_0_30px_rgba(34,197,94,0.3)] flex items-center justify-center gap-2 transition-all duration-300"
+              >
+                View Accounts <ChevronDown className="w-5 h-5" />
+              </button>
+            </div>
           </div>
         </div>
 

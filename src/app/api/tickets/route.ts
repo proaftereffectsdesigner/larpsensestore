@@ -47,7 +47,8 @@ export async function POST(req: Request) {
       .single();
 
     if (ticketError || !ticketData) {
-      return NextResponse.json({ error: "Failed to create ticket" }, { status: 500 });
+      console.error("Ticket DB Error:", ticketError);
+      return NextResponse.json({ error: ticketError?.message || "Failed to create ticket" }, { status: 500 });
     }
 
     // Integrate with Discord if credentials are set

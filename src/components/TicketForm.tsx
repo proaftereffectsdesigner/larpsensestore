@@ -10,6 +10,8 @@ export default function TicketForm() {
   const [orders, setOrders] = useState<any[]>([]);
   const [issueType, setIssueType] = useState("");
   const [orderId, setOrderId] = useState("");
+  const [transactionId, setTransactionId] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("");
   const [description, setDescription] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [loadingOrders, setLoadingOrders] = useState(false);
@@ -22,9 +24,8 @@ export default function TicketForm() {
         setLoadingOrders(true);
         const { data } = await supabase
           .from('orders')
-          .select('id, product_id, created_at')
+          .select('id, product_id, created_at, status')
           .eq('user_id', session.user.id)
-          .eq('status', 'completed')
           .order('created_at', { ascending: false });
         
         if (data) setOrders(data);
@@ -43,6 +44,11 @@ export default function TicketForm() {
     }
 
     setSubmitting(true);
+    
+    // Append extra info to description
+    let finalDescription = description;
+    if (paymentMethod) finalDescription = `**Payment Method:** ${paymentMethod}\n` + finalDescription;
+    if (transactionId) finalDescription = `**Transaction ID:** ${transactionId}\n` + finalDescription;
     try {
       const { data: { session } } = await supabase.auth.getSession();
       const res = await fetch("/api/tickets", {
@@ -54,7 +60,7 @@ export default function TicketForm() {
         body: JSON.stringify({
           issueType,
           orderId: orderId || null,
-          description
+          description: finalDescription
         })
       });
 
@@ -64,6 +70,8 @@ export default function TicketForm() {
       toast.success(`Ticket #${data.ticket_number} created successfully! We will contact you soon.`);
       setIssueType("");
       setOrderId("");
+      setTransactionId("");
+      setPaymentMethod("");
       setDescription("");
     } catch (err: any) {
       toast.error(err.message);
@@ -119,23 +127,50 @@ export default function TicketForm() {
         </div>
 
         {/* Order Selection */}
-        {orders.length > 0 && (
-          <div>
-            <label className="block text-xs font-bold tracking-widest text-gray-500 mb-2 uppercase flex items-center gap-2">
-              <ShoppingBag className="w-3 h-3" /> Related Order (Optional)
-            </label>
-            <select 
-              value={orderId}
-              onChange={(e) => setOrderId(e.target.value)}
-              className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/50 transition-all appearance-none"
-            >
-              <option value="">No specific order</option>
-              {orders.map(o => (
-                <option key={o.id} value={o.id}>
-                  Order #{o.id.split('-')[0]} - {new Date(o.created_at).toLocaleDateString()}
-                </option>
-              ))}
-            </select>
+        <div>
+          <label className="block text-xs font-bold tracking-widest text-gray-500 mb-2 uppercase flex items-center gap-2">
+            <ShoppingBag className="w-3 h-3" /> Related Order (Optional)
+          </label>
+          <select 
+            value={orderId}
+            onChange={(e) => setOrderId(e.target.value)}
+            className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/50 transition-all appearance-none"
+          >
+            <option value="">No specific order (or order not listed)</option>
+            {orders.map(o => (
+              <option key={o.id} value={o.id}>
+                Order #{o.id.split('-')[0]} - {new Date(o.created_at).toLocaleDateString()} ({o.status})
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Extra Information based on Issue Type */}
+        {(issueType === 'payment_issue' || issueType === 'missing_delivery' || issueType === 'invalid_token') && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 bg-white/5 border border-white/10 rounded-xl">
+            <div>
+              <label className="block text-xs font-bold tracking-widest text-gray-500 mb-2 uppercase">Payment Method</label>
+              <select 
+                value={paymentMethod}
+                onChange={(e) => setPaymentMethod(e.target.value)}
+                className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-accent/50 transition-all appearance-none text-sm"
+              >
+                <option value="">Select method (Optional)</option>
+                <option value="Stripe / Card">Stripe / Card</option>
+                <option value="Crypto (Coinbase)">Crypto (Coinbase Commerce)</option>
+                <option value="Balance">Store Balance</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-bold tracking-widest text-gray-500 mb-2 uppercase">Transaction ID</label>
+              <input 
+                type="text"
+                value={transactionId}
+                onChange={(e) => setTransactionId(e.target.value)}
+                placeholder="e.g. pi_... or hash"
+                className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-accent/50 transition-all text-sm"
+              />
+            </div>
           </div>
         )}
 

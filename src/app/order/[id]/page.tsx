@@ -20,7 +20,8 @@ import {
   Undo2,
   Ban,
   Clock,
-  XOctagon
+  XOctagon,
+  Wallet
 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";

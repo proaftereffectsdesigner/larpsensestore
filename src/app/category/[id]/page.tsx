@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { products } from "@/lib/products";
 import { supabase } from "@/lib/supabase-client";
 import { User } from "@supabase/supabase-js";
-import { CheckCircle2, CreditCard, Wallet, ChevronDown, ChevronRight, Minus, Plus, ShieldCheck, Gamepad2, Info, Zap, Lock, RefreshCcw, ShieldAlert, Star } from "lucide-react";
+import { CheckCircle2, CreditCard, Wallet, ChevronDown, ChevronRight, ChevronLeft, Minus, Plus, ShieldCheck, Gamepad2, Info, Zap, Lock, RefreshCcw, ShieldAlert, Star } from "lucide-react";
 import { SiStripe, SiSolana, SiLitecoin, SiTether, SiBitcoin } from "react-icons/si";
 import ParticlesBackground from "@/components/ParticlesBackground";
 import Image from "next/image";
@@ -509,7 +509,7 @@ export default function CategoryPage() {
       </div>
 
       {/* Reviews Section */}
-      <div className="w-full max-w-5xl mt-16 px-4 pb-20">
+      <div id="reviews" className="w-full max-w-5xl mt-16 px-4 pb-20">
         <div className="flex items-center justify-between mb-8">
           <h2 className="text-2xl font-bold text-white flex items-center gap-3">
             <Star className="w-6 h-6 text-yellow-500" />
@@ -578,12 +578,22 @@ export default function CategoryPage() {
             {/* Pagination Controls */}
             {Math.ceil(reviews.length / reviewsPerPage) > 1 && (
               <div className="flex justify-center mt-12 gap-2">
+                <button
+                  onClick={() => {
+                    setCurrentPage(Math.max(1, currentPage - 1));
+                    document.getElementById('reviews')?.scrollIntoView({ behavior: 'smooth' });
+                  }}
+                  disabled={currentPage === 1}
+                  className="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold transition-all bg-[#141414] border border-white/10 text-gray-400 hover:text-white hover:border-white/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                </button>
                 {Array.from({ length: Math.ceil(reviews.length / reviewsPerPage) }).map((_, i) => (
                   <button
                     key={i}
                     onClick={() => {
                       setCurrentPage(i + 1);
-                      window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+                      document.getElementById('reviews')?.scrollIntoView({ behavior: 'smooth' });
                     }}
                     className={`w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold transition-all ${
                       currentPage === i + 1 
@@ -594,6 +604,16 @@ export default function CategoryPage() {
                     {i + 1}
                   </button>
                 ))}
+                <button
+                  onClick={() => {
+                    setCurrentPage(Math.min(Math.ceil(reviews.length / reviewsPerPage), currentPage + 1));
+                    document.getElementById('reviews')?.scrollIntoView({ behavior: 'smooth' });
+                  }}
+                  disabled={currentPage === Math.ceil(reviews.length / reviewsPerPage)}
+                  className="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold transition-all bg-[#141414] border border-white/10 text-gray-400 hover:text-white hover:border-white/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <ChevronRight className="w-5 h-5" />
+                </button>
               </div>
             )}
           </>

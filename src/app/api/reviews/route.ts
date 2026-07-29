@@ -72,7 +72,7 @@ export async function POST(req: Request) {
         const stars = '⭐'.repeat(rating) + '☆'.repeat(5 - rating);
         
         const { data: profile } = await authenticatedSupabase.from('profiles').select('id, display_name, avatar_url').eq('id', user.id).single();
-        const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://larpsensestore.vercel.app';
+        const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://larpsensestore.com';
         
         await fetch(`https://discord.com/api/v10/channels/${reviewsChannelId}/messages`, {
           method: 'POST',

@@ -77,6 +77,13 @@ function DashboardContent() {
   const [isCropping, setIsCropping] = useState(false);
   const [isBadgesModalOpen, setIsBadgesModalOpen] = useState(false);
 
+  // Review System State
+  const [reviewModalOpen, setReviewModalOpen] = useState(false);
+  const [reviewOrder, setReviewOrder] = useState<any>(null);
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewComment, setReviewComment] = useState("");
+  const [submittingReview, setSubmittingReview] = useState(false);
+
   const router = useRouter();
 
   const fetchOrders = async (userId: string) => {
@@ -602,6 +609,38 @@ function DashboardContent() {
     toast.success("Copied to clipboard!");
   };
 
+  const handleSubmitReview = async () => {
+    if (!reviewOrder) return;
+    setSubmittingReview(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch("/api/reviews", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${session?.access_token}`
+        },
+        body: JSON.stringify({
+          orderId: reviewOrder.id,
+          rating: reviewRating,
+          comment: reviewComment
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to submit review");
+      
+      toast.success("Review submitted successfully! Thank you.");
+      setReviewModalOpen(false);
+      setReviewOrder(null);
+      setReviewComment("");
+      setReviewRating(5);
+    } catch (err: any) {
+      toast.error(err.message);
+    } finally {
+      setSubmittingReview(false);
+    }
+  };
+
   if (!user || loading) {
     return (
       <div className="flex justify-center items-center h-[60vh]">
@@ -696,6 +735,55 @@ function DashboardContent() {
                 className="w-full bg-white text-black font-bold rounded-xl px-6 py-3.5 hover:bg-gray-200 transition-all hover:scale-[1.02] disabled:opacity-50 disabled:hover:scale-100 flex justify-center items-center gap-2 shadow-[0_0_15px_rgba(255,255,255,0.15)]"
               >
                 {avatarUploading ? <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin" /> : "Crop & Save"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Review Modal */}
+      {reviewModalOpen && reviewOrder && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-[#141414] border border-white/10 rounded-3xl overflow-hidden w-full max-w-md shadow-2xl relative flex flex-col">
+            <div className="p-4 border-b border-white/5 flex justify-between items-center bg-[#0a0a0a]">
+              <h3 className="font-bold text-white text-lg">Leave a Review</h3>
+              <button onClick={() => setReviewModalOpen(false)} className="text-gray-400 hover:text-white transition-colors">
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            <div className="p-6 space-y-6">
+              <div>
+                <p className="text-sm text-gray-400 mb-2">Order: <span className="text-white font-mono">{reviewOrder.id.split('-')[0]}</span></p>
+                <div className="flex items-center gap-2">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      onClick={() => setReviewRating(star)}
+                      className={`transition-all hover:scale-110 ${reviewRating >= star ? 'text-yellow-400' : 'text-gray-600'}`}
+                    >
+                      <svg className="w-8 h-8 drop-shadow-md" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                      </svg>
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-bold tracking-widest text-gray-500 mb-2 uppercase">Comment (Optional)</label>
+                <textarea 
+                  value={reviewComment}
+                  onChange={(e) => setReviewComment(e.target.value)}
+                  rows={4}
+                  className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-3 text-gray-300 focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/50 transition-all resize-none"
+                  placeholder="Tell us what you think..."
+                />
+              </div>
+              <button 
+                onClick={handleSubmitReview}
+                disabled={submittingReview}
+                className="w-full bg-accent text-white font-bold rounded-xl px-6 py-3.5 hover:bg-accent/80 transition-all hover:scale-[1.02] disabled:opacity-50 disabled:hover:scale-100 flex justify-center items-center"
+              >
+                {submittingReview ? "Submitting..." : "Submit Review"}
               </button>
             </div>
           </div>
@@ -1117,6 +1205,19 @@ function DashboardContent() {
                             </div>
                           </div>
                           
+                          <div className="mt-4 pt-4 border-t border-white/5 flex justify-end">
+                            <button
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                setReviewOrder(order);
+                                setReviewModalOpen(true);
+                              }}
+                              className="text-xs bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold px-4 py-2 rounded-lg transition-colors flex items-center gap-1.5 z-20 relative"
+                            >
+                              ⭐ Leave a Review
+                            </button>
+                          </div>
                         </Link>
                       );
                     })}

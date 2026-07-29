@@ -1,5 +1,6 @@
 import FAQ from "@/components/FAQ";
 import ParticlesBackground from "@/components/ParticlesBackground";
+import TicketForm from "@/components/TicketForm";
 import { Mail, MessageSquare } from "lucide-react";
 
 export default function SupportPage() {
@@ -28,7 +29,7 @@ export default function SupportPage() {
               <Mail className="w-8 h-8 text-white group-hover:text-accent transition-colors" />
             </div>
             <h2 className="text-xl font-bold text-white mb-2">Email Support</h2>
-            <p className="text-gray-400 text-center mb-4">For order issues and general inquiries.</p>
+            <p className="text-gray-400 text-center mb-4">For general inquiries and quick questions.</p>
             <span className="text-accent font-medium">support@larpsensestore.com</span>
           </a>
 
@@ -37,9 +38,13 @@ export default function SupportPage() {
               <img src="/discord.png" alt="Discord" className="w-8 h-8 object-contain" />
             </div>
             <h2 className="text-xl font-bold text-white mb-2">Discord Community</h2>
-            <p className="text-gray-400 text-center mb-4">Join for announcements and community help.</p>
+            <p className="text-gray-400 text-center mb-4">Fastest response times. Open a ticket or join the community.</p>
             <span className="text-[#5865F2] font-medium">Join Server</span>
           </a>
+        </div>
+
+        <div className="mb-16">
+          <TicketForm />
         </div>
 
         <div id="faq" className="bg-[#111]/80 backdrop-blur-xl border border-white/10 rounded-3xl shadow-2xl overflow-hidden">

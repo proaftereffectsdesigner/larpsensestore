@@ -41,6 +41,10 @@ export default function CategoryPage() {
   const [isCryptoExpanded, setIsCryptoExpanded] = useState(false);
   const [isVariantDropdownOpen, setIsVariantDropdownOpen] = useState(false);
   const paymentDropdownRef = useRef<HTMLDivElement>(null);
+  
+  // Reviews state
+  const [reviews, setReviews] = useState<any[]>([]);
+  const [reviewsLoading, setReviewsLoading] = useState(true);
 
 
 
@@ -89,6 +93,15 @@ export default function CategoryPage() {
       }).then(({ error }) => {
         if (error) console.error("Failed to track checkout session", error);
       });
+
+      // Fetch reviews
+      setReviewsLoading(true);
+      fetch(`/api/reviews?product_type=${selectedProduct.type}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.reviews) setReviews(data.reviews);
+        })
+        .finally(() => setReviewsLoading(false));
     }
   }, [selectedProduct, allStockData]);
 
@@ -468,6 +481,47 @@ export default function CategoryPage() {
           
         </div>
       </div>
+
+      {/* Reviews Section */}
+      <div className="w-full max-w-5xl mt-16 px-4 pb-20">
+        <h2 className="text-2xl font-bold text-white mb-8 flex items-center gap-3">
+          <Star className="w-6 h-6 text-yellow-500" />
+          Verified Reviews for {selectedProduct.name}
+        </h2>
+        
+        {reviewsLoading ? (
+          <div className="flex justify-center p-12">
+            <div className="w-8 h-8 border-2 border-accent/30 border-t-accent rounded-full animate-spin"></div>
+          </div>
+        ) : reviews.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {reviews.map((review, i) => (
+              <div key={i} className="p-6 bg-[#0a0a0a]/80 backdrop-blur-xl border border-white/5 rounded-2xl hover:border-white/10 transition-colors shadow-xl">
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="flex text-yellow-500">
+                    {Array.from({ length: 5 }).map((_, idx) => (
+                      <Star key={idx} className={`w-4 h-4 ${idx < review.rating ? 'fill-current' : 'text-gray-700'}`} />
+                    ))}
+                  </div>
+                  <span className="text-gray-500 text-xs font-bold">{new Date(review.created_at).toLocaleDateString()}</span>
+                  <span className="text-[10px] ml-auto bg-green-500/10 text-green-400 px-2 py-1 rounded font-bold uppercase tracking-widest flex items-center gap-1">
+                    <CheckCircle2 className="w-3 h-3" /> Verified
+                  </span>
+                </div>
+                <p className="text-gray-300 italic mb-4">"{review.comment || 'Great service!'}"</p>
+                <div className="text-sm font-bold text-gray-500">— {review.profiles?.display_name || 'Anonymous'}</div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="p-12 bg-[#0a0a0a]/80 backdrop-blur-xl border border-white/5 rounded-2xl text-center shadow-xl">
+            <Star className="w-12 h-12 text-gray-600 mx-auto mb-4 opacity-50" />
+            <h3 className="text-xl font-bold text-white mb-2">No reviews yet</h3>
+            <p className="text-gray-400 max-w-sm mx-auto">This variant doesn't have any reviews yet. Be the first to review it after purchase!</p>
+          </div>
+        )}
+      </div>
+
     </div>
   );
 }

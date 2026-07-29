@@ -131,6 +131,7 @@ export async function POST(req: Request) {
                 color: 0x3498db,
                 fields: [
                   { name: 'User Email', value: profile?.email || user.email || 'Unknown', inline: true },
+                  { name: 'Discord Account', value: profile?.discord_id ? `<@${profile.discord_id}> (Linked)` : 'Not Linked', inline: true },
                   { name: 'Order ID', value: orderId || 'N/A', inline: true },
                   ...(transactionId ? [{ name: 'Transaction ID', value: transactionId, inline: false }] : []),
                   ...(paymentMethod ? [{ name: 'Payment Method', value: paymentMethod, inline: true }] : []),

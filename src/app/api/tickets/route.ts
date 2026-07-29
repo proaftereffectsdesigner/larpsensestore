@@ -122,7 +122,7 @@ export async function POST(req: Request) {
                   { name: 'Order ID', value: orderId ? orderId.split('-')[0] : 'N/A', inline: true },
                   { name: 'Description', value: description, inline: false }
                 ],
-                footer: { text: `Ticket #${ticketData.ticket_number} • Use /close to close` }
+                footer: { text: `Ticket #${ticketData.ticket_number} • Delete this channel to close` }
               }]
             })
           });

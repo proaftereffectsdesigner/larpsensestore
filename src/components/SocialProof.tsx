@@ -35,7 +35,7 @@ export default function SocialProof() {
       // Get reviews
       const { data: reviewsData } = await supabase
         .from('reviews')
-        .select('rating, comment, created_at, profiles!inner(display_name)')
+        .select('rating, comment, created_at, product_type, profiles!inner(id, display_name, avatar_url, is_private)')
         .eq('is_published', true)
         .order('created_at', { ascending: false })
         .limit(4);

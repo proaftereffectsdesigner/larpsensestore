@@ -68,8 +68,11 @@ export async function POST(req: Request) {
       const reviewsChannelId = process.env.DISCORD_REVIEWS_CHANNEL_ID;
       
       if (botToken && reviewsChannelId) {
-        const product = products.find(p => p.type === order.product_type) || { name: order.product_type };
+        const product = products.find(p => p.id === order.product_id) || { name: order.product_id };
         const stars = '⭐'.repeat(rating) + '☆'.repeat(5 - rating);
+        
+        const { data: profile } = await supabase.from('profiles').select('id, display_name, avatar_url').eq('id', user.id).single();
+        const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://larpsensestore.vercel.app';
         
         await fetch(`https://discord.com/api/v10/channels/${reviewsChannelId}/messages`, {
           method: 'POST',
@@ -82,9 +85,13 @@ export async function POST(req: Request) {
               title: `New Review for ${product.name}`,
               description: comment || '*No comment provided*',
               color: 0x2ecc71,
+              author: profile ? {
+                name: profile.display_name || 'Anonymous',
+                icon_url: profile.avatar_url || undefined,
+                url: `${baseUrl}/user/${profile.id}`
+              } : undefined,
               fields: [
-                { name: 'Rating', value: stars, inline: true },
-                { name: 'User', value: user.email || 'Unknown', inline: true }
+                { name: 'Rating', value: stars, inline: true }
               ],
               timestamp: new Date().toISOString()
             }]

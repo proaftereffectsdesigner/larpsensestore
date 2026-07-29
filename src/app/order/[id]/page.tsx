@@ -274,11 +274,31 @@ export default function OrderDetails() {
           </div>
 
           <div className="text-center mb-10 pb-10 border-b border-white/5 relative">
-            <div className="w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto mb-6 shadow-[0_0_30px_rgba(16,185,129,0.15)]">
-              <CheckCircle2 className="w-8 h-8 text-emerald-500" />
-            </div>
-            <h1 className="text-3xl font-bold text-white mb-3">Order Successful!</h1>
-            <p className="text-gray-400 font-medium mb-6">Your payment was processed and your accounts are ready.</p>
+            {order?.status === 'completed' ? (
+              <>
+                <div className="w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto mb-6 shadow-[0_0_30px_rgba(16,185,129,0.15)]">
+                  <CheckCircle2 className="w-8 h-8 text-emerald-500" />
+                </div>
+                <h1 className="text-3xl font-bold text-white mb-3">Order Successful!</h1>
+                <p className="text-gray-400 font-medium mb-6">Your payment was processed and your accounts are ready.</p>
+              </>
+            ) : order?.status === 'failed' || order?.status === 'cancelled' || order?.status === 'refunded' ? (
+              <>
+                <div className="w-16 h-16 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center mx-auto mb-6 shadow-[0_0_30px_rgba(239,68,68,0.15)]">
+                  <AlertTriangle className="w-8 h-8 text-red-500" />
+                </div>
+                <h1 className="text-3xl font-bold text-white mb-3">Order {order?.status === 'cancelled' ? 'Cancelled' : order?.status === 'refunded' ? 'Refunded' : 'Failed'}</h1>
+                <p className="text-gray-400 font-medium mb-6">This order was not completed successfully.</p>
+              </>
+            ) : (
+              <>
+                <div className="w-16 h-16 rounded-full bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-center mx-auto mb-6 shadow-[0_0_30px_rgba(234,179,8,0.15)]">
+                  <RefreshCw className="w-8 h-8 text-yellow-500 animate-spin" />
+                </div>
+                <h1 className="text-3xl font-bold text-white mb-3">Order Processing</h1>
+                <p className="text-gray-400 font-medium mb-6">Your order is being processed, please wait.</p>
+              </>
+            )}
             <button 
               onClick={handleCopyId}
               className={`inline-block bg-[#0f0f0f] border rounded-xl px-4 py-2 font-mono text-sm transition-colors ${
@@ -294,18 +314,19 @@ export default function OrderDetails() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
             
             {/* Left Column - Accounts */}
-            <div className="space-y-6">
-              <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold text-white tracking-tight">Your Accounts</h2>
-                <button 
-                  onClick={handleDownloadTxt}
-                  className="flex items-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 text-gray-300 px-4 py-2 rounded-xl text-xs font-semibold transition-colors"
-                >
-                  <Download className="w-3.5 h-3.5" /> Save .txt
-                </button>
-              </div>
-
-              <div className="space-y-4">
+            {accounts.length > 0 ? (
+              <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-xl font-bold text-white tracking-tight">Your Accounts</h2>
+                  <button 
+                    onClick={handleDownloadTxt}
+                    className="flex items-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 text-gray-300 px-4 py-2 rounded-xl text-xs font-semibold transition-colors"
+                  >
+                    <Download className="w-3.5 h-3.5" /> Save .txt
+                  </button>
+                </div>
+  
+                <div className="space-y-4">
                   {accounts.map((acc, idx) => (
                     <AccountCard 
                       key={acc.id} 
@@ -328,8 +349,15 @@ export default function OrderDetails() {
                       }}
                     />
                   ))}
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className="bg-white/5 border border-white/10 rounded-2xl p-8 flex flex-col items-center justify-center text-center h-full min-h-[300px]">
+                <Package className="w-12 h-12 text-gray-500 mb-4 opacity-50" />
+                <h3 className="text-xl font-bold text-white mb-2">No Accounts Available</h3>
+                <p className="text-gray-400 text-sm max-w-[250px]">Accounts will appear here once the order is successfully completed.</p>
+              </div>
+            )}
 
             {/* Right Column - Instructions */}
             <div className="bg-[#0f0f0f] border border-white/5 rounded-3xl p-6 md:p-8">

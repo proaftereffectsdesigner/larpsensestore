@@ -1204,10 +1204,14 @@ function DashboardContent() {
                                 <div className="font-mono text-white text-xl font-bold tracking-tight">€{Number(order.total_price).toFixed(2)}</div>
                               </div>
                               <div className="w-px h-8 bg-white/10 hidden sm:block"></div>
-                              <div className="inline-flex flex-col items-center justify-center bg-emerald-500/10 px-4 py-1.5 rounded-lg border border-emerald-500/20 min-w-[80px]">
-                                <div className="text-lg font-black text-emerald-400 leading-none">{accounts.length}</div>
-                                <div className="text-[9px] uppercase tracking-widest font-bold text-emerald-500/80 mt-0.5">
-                                  {accounts.length === 1 ? "Account" : "Accounts"}
+                              <div className={`inline-flex flex-col items-center justify-center px-4 py-1.5 rounded-lg border min-w-[80px] ${
+                                order.status === 'completed' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' :
+                                order.status === 'failed' || order.status === 'cancelled' || order.status === 'refunded' ? 'bg-red-500/10 border-red-500/20 text-red-400' :
+                                'bg-yellow-500/10 border-yellow-500/20 text-yellow-400'
+                              }`}>
+                                <div className="text-lg font-black leading-none">{order.quantity}</div>
+                                <div className="text-[9px] uppercase tracking-widest font-bold opacity-80 mt-0.5">
+                                  {order.quantity === 1 ? "Account" : "Accounts"}
                                 </div>
                               </div>
                             </div>

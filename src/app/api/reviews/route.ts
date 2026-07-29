@@ -114,9 +114,14 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const productType = searchParams.get('product_type');
 
-    let query = supabase
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+
+    let query = supabaseAdmin
       .from('reviews')
-      .select('rating, comment, created_at, profiles!inner(id, display_name, email, avatar_url, is_private)')
+      .select('rating, comment, created_at, profiles!inner(id, display_name, avatar_url, is_private)')
       .eq('is_published', true)
       .order('created_at', { ascending: false });
 

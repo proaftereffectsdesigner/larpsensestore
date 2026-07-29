@@ -15,6 +15,8 @@ export default function AdminDashboard() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState<'all' | 'banned' | 'restricted'>('all');
   const [sessionToken, setSessionToken] = useState<string | null>(null);
+  const [sortField, setSortField] = useState<'orders' | 'spent' | 'balance' | null>(null);
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc' | null>(null);
 
   // Modal for updating balance
   const [selectedUser, setSelectedUser] = useState<any>(null);
@@ -315,7 +317,40 @@ export default function AdminDashboard() {
     }
 
     return matchesSearch && matchesStatus;
+  }).sort((a, b) => {
+    if (!sortField || !sortOrder) return 0;
+    
+    let aVal = 0;
+    let bVal = 0;
+    
+    if (sortField === 'orders') {
+      aVal = a.total_orders || 0;
+      bVal = b.total_orders || 0;
+    } else if (sortField === 'spent') {
+      aVal = a.total_spent || 0;
+      bVal = b.total_spent || 0;
+    } else if (sortField === 'balance') {
+      aVal = Number(a.balance) || 0;
+      bVal = Number(b.balance) || 0;
+    }
+    
+    if (aVal < bVal) return sortOrder === 'asc' ? -1 : 1;
+    if (aVal > bVal) return sortOrder === 'asc' ? 1 : -1;
+    return 0;
   });
+
+  const handleSort = (field: 'orders' | 'spent' | 'balance') => {
+    if (sortField === field) {
+      if (sortOrder === 'asc') setSortOrder('desc');
+      else if (sortOrder === 'desc') {
+        setSortField(null);
+        setSortOrder(null);
+      }
+    } else {
+      setSortField(field);
+      setSortOrder('asc');
+    }
+  };
 
   if (!authChecked) return null;
 
@@ -373,9 +408,15 @@ export default function AdminDashboard() {
               <tr className="bg-white/5 text-gray-400 text-xs uppercase tracking-widest">
                 <th className="p-4 font-bold">User</th>
                 <th className="p-4 font-bold">Discord</th>
-                <th className="p-4 font-bold">Orders</th>
-                <th className="p-4 font-bold">Total Spent</th>
-                <th className="p-4 font-bold">Balance</th>
+                <th className="p-4 font-bold cursor-pointer hover:text-white transition-colors select-none" onClick={() => handleSort('orders')}>
+                  Orders {sortField === 'orders' && (sortOrder === 'asc' ? '↑' : '↓')}
+                </th>
+                <th className="p-4 font-bold cursor-pointer hover:text-white transition-colors select-none" onClick={() => handleSort('spent')}>
+                  Total Spent {sortField === 'spent' && (sortOrder === 'asc' ? '↑' : '↓')}
+                </th>
+                <th className="p-4 font-bold cursor-pointer hover:text-white transition-colors select-none" onClick={() => handleSort('balance')}>
+                  Balance {sortField === 'balance' && (sortOrder === 'asc' ? '↑' : '↓')}
+                </th>
                 <th className="p-4 font-bold text-right">Actions</th>
               </tr>
             </thead>

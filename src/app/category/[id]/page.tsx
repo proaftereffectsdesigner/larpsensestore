@@ -48,6 +48,7 @@ export default function CategoryPage() {
   const [reviews, setReviews] = useState<any[]>([]);
   const [reviewsLoading, setReviewsLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
+  const [sortBy, setSortBy] = useState<"newest" | "oldest" | "best" | "worst">("newest");
   const reviewsPerPage = 8;
 
 
@@ -208,6 +209,15 @@ export default function CategoryPage() {
 
   const totalReviews = reviews.length;
   const averageRating = totalReviews > 0 ? (reviews.reduce((acc, rev) => acc + rev.rating, 0) / totalReviews).toFixed(1) : "0.0";
+  const totalPrice = selectedProduct.price * quantity;
+
+  const sortedReviews = [...reviews].sort((a, b) => {
+    if (sortBy === "newest") return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    if (sortBy === "oldest") return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+    if (sortBy === "best") return b.rating - a.rating;
+    if (sortBy === "worst") return a.rating - b.rating;
+    return 0;
+  });
 
   return (
     <div className="flex flex-col items-center py-12 px-4 relative z-10 min-h-[calc(100vh-80px)] mt-8">
@@ -506,8 +516,23 @@ export default function CategoryPage() {
             Verified Reviews for {selectedProduct.name}
           </h2>
           {!reviewsLoading && totalReviews > 0 && (
-            <div className="text-sm text-gray-400 font-medium">
-              <span className="text-white font-bold text-lg mr-1">{averageRating}</span>/ 5.0
+            <div className="flex items-center gap-6">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Sort by:</span>
+                <select 
+                  value={sortBy} 
+                  onChange={(e) => { setSortBy(e.target.value as any); setCurrentPage(1); }}
+                  className="bg-[#0a0a0a] border border-white/10 rounded-lg px-3 py-1.5 text-sm text-gray-300 font-medium focus:outline-none focus:border-white/20"
+                >
+                  <option value="newest">Newest</option>
+                  <option value="oldest">Oldest</option>
+                  <option value="best">Highest Rated</option>
+                  <option value="worst">Lowest Rated</option>
+                </select>
+              </div>
+              <div className="text-sm text-gray-400 font-medium hidden sm:block">
+                <span className="text-white font-bold text-lg mr-1">{averageRating}</span>/ 5.0
+              </div>
             </div>
           )}
         </div>
@@ -519,7 +544,7 @@ export default function CategoryPage() {
         ) : reviews.length > 0 ? (
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {reviews.slice((currentPage - 1) * reviewsPerPage, currentPage * reviewsPerPage).map((review, i) => (
+              {sortedReviews.slice((currentPage - 1) * reviewsPerPage, currentPage * reviewsPerPage).map((review, i) => (
                 <div key={i} className="p-6 bg-[#0a0a0a]/80 backdrop-blur-xl border border-white/5 rounded-2xl hover:border-white/10 transition-colors shadow-xl">
                   <div className="flex items-center gap-2 mb-4">
                     <div className="flex text-yellow-500">

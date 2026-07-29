@@ -1206,7 +1206,9 @@ function DashboardContent() {
                               <div className="w-px h-8 bg-white/10 hidden sm:block"></div>
                               <div className={`inline-flex flex-col items-center justify-center px-4 py-1.5 rounded-lg border min-w-[80px] ${
                                 order.status === 'completed' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' :
-                                order.status === 'failed' || order.status === 'cancelled' || order.status === 'refunded' ? 'bg-red-500/10 border-red-500/20 text-red-400' :
+                                order.status === 'failed' ? 'bg-red-500/10 border-red-500/20 text-red-400' :
+                                order.status === 'cancelled' ? 'bg-gray-500/10 border-gray-500/20 text-gray-400' :
+                                order.status === 'refunded' ? 'bg-indigo-500/10 border-indigo-500/20 text-indigo-400' :
                                 'bg-yellow-500/10 border-yellow-500/20 text-yellow-400'
                               }`}>
                                 <div className="text-lg font-black leading-none">{order.quantity}</div>

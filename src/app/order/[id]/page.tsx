@@ -16,7 +16,11 @@ import {
   Play,
   Check,
   ArrowLeft,
-  Package
+  Package,
+  Undo2,
+  Ban,
+  Clock,
+  XOctagon
 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -283,18 +287,34 @@ export default function OrderDetails() {
                 <h1 className="text-3xl font-bold text-white mb-3">Order Successful!</h1>
                 <p className="text-gray-400 font-medium mb-6">Your payment was processed and your accounts are ready.</p>
               </>
-            ) : order?.status === 'failed' || order?.status === 'cancelled' || order?.status === 'refunded' ? (
+            ) : order?.status === 'cancelled' ? (
+              <>
+                <div className="w-16 h-16 rounded-full bg-gray-500/10 border border-gray-500/20 flex items-center justify-center mx-auto mb-6 shadow-[0_0_30px_rgba(156,163,175,0.15)]">
+                  <Ban className="w-8 h-8 text-gray-400" />
+                </div>
+                <h1 className="text-3xl font-bold text-white mb-3">Order Cancelled</h1>
+                <p className="text-gray-400 font-medium mb-6">This order has been cancelled.</p>
+              </>
+            ) : order?.status === 'refunded' ? (
+              <>
+                <div className="w-16 h-16 rounded-full bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center mx-auto mb-6 shadow-[0_0_30px_rgba(99,102,241,0.15)]">
+                  <Undo2 className="w-8 h-8 text-indigo-400" />
+                </div>
+                <h1 className="text-3xl font-bold text-white mb-3">Order Refunded</h1>
+                <p className="text-gray-400 font-medium mb-6">The payment for this order has been refunded.</p>
+              </>
+            ) : order?.status === 'failed' ? (
               <>
                 <div className="w-16 h-16 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center mx-auto mb-6 shadow-[0_0_30px_rgba(239,68,68,0.15)]">
-                  <AlertTriangle className="w-8 h-8 text-red-500" />
+                  <XOctagon className="w-8 h-8 text-red-500" />
                 </div>
-                <h1 className="text-3xl font-bold text-white mb-3">Order {order?.status === 'cancelled' ? 'Cancelled' : order?.status === 'refunded' ? 'Refunded' : 'Failed'}</h1>
+                <h1 className="text-3xl font-bold text-white mb-3">Order Failed</h1>
                 <p className="text-gray-400 font-medium mb-6">This order was not completed successfully.</p>
               </>
             ) : (
               <>
                 <div className="w-16 h-16 rounded-full bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-center mx-auto mb-6 shadow-[0_0_30px_rgba(234,179,8,0.15)]">
-                  <RefreshCw className="w-8 h-8 text-yellow-500 animate-spin" />
+                  <Clock className="w-8 h-8 text-yellow-500 animate-pulse" />
                 </div>
                 <h1 className="text-3xl font-bold text-white mb-3">Order Processing</h1>
                 <p className="text-gray-400 font-medium mb-6">Your order is being processed, please wait.</p>

@@ -58,7 +58,7 @@ export async function POST(req: Request) {
     if (botToken && guildId && categoryId) {
       try {
         const ticketName = `ticket-${ticketData.ticket_number}`;
-        const permissionOverwrites = [
+        const permissionOverwrites: any[] = [
           {
             id: guildId, // @everyone role
             type: 0,

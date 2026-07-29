@@ -49,42 +49,52 @@ export default function ProductCards() {
   }, []);
 
   const primeProducts = products.filter(p => p.id === "prime");
-  const premierProducts = products.filter(p => p.id.startsWith("premier"));
+  const premierBaseProducts = products.filter(p => p.id === "premier");
+  const premierMedalsProducts = products.filter(p => p.id.includes("-medals"));
+  const premierRatingsProducts = products.filter(p => p.id.includes("k"));
+  const premierRareProducts = products.filter(p => p.id === "premier-rare");
 
   const cards = [
     {
-      id: "prime", // Maps to /category/prime
+      id: "prime",
       title: "Prime Ready",
       desc: "Standard Prime accounts for matchmaking. No bans, instantly delivered.",
       products: primeProducts,
       img: "/prime-bg.png"
     },
     {
-      id: "premier", // Maps to /category/premier
+      id: "premier",
       title: "Premier Ready",
-      desc: "Accounts ready for Premier mode. Choose your exact rating or medals.",
-      products: premierProducts,
+      desc: "Standard accounts ready for Premier mode. Blank slate for your journey.",
+      products: premierBaseProducts,
       img: "/premier-bg.jpg"
     },
     {
-      id: "software", // Dummy
-      title: "Private Tools",
-      desc: "Exclusive software and private tools for advanced users. Coming soon.",
-      products: [],
-      img: "/prime-bg.png" // fallback
+      id: "premier-4-medals", 
+      title: "Premier with Medals",
+      desc: "Premier accounts loaded with service medals. Show off your veteran status.",
+      products: premierMedalsProducts,
+      img: "/premier-bg.jpg" 
     },
     {
-      id: "configs", // Dummy
-      title: "Pro Configs",
-      desc: "Optimized configurations used by the pros. Coming soon.",
-      products: [],
-      img: "/premier-bg.jpg" // fallback
+      id: "premier-10k", 
+      title: "Premier with Ratings",
+      desc: "Jump straight into high Elo. Choose from 10k, 15k, or 20k CS Rating.",
+      products: premierRatingsProducts,
+      img: "/premier-bg.jpg" 
+    },
+    {
+      id: "premier-rare", 
+      title: "Premier Rare",
+      desc: "The ultimate flex. Accounts loaded with a knife or gloves.",
+      products: premierRareProducts,
+      img: "/premier-bg.jpg" 
     }
   ];
 
   return (
     <div className="w-full max-w-7xl mx-auto p-6 relative z-10" id="products" ref={containerRef}>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-full mx-auto">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-full mx-auto">
         {cards.map((card, index) => {
           const minPrice = card.products.length > 0 ? Math.min(...card.products.map(p => p.price)) : 0;
           const maxPrice = card.products.length > 0 ? Math.max(...card.products.map(p => p.price)) : 0;

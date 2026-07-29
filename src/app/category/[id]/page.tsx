@@ -24,7 +24,8 @@ export default function CategoryPage() {
   
   const categoryProducts = products.filter(p => id === "prime" ? p.id === "prime" : p.id.startsWith("premier"));
   
-  const [selectedProductId, setSelectedProductId] = useState<string>(categoryProducts[0]?.id || "");
+  const defaultSelected = categoryProducts.find(p => p.id === id) || categoryProducts[0];
+  const [selectedProductId, setSelectedProductId] = useState<string>(defaultSelected?.id || "");
   const selectedProduct = categoryProducts.find(p => p.id === selectedProductId);
 
   const [stock, setStock] = useState<number | null>(null);

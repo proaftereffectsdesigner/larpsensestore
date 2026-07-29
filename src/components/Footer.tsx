@@ -38,12 +38,9 @@ export default function Footer() {
               </div>
             </Link>
             <p className="text-gray-400 text-sm leading-relaxed max-w-sm mb-6">
-              Your trusted destination for premium, instantly delivered digital accounts. Experience gaming without limits, backed by our lifetime guarantee.
+              Your trusted destination for premium, instantly delivered digital accounts. Experience gaming without limits, backed by our automated warranty.
             </p>
             <div className="text-xs text-gray-500 space-y-1">
-              <p className="font-semibold text-gray-400">LarpSense LTD</p>
-              <p>VAT ID: GB123456789</p>
-              <p>London, United Kingdom</p>
               <a href="mailto:support@larpsensestore.com" className="text-accent hover:text-white transition-colors mt-2 inline-block">support@larpsensestore.com</a>
             </div>
           </div>

@@ -91,12 +91,10 @@ export default function TermsPage() {
               <Shield className="w-6 h-6 text-accent" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-white mb-4">5. Company Information</h2>
+              <h2 className="text-2xl font-bold text-white mb-4">5. Contact Information</h2>
               <p className="text-gray-400 leading-relaxed text-lg">
-                LarpSense LTD<br />
-                VAT ID: GB123456789<br />
-                London, United Kingdom<br />
-                Contact: <a href="mailto:support@larpsensestore.com" className="text-accent hover:underline">support@larpsensestore.com</a>
+                If you have any questions about these Terms of Service or need support with your order, please contact us at: <br />
+                <a href="mailto:support@larpsensestore.com" className="text-accent hover:underline">support@larpsensestore.com</a>
               </p>
             </div>
           </section>

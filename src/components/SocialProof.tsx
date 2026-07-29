@@ -24,34 +24,17 @@ export default function SocialProof() {
 
     if (containerRef.current) observer.observe(containerRef.current);
     
-    // Fetch stats
+    // Fetch stats via public API to bypass RLS
     const fetchStats = async () => {
-      // Get completed orders count
-      const { count: orderCount } = await supabase
-        .from('orders')
-        .select('*', { count: 'exact', head: true })
-        .eq('status', 'completed');
-        
-      // Get reviews
-      const { data: reviewsData } = await supabase
-        .from('reviews')
-        .select('rating, comment, created_at, product_type, profiles!inner(id, display_name, avatar_url, is_private)')
-        .eq('is_published', true)
-        .order('created_at', { ascending: false })
-        .limit(4);
-
-      if (reviewsData) {
-        setReviews(reviewsData);
-        if (reviewsData.length > 0) {
-          const avg = reviewsData.reduce((acc, curr) => acc + curr.rating, 0) / reviewsData.length;
-          setStats({
-            orders: orderCount || 0,
-            avgRating: Number(avg.toFixed(1)),
-            count: reviewsData.length
-          });
-        } else {
-          setStats(s => ({ ...s, orders: orderCount || 0 }));
+      try {
+        const res = await fetch('/api/public/store-stats');
+        const data = await res.json();
+        if (data && !data.error) {
+          setStats(s => ({ ...s, orders: data.orders || 0, avgRating: data.avgRating || 5.0, count: data.reviewCount || 0 }));
+          setReviews(data.reviews || []);
         }
+      } catch (err) {
+        console.error("Failed to fetch store stats", err);
       }
     };
     

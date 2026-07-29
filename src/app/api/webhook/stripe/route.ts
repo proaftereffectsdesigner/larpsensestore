@@ -138,7 +138,6 @@ export async function POST(req: Request) {
             'Authorization': `Bearer ${process.env.VERIFICATION_JWT_SECRET}`
           }
         }).catch(console.error);
-      }
     }
   }
 

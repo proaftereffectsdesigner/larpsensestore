@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { supabase } from "@/lib/supabase-client";
 import ParticlesBackground from "@/components/ParticlesBackground";
-import { UserIcon, ShieldCheck, Crown, Syringe, Crosshair, ShieldAlert, Unlock, Ghost, FlaskConical, Package, Gem, Zap, ArrowLeft, Edit2 } from "lucide-react";
+import { UserIcon, ShieldCheck, Crown, Syringe, Crosshair, ShieldAlert, Unlock, Ghost, FlaskConical, Package, Gem, Zap, ArrowLeft, Edit2, UserPlus, CalendarCheck, Award, Medal, ShoppingBag, Coins } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import Link from "next/link";
 import { usePresence } from "@/components/PresenceTracker";
@@ -103,13 +103,22 @@ export default function PublicProfile() {
   const accountAgeDays = Math.floor((new Date().getTime() - new Date(created_at || new Date()).getTime()) / (1000 * 3600 * 24));
   
   // Compute time badge
-  let TimeIcon = Syringe;
-  let timeBadge = { name: "Fresh Inject", desc: "Newcomer to the community", color: "text-blue-400", bg: "bg-blue-500/10 border-blue-500/20", glow: "shadow-[0_0_2px_rgba(59,130,246,0.2)]" };
-  if (accountAgeDays >= 365) { timeBadge = { name: "VACine Maker", desc: "Full year of elite status", color: "text-emerald-400", bg: "bg-emerald-500/10 border-emerald-500/30", glow: "shadow-[0_0_22px_rgba(16,185,129,0.8)]" }; TimeIcon = FlaskConical; }
-  else if (accountAgeDays >= 180) { timeBadge = { name: "Undetected Legend", desc: "Legendary 6 months milestone", color: "text-purple-400", bg: "bg-purple-500/10 border-purple-500/20", glow: "shadow-[0_0_16px_rgba(168,85,247,0.6)]" }; TimeIcon = Ghost; }
-  else if (accountAgeDays >= 90) { timeBadge = { name: "Vac Bypasser", desc: "90 days of undetected presence", color: "text-yellow-400", bg: "bg-yellow-500/10 border-yellow-500/20", glow: "shadow-[0_0_12px_rgba(234,179,8,0.5)]" }; TimeIcon = Unlock; }
-  else if (accountAgeDays >= 30) { timeBadge = { name: "Overwatch Survivor", desc: "Survived the first 30 days", color: "text-orange-400", bg: "bg-orange-500/10 border-orange-500/20", glow: "shadow-[0_0_8px_rgba(249,115,22,0.4)]" }; TimeIcon = ShieldAlert; }
-  else if (accountAgeDays >= 7) { timeBadge = { name: "Soft Aimer", desc: "Active member for a week", color: "text-red-400", bg: "bg-red-500/10 border-red-500/20", glow: "shadow-[0_0_5px_rgba(239,68,68,0.3)]" }; TimeIcon = Crosshair; }
+  const ALL_TIME_BADGES = [
+    { name: "Newcomer / Registered", desc: "Welcome to the community", color: "text-blue-400", bg: "bg-blue-500/10 border-blue-500/20", glow: "shadow-[0_0_2px_rgba(59,130,246,0.2)]", Icon: UserPlus, daysReq: 0 },
+    { name: "Active Member", desc: "Active community member for a week", color: "text-emerald-400", bg: "bg-emerald-500/10 border-emerald-500/20", glow: "shadow-[0_0_5px_rgba(16,185,129,0.3)]", Icon: CalendarCheck, daysReq: 7 },
+    { name: "Trusted User", desc: "30 days of trusted membership", color: "text-purple-400", bg: "bg-purple-500/10 border-purple-500/20", glow: "shadow-[0_0_8px_rgba(168,85,247,0.4)]", Icon: ShieldCheck, daysReq: 30 },
+    { name: "Established Client", desc: "90 days of consistent presence", color: "text-orange-400", bg: "bg-orange-500/10 border-orange-500/20", glow: "shadow-[0_0_12px_rgba(249,115,22,0.5)]", Icon: Award, daysReq: 90 },
+    { name: "Platform Veteran", desc: "Legendary 6 months milestone", color: "text-red-400", bg: "bg-red-500/10 border-red-500/20", glow: "shadow-[0_0_16px_rgba(239,68,68,0.6)]", Icon: Medal, daysReq: 180 },
+    { name: "Foundation Pillar", desc: "Full year of elite platform status", color: "text-yellow-400", bg: "bg-yellow-500/10 border-yellow-500/30", glow: "shadow-[0_0_22px_rgba(234,179,8,0.8)]", Icon: Crown, daysReq: 365 },
+  ];
+  
+  let TimeIcon = UserPlus;
+  let timeBadge = ALL_TIME_BADGES[0];
+  if (accountAgeDays >= 365) { timeBadge = ALL_TIME_BADGES[5]; TimeIcon = Crown; }
+  else if (accountAgeDays >= 180) { timeBadge = ALL_TIME_BADGES[4]; TimeIcon = Medal; }
+  else if (accountAgeDays >= 90) { timeBadge = ALL_TIME_BADGES[3]; TimeIcon = Award; }
+  else if (accountAgeDays >= 30) { timeBadge = ALL_TIME_BADGES[2]; TimeIcon = ShieldCheck; }
+  else if (accountAgeDays >= 7) { timeBadge = ALL_TIME_BADGES[1]; TimeIcon = CalendarCheck; }
 
   // Online status (Live tracking via WebSockets)
   const lastSeenDate = new Date(last_seen || created_at || new Date());
@@ -252,34 +261,34 @@ export default function PublicProfile() {
                   {/* Top Purchase Badge */}
                   {total_orders > 0 && (
                     <div className="bg-[#0a0a0a] border border-white/5 rounded-2xl p-4 flex items-center gap-4">
-                      {total_spent > 250 ? (
+                      {total_spent >= 250 ? (
                         <>
-                          <div className="p-3 rounded-xl border shrink-0 bg-yellow-500/10 border-yellow-500/30 shadow-[0_0_20px_rgba(234,179,8,0.5)]">
-                            <Zap className="w-6 h-6 text-yellow-400" />
+                          <div className="p-3 rounded-xl border shrink-0 bg-cyan-500/10 border-cyan-500/30 shadow-[0_0_15px_rgba(34,211,238,0.5)]">
+                            <Gem className="w-6 h-6 text-cyan-400" />
                           </div>
                           <div>
                             <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-0.5">Spender Badge</div>
-                            <div className="font-bold text-sm text-yellow-400">High Roller</div>
+                            <div className="font-bold text-sm text-cyan-400">VIP Status</div>
                           </div>
                         </>
-                      ) : total_spent > 50 ? (
+                      ) : total_spent >= 50 ? (
                         <>
-                          <div className="p-3 rounded-xl border shrink-0 bg-blue-500/10 border-blue-500/20 shadow-[0_0_15px_rgba(59,130,246,0.4)]">
-                            <Gem className="w-6 h-6 text-blue-400" />
+                          <div className="p-3 rounded-xl border shrink-0 bg-yellow-500/10 border-yellow-500/30 shadow-[0_0_15px_rgba(234,179,8,0.5)]">
+                            <Coins className="w-6 h-6 text-yellow-400" />
                           </div>
                           <div>
                             <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-0.5">Spender Badge</div>
-                            <div className="font-bold text-sm text-blue-400">Elite Spender</div>
+                            <div className="font-bold text-sm text-yellow-400">Premium Tier</div>
                           </div>
                         </>
                       ) : (
                         <>
-                          <div className="p-3 rounded-xl border shrink-0 bg-accent/10 border-accent/20">
-                            <Package className="w-6 h-6 text-accent" />
+                          <div className="p-3 rounded-xl border shrink-0 bg-green-500/10 border-green-500/20 shadow-[0_0_8px_rgba(34,197,94,0.3)]">
+                            <ShoppingBag className="w-6 h-6 text-green-400" />
                           </div>
                           <div>
                             <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-0.5">Spender Badge</div>
-                            <div className="font-bold text-sm text-accent">Verified Buyer</div>
+                            <div className="font-bold text-sm text-green-400">Verified Buyer</div>
                           </div>
                         </>
                       )}

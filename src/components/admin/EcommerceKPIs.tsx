@@ -63,8 +63,8 @@ export default function EcommerceKPIs({ data, hideTrends = false }: { data: any,
           </h3>
         </div>
         <div className="flex items-end justify-between">
-          <p className="text-3xl font-black text-white">€{data?.advanced?.ecommerce?.averageOrderValue?.value || '45.00'}</p>
-          {!hideTrends && <TrendIndicator trend={data?.advanced?.ecommerce?.averageOrderValue?.trend || '+5.2%'} />}
+          <p className="text-3xl font-black text-white">€{data?.summary?.averageOrderValue || '0.00'}</p>
+          {!hideTrends && <TrendIndicator trend={'+0%'} />}
         </div>
       </div>
 
@@ -76,8 +76,8 @@ export default function EcommerceKPIs({ data, hideTrends = false }: { data: any,
           </h3>
         </div>
         <div className="flex items-end justify-between">
-          <p className="text-3xl font-black text-white">{data?.advanced?.ecommerce?.cartAbandonmentRate?.value || '65.4%'}</p>
-          {!hideTrends && <TrendIndicator trend={data?.advanced?.ecommerce?.cartAbandonmentRate?.trend || '-1.2%'} inverse={true} />}
+          <p className="text-3xl font-black text-white">{data?.summary?.cartAbandonmentRate || '0'}%</p>
+          {!hideTrends && <TrendIndicator trend={'-0%'} inverse={true} />}
         </div>
       </div>
     </>

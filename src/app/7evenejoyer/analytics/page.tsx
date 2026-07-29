@@ -348,10 +348,7 @@ export default function AnalyticsDashboard() {
                       <ResponsiveContainer width="100%" height="100%">
                         <PieChart>
                           <Pie
-                            data={[
-                              { name: 'Returning', value: 45, fill: '#8b5cf6' },
-                              { name: 'New', value: 55, fill: '#10b981' }
-                            ]}
+                            data={data.advanced.customerTypes}
                             innerRadius={60}
                             outerRadius={100}
                             paddingAngle={5}
@@ -385,17 +382,17 @@ export default function AnalyticsDashboard() {
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-white/5">
-                        {[
-                          { name: 'NFA Tool License', units: 42, revenue: 2100.00 },
-                          { name: 'VIP Package', units: 28, revenue: 1400.00 },
-                          { name: 'Standard Subscription', units: 85, revenue: 850.00 },
-                        ].map((product: any, i: number) => (
-                          <tr key={i} className="hover:bg-white/[0.02] transition-colors">
-                            <td className="py-3 font-medium text-sm text-white">{product.name}</td>
-                            <td className="py-3 text-right font-bold text-gray-300">{product.units}</td>
-                            <td className="py-3 text-right font-bold text-emerald-400">€{product.revenue.toFixed(2)}</td>
-                          </tr>
-                        ))}
+                        {data.advanced.topProducts && data.advanced.topProducts.length > 0 ? (
+                          data.advanced.topProducts.map((product: any, i: number) => (
+                            <tr key={i} className="hover:bg-white/[0.02] transition-colors">
+                              <td className="py-3 font-medium text-sm text-white">{product.name}</td>
+                              <td className="py-3 text-right font-bold text-gray-300">{product.units}</td>
+                              <td className="py-3 text-right font-bold text-emerald-400">€{product.revenue.toFixed(2)}</td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr><td colSpan={3} className="py-6 text-center text-gray-500">No products sold yet</td></tr>
+                        )}
                       </tbody>
                     </table>
                   </div>
@@ -557,12 +554,7 @@ export default function AnalyticsDashboard() {
                 <div className="bg-[#111] border border-white/10 rounded-2xl p-6 flex flex-col">
                   <h3 className="text-lg font-bold text-white mb-6">Traffic Sources</h3>
                   <div className="flex-1 flex flex-col justify-center gap-6">
-                    {[
-                      { name: 'Direct', value: 45, color: 'bg-blue-500' },
-                      { name: 'Organic Search', value: 30, color: 'bg-emerald-500' },
-                      { name: 'Social', value: 15, color: 'bg-purple-500' },
-                      { name: 'Referral', value: 10, color: 'bg-orange-500' },
-                    ].map((source, i) => (
+                    {data.advanced.trafficSources && data.advanced.trafficSources.length > 0 ? data.advanced.trafficSources.map((source: any, i: number) => (
                       <div key={i} className="flex flex-col gap-2">
                         <div className="flex justify-between text-sm font-bold">
                           <span className="text-gray-300">{source.name}</span>
@@ -575,7 +567,9 @@ export default function AnalyticsDashboard() {
                           ></div>
                         </div>
                       </div>
-                    ))}
+                    )) : (
+                       <div className="text-center text-gray-500 py-4">No traffic data yet</div>
+                    )}
                   </div>
                 </div>
               </div>

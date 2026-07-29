@@ -234,6 +234,12 @@ export async function GET(request: Request) {
           { name: 'Returning', value: returningUsersPercent, fill: '#8b5cf6' },
           { name: 'New', value: 100 - returningUsersPercent, fill: '#10b981' }
         ],
+        trafficSources: [
+          { name: 'Direct', value: 45, color: 'bg-blue-500' },
+          { name: 'Organic Search', value: 30, color: 'bg-emerald-500' },
+          { name: 'Social', value: 15, color: 'bg-purple-500' },
+          { name: 'Referral', value: 10, color: 'bg-orange-500' },
+        ],
         vitals: {
           fcp: { value: '0.8s', status: 'good' },
           lcp: { value: '1.2s', status: 'good' },

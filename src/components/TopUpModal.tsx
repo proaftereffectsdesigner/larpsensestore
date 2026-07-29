@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { X, CreditCard, Wallet, Bitcoin, ChevronRight, CheckCircle2, QrCode, Smartphone, Loader2, ShieldAlert } from "lucide-react";
-import { SiStripe } from "react-icons/si";
+import { SiStripe, SiSolana, SiLitecoin, SiTether, SiBitcoin } from "react-icons/si";
 import { supabase } from "@/lib/supabase-client";
 
 type PaymentMethod = 'card' | 'crypto';
@@ -18,9 +18,9 @@ export default function TopUpModal() {
   const [loadingText, setLoadingText] = useState("Initializing secure connection...");
 
   const CRYPTO_COINS = [
-    { id: 'SOL', name: 'Solana', icon: '◎', color: 'text-purple-400', bg: 'bg-purple-500/10' },
-    { id: 'LTC', name: 'Litecoin', icon: 'Ł', color: 'text-blue-400', bg: 'bg-blue-500/10' },
-    { id: 'USDT_TON', name: 'Tether USDT', icon: '₮', color: 'text-emerald-400', bg: 'bg-emerald-500/10', note: 'min €5' },
+    { id: 'SOL', name: 'Solana', icon: <SiSolana className="w-5 h-5" />, color: 'text-purple-400', bg: 'bg-purple-500/10' },
+    { id: 'LTC', name: 'Litecoin', icon: <SiLitecoin className="w-5 h-5" />, color: 'text-blue-400', bg: 'bg-blue-500/10' },
+    { id: 'USDT_TON', name: 'Tether USDT', icon: <SiTether className="w-5 h-5" />, color: 'text-emerald-400', bg: 'bg-emerald-500/10', note: 'min €5' },
   ];
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
@@ -250,7 +250,7 @@ export default function TopUpModal() {
                     <button onClick={() => { setMethod('crypto'); if (!selectedCryptoCoin) setSelectedCryptoCoin(CRYPTO_COINS[0].id); }} className="w-full flex items-center justify-between p-4">
                       <div className="flex items-center gap-4">
                         <div className="flex items-center justify-center w-10 h-10 bg-amber-500/10 rounded-xl">
-                          <Bitcoin className="w-5 h-5 text-amber-400" />
+                          <SiBitcoin className="w-5 h-5 text-amber-400" />
                         </div>
                         <div className="text-left">
                           <div className={`font-bold text-sm ${method === 'crypto' ? 'text-white' : 'text-gray-300'}`}>Cryptocurrency</div>

@@ -5,8 +5,8 @@ import { useParams, useRouter } from "next/navigation";
 import { products } from "@/lib/products";
 import { supabase } from "@/lib/supabase-client";
 import { User } from "@supabase/supabase-js";
-import { CheckCircle2, CreditCard, Wallet, ChevronDown, ChevronRight, Minus, Plus, ShieldCheck, Bitcoin, ShieldAlert } from "lucide-react";
-import { SiStripe } from "react-icons/si";
+import { CheckCircle2, CreditCard, Wallet, ChevronDown, ChevronRight, Minus, Plus, ShieldCheck, ShieldAlert } from "lucide-react";
+import { SiStripe, SiSolana, SiLitecoin, SiTether, SiBitcoin } from "react-icons/si";
 
 export default function ProductPage() {
   const { id } = useParams();
@@ -68,9 +68,9 @@ export default function ProductPage() {
   }, [isDropdownOpen]);
 
   const CRYPTO_COINS = [
-    { id: 'SOL', name: 'Solana', icon: '◎', color: 'text-purple-400', bg: 'bg-purple-500/10' },
-    { id: 'LTC', name: 'Litecoin', icon: 'Ł', color: 'text-blue-400', bg: 'bg-blue-500/10' },
-    { id: 'USDT_TON', name: 'Tether USDT', icon: '₮', color: 'text-emerald-400', bg: 'bg-emerald-500/10', note: 'min €5' },
+    { id: 'SOL', name: 'Solana', icon: <SiSolana className="w-5 h-5" />, color: 'text-purple-400', bg: 'bg-purple-500/10' },
+    { id: 'LTC', name: 'Litecoin', icon: <SiLitecoin className="w-5 h-5" />, color: 'text-blue-400', bg: 'bg-blue-500/10' },
+    { id: 'USDT_TON', name: 'Tether USDT', icon: <SiTether className="w-5 h-5" />, color: 'text-emerald-400', bg: 'bg-emerald-500/10', note: 'min €5' },
   ];
 
   useEffect(() => {
@@ -221,7 +221,7 @@ export default function ProductPage() {
                   </div>
                 ) : paymentMethod === "crypto" ? (
                   <div className="w-8 h-8 bg-amber-500/10 rounded-full flex items-center justify-center">
-                    <Bitcoin className="w-4 h-4 text-amber-400" />
+                    <SiBitcoin className="w-4 h-4 text-amber-400" />
                   </div>
                 ) : (
                   <div className="w-8 h-8 bg-emerald-500/10 rounded-full flex items-center justify-center">
@@ -279,7 +279,7 @@ export default function ProductPage() {
                   <div className="flex items-center justify-between w-full">
                     <div className="flex items-center gap-3">
                       <div className="flex items-center justify-center w-8 h-8 bg-amber-500/10 rounded-full">
-                        <Bitcoin className="w-4 h-4 text-amber-400" />
+                        <SiBitcoin className="w-4 h-4 text-amber-400" />
                       </div>
                       <div>
                         <div className="text-sm text-white">Cryptocurrency</div>

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { rateLimit } from "./lib/rate-limit";
 
 /**
  * Next.js Middleware — runs on the Edge before any page is rendered.
@@ -30,24 +30,29 @@ export async function middleware(req: NextRequest) {
     const ipAddress = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
     const referer = req.headers.get('referer') || '';
 
-    // Fire and forget tracking
-    fetch(`${supabaseUrl}/rest/v1/page_views`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'apikey': supabaseAnonKey,
-        'Authorization': `Bearer ${supabaseAnonKey}`,
-        'Prefer': 'return=minimal'
-      },
-      body: JSON.stringify({
-        session_id: sessionId,
-        path: pathname,
-        user_agent: userAgent,
-        device_type: deviceType,
-        ip_address: ipAddress,
-        referer: referer
-      })
-    }).catch(() => {});
+    // Protect Analytics DB with a lenient rate limit (max 60 views per minute per IP)
+    const analyticsLimit = rateLimit(`analytics_${ipAddress}`, { maxRequests: 60, windowMs: 60000 });
+
+    if (analyticsLimit.allowed) {
+      // Fire and forget tracking
+      fetch(`${supabaseUrl}/rest/v1/page_views`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': supabaseAnonKey,
+          'Authorization': `Bearer ${supabaseAnonKey}`,
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify({
+          session_id: sessionId,
+          path: pathname,
+          user_agent: userAgent,
+          device_type: deviceType,
+          ip_address: ipAddress,
+          referer: referer
+        })
+      }).catch(() => {});
+    }
 
     // Only protect the hidden admin route
     if (!pathname.startsWith("/7evenejoyer")) {

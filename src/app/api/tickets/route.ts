@@ -1,9 +1,17 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase-client';
 import { createClient } from '@supabase/supabase-js';
+import { rateLimit, getClientIp } from '@/lib/rate-limit';
 
 export async function POST(req: Request) {
   try {
+    const ip = getClientIp(req);
+    // Limit to 5 ticket attempts per minute per IP to prevent Discord spam
+    const rl = rateLimit(`tickets_${ip}`, { maxRequests: 5, windowMs: 60000 });
+    if (!rl.allowed) {
+      return NextResponse.json({ error: "Too many requests. Please wait a moment." }, { status: 429 });
+    }
+
     const { issueType, orderId, description, transactionId, paymentMethod } = await req.json();
     const token = req.headers.get("authorization")?.replace("Bearer ", "");
 

@@ -62,6 +62,45 @@ alter table public.login_activity enable row level security;
 create policy "Users can view their own login activity" on public.login_activity for select using (auth.uid() = user_id);
 create policy "Users can insert their own login activity" on public.login_activity for insert with check (auth.uid() = user_id);
 create policy "Users can delete their own login activity" on public.login_activity for delete using (auth.uid() = user_id);
+
+-- 3. Tabela do analityki ruchu (Page Views)
+create table public.page_views (
+  id uuid default gen_random_uuid() primary key,
+  session_id text not null,
+  path text not null,
+  user_agent text,
+  device_type text, -- 'Desktop', 'Mobile', 'Tablet'
+  ip_address text,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- Tabela do analityki ruchu może być wstawiana przez anonów (middleware)
+alter table public.page_views enable row level security;
+create policy "Anyone can insert page views" on public.page_views for insert with check (true);
+create policy "Admins can view page views" on public.page_views for select using (
+  exists (
+    select 1 from public.profiles where profiles.id = auth.uid() and is_admin = true
+  )
+);
+
+-- 4. Tabela do śledzenia koszyków (Cart Abandonment)
+create table public.checkout_sessions (
+  id uuid default gen_random_uuid() primary key,
+  session_id text not null,
+  user_id uuid references public.profiles(id),
+  product_type text not null,
+  status text default 'started', -- 'started', 'completed'
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+alter table public.checkout_sessions enable row level security;
+create policy "Anyone can insert checkout sessions" on public.checkout_sessions for insert with check (true);
+create policy "Users can update their own checkout sessions" on public.checkout_sessions for update using (auth.uid() = user_id);
+create policy "Admins can view checkout sessions" on public.checkout_sessions for select using (
+  exists (
+    select 1 from public.profiles where profiles.id = auth.uid() and is_admin = true
+  )
+);
 ```
 
 ## 2. Podpięcie środowiska (Zmienne .env)

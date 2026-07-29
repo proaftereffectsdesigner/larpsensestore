@@ -74,6 +74,20 @@ export default function CategoryPage() {
       const available = allStockData[selectedProduct.type]?.available || 0;
       setStock(available);
       setQuantity(1); // reset quantity when product changes
+      
+      // Track checkout session started
+      const sessionId = localStorage.getItem("analytics_session_id") || crypto.randomUUID();
+      if (!localStorage.getItem("analytics_session_id")) {
+        localStorage.setItem("analytics_session_id", sessionId);
+      }
+
+      supabase.from("checkout_sessions").insert({
+        session_id: sessionId,
+        product_type: selectedProduct.type,
+        status: 'started'
+      }).then(({ error }) => {
+        if (error) console.error("Failed to track checkout session", error);
+      });
     }
   }, [selectedProduct, allStockData]);
 

@@ -93,6 +93,21 @@ export default function ProductPage() {
       })
       .catch((err) => console.error(err))
       .finally(() => setLoadingStock(false));
+
+    // Track checkout session started
+    const sessionId = localStorage.getItem("analytics_session_id") || crypto.randomUUID();
+    if (!localStorage.getItem("analytics_session_id")) {
+      localStorage.setItem("analytics_session_id", sessionId);
+    }
+
+    supabase.from("checkout_sessions").insert({
+      session_id: sessionId,
+      product_type: product.type,
+      status: 'started'
+    }).then(({ data, error }) => {
+       if (error) console.error("Failed to track checkout session", error);
+    });
+
   }, [product]);
 
   if (!product) {

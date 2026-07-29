@@ -72,6 +72,14 @@ export async function POST(req: Request) {
     if (botToken && guildId && categoryId) {
       try {
         const ticketName = `ticket-${ticketData.ticket_number}`;
+        const issueTypeLabels: Record<string, string> = {
+          'invalid_token': 'Invalid / Expired Token',
+          'missing_delivery': 'Order not delivered',
+          'payment_issue': 'Payment Issue / Top-up failed',
+          'general_question': 'General Question',
+          'other': 'Other'
+        };
+        const formattedIssueType = issueTypeLabels[issueType] || issueType;
         const permissionOverwrites: any[] = [
           {
             id: guildId, // @everyone role
@@ -119,7 +127,7 @@ export async function POST(req: Request) {
             body: JSON.stringify({
               content: profile?.discord_id ? `<@${profile.discord_id}>` : "",
               embeds: [{
-                title: `New Ticket: ${issueType}`,
+                title: `New Ticket: ${formattedIssueType}`,
                 color: 0x3498db,
                 fields: [
                   { name: 'User Email', value: profile?.email || user.email || 'Unknown', inline: true },

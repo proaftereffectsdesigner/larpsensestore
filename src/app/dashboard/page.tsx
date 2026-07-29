@@ -1213,7 +1213,8 @@ function DashboardContent() {
                             </div>
                           </div>
                           
-                          <div className="mt-4 pt-4 border-t border-white/5 flex justify-end">
+                          {order.status === 'completed' && (
+                            <div className="mt-4 pt-4 border-t border-white/5 flex justify-end">
                             {order.reviews ? (
                               <button
                                 disabled
@@ -1236,7 +1237,8 @@ function DashboardContent() {
                                 ⭐ Leave a Review
                               </button>
                             )}
-                          </div>
+                            </div>
+                          )}
                         </Link>
                       );
                     })}

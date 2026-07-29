@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase-client";
 import { MessageSquare, AlertCircle, ShoppingBag, Send } from "lucide-react";
-import toast from "react-hot-toast";
+import { toast } from "sonner";
 
 export default function TicketForm() {
   const [user, setUser] = useState<any>(null);

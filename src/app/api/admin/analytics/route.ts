@@ -118,12 +118,7 @@ export async function GET(request: Request) {
     const newOrdersToday = completedOrders.filter(o => new Date(o.created_at) > new Date(Date.now() - 24*60*60*1000)).length;
     const conversionRate = uniqueUsers > 0 ? (totalOrders / uniqueUsers) * 100 : 0;
     
-    const startedCheckouts = checkouts.length;
-    const completedCheckouts = totalOrders; 
     let abandonmentRate = 0;
-    if (startedCheckouts > 0) {
-      abandonmentRate = Math.max(0, ((startedCheckouts - completedCheckouts) / startedCheckouts) * 100);
-    }
 
     // Realtime (Active in last 5 mins)
     const fiveMinsAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();

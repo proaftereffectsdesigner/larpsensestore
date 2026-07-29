@@ -1,5 +1,7 @@
 "use client";
-import { Users, Star, TrendingUp } from "lucide-react";
+import { Users, Star, TrendingUp, UserIcon } from "lucide-react";
+import Link from "next/link";
+import { products } from "@/lib/products";
 import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/lib/supabase-client";
 
@@ -91,7 +93,7 @@ export default function SocialProof() {
       <div className={`mt-16 grid grid-cols-1 md:grid-cols-2 gap-6 transition-all duration-1000 delay-300 ease-out ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-20'}`}>
         {reviews.length > 0 ? (
           reviews.map((review, i) => (
-            <div key={i} className="p-6 bg-[#0f0f0f] border border-white/5 rounded-2xl hover:border-white/10 transition-colors">
+            <div key={i} className="p-6 bg-[#0f0f0f] border border-white/5 rounded-2xl hover:border-white/10 transition-colors shadow-xl">
               <div className="flex items-center gap-2 mb-4">
                 <div className="flex text-yellow-500">
                   {Array.from({ length: 5 }).map((_, idx) => (
@@ -102,7 +104,27 @@ export default function SocialProof() {
                 <span className="text-[10px] ml-auto bg-green-500/10 text-green-400 px-2 py-1 rounded font-bold uppercase tracking-widest">Verified Purchase</span>
               </div>
               <p className="text-gray-300 italic mb-4">"{review.comment || 'Great service!'}"</p>
-              <div className="text-sm font-bold text-gray-500">— {review.profiles?.display_name || 'Anonymous'}</div>
+              
+              <div className="flex items-center gap-3 border-t border-white/5 pt-4">
+                {review.profiles?.avatar_url ? (
+                  <img src={review.profiles.avatar_url} alt="Avatar" className="w-10 h-10 rounded-full border border-white/10" />
+                ) : (
+                  <div className="w-10 h-10 bg-[#1a1a1a] border border-white/10 rounded-full flex items-center justify-center text-gray-500">
+                    <UserIcon className="w-5 h-5" />
+                  </div>
+                )}
+                
+                <div className="flex flex-col flex-1 leading-tight">
+                  <Link href={`/user/${review.profiles?.id}`} className="text-sm font-bold text-gray-300 hover:text-white transition-colors">
+                    {review.profiles?.display_name || 'Anonymous'}
+                  </Link>
+                  <span className="text-xs text-gray-500 font-medium">Purchased: <span className="text-accent">{products.find(p => p.id === review.product_type)?.name || review.product_type}</span></span>
+                </div>
+                
+                <Link href={`/user/${review.profiles?.id}`} className="text-[10px] text-accent/80 hover:text-accent font-bold uppercase tracking-wider py-1.5 px-3 bg-accent/10 hover:bg-accent/20 rounded-lg transition-colors border border-accent/20 hover:border-accent/40">
+                  View Profile
+                </Link>
+              </div>
             </div>
           ))
         ) : (

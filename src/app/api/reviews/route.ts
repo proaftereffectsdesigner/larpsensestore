@@ -3,6 +3,8 @@ import { supabase } from '@/lib/supabase-client';
 import { createClient } from '@supabase/supabase-js';
 import { products } from '@/lib/products';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(req: Request) {
   try {
     const { orderId, rating, comment } = await req.json();

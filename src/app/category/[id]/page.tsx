@@ -9,6 +9,8 @@ import { CheckCircle2, CreditCard, Wallet, ChevronDown, ChevronRight, Minus, Plu
 import { SiStripe, SiSolana, SiLitecoin, SiTether, SiBitcoin } from "react-icons/si";
 import ParticlesBackground from "@/components/ParticlesBackground";
 import Image from "next/image";
+import Link from "next/link";
+import { UserIcon } from "lucide-react";
 
 export default function CategoryPage() {
   const { id } = useParams(); // 'prime' or 'premier'
@@ -96,7 +98,7 @@ export default function CategoryPage() {
 
       // Fetch reviews
       setReviewsLoading(true);
-      fetch(`/api/reviews?product_type=${selectedProduct.type}`)
+      fetch(`/api/reviews?product_type=${selectedProduct.id}`)
         .then(res => res.json())
         .then(data => {
           if (data.reviews) setReviews(data.reviews);
@@ -509,7 +511,26 @@ export default function CategoryPage() {
                   </span>
                 </div>
                 <p className="text-gray-300 italic mb-4">"{review.comment || 'Great service!'}"</p>
-                <div className="text-sm font-bold text-gray-500">— {review.profiles?.display_name || 'Anonymous'}</div>
+                <div className="flex items-center gap-3 border-t border-white/5 pt-4">
+                  {review.profiles?.avatar_url && !review.profiles?.is_private ? (
+                    <img src={review.profiles.avatar_url} alt="Avatar" className="w-8 h-8 rounded-full border border-white/10" />
+                  ) : (
+                    <div className="w-8 h-8 bg-[#1a1a1a] border border-white/10 rounded-full flex items-center justify-center text-gray-500">
+                      <UserIcon className="w-4 h-4" />
+                    </div>
+                  )}
+                  {review.profiles?.is_private ? (
+                    <div className="text-sm font-bold text-gray-500 flex flex-col leading-tight">
+                      <span>Private User</span>
+                      <span className="text-[10px] font-normal opacity-50">Profile hidden</span>
+                    </div>
+                  ) : (
+                    <Link href={`/user/${review.profiles?.id}`} className="text-sm font-bold text-gray-300 hover:text-white transition-colors flex flex-col leading-tight">
+                      <span>{review.profiles?.display_name || 'Anonymous'}</span>
+                      <span className="text-[10px] text-accent font-normal hover:underline">View Profile</span>
+                    </Link>
+                  )}
+                </div>
               </div>
             ))}
           </div>

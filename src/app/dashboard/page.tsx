@@ -1227,6 +1227,8 @@ function DashboardContent() {
                                   e.preventDefault();
                                   e.stopPropagation();
                                   setReviewOrder(order);
+                                  setReviewComment("");
+                                  setReviewRating(5);
                                   setReviewModalOpen(true);
                                 }}
                                 className="text-xs bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold px-4 py-2 rounded-lg transition-colors flex items-center gap-1.5 z-20 relative"

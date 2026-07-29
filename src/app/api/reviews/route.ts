@@ -107,7 +107,7 @@ export async function GET(req: Request) {
 
     let query = supabase
       .from('reviews')
-      .select('rating, comment, created_at, profiles!inner(display_name, email)')
+      .select('rating, comment, created_at, profiles!inner(id, display_name, email, avatar_url, is_private)')
       .eq('is_published', true)
       .order('created_at', { ascending: false });
 

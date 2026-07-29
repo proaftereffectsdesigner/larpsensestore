@@ -24,7 +24,17 @@ export default function CategoryPage() {
     return "text-orange-400";
   };
   
-  const categoryProducts = products.filter(p => id === "prime" ? p.id === "prime" : p.id.startsWith("premier"));
+  const categoryProducts = (() => {
+    if (id === "prime") return products.filter(p => p.id === "prime");
+    if (id === "premier") return products.filter(p => p.id === "premier");
+    if (id === "premier-4-medals") return products.filter(p => p.id.includes("-medals"));
+    if (id === "premier-10k") return products.filter(p => p.id.includes("k"));
+    if (id === "premier-rare") return products.filter(p => p.id === "premier-rare");
+    // Fallback if accessed via direct variant id (e.g. /category/premier-10-medals)
+    if (typeof id === 'string' && id.includes("-medals")) return products.filter(p => p.id.includes("-medals"));
+    if (typeof id === 'string' && id.includes("k")) return products.filter(p => p.id.includes("k"));
+    return products.filter(p => p.id === id); // exact match fallback
+  })();
   
   const defaultSelected = categoryProducts.find(p => p.id === id) || categoryProducts[0];
   const [selectedProductId, setSelectedProductId] = useState<string>(defaultSelected?.id || "");

@@ -634,7 +634,7 @@ function DashboardContent() {
       // Update local state to mark this order as reviewed
       setOrders(prev => prev.map(o => 
         o.id === reviewOrder.id 
-          ? { ...o, reviews: [{ id: 'new-review' }] } 
+          ? { ...o, reviews: { id: 'new-review' } } 
           : o
       ));
       
@@ -1214,7 +1214,7 @@ function DashboardContent() {
                           </div>
                           
                           <div className="mt-4 pt-4 border-t border-white/5 flex justify-end">
-                            {order.reviews && order.reviews.length > 0 ? (
+                            {order.reviews ? (
                               <button
                                 disabled
                                 className="text-xs bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-bold px-4 py-2 rounded-lg flex items-center gap-1.5 z-20 relative cursor-not-allowed opacity-80"

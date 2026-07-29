@@ -71,7 +71,7 @@ export async function POST(req: Request) {
         const product = products.find(p => p.id === order.product_id) || { name: order.product_id };
         const stars = '⭐'.repeat(rating) + '☆'.repeat(5 - rating);
         
-        const { data: profile } = await supabase.from('profiles').select('id, display_name, avatar_url').eq('id', user.id).single();
+        const { data: profile } = await authenticatedSupabase.from('profiles').select('id, display_name, avatar_url').eq('id', user.id).single();
         const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://larpsensestore.vercel.app';
         
         await fetch(`https://discord.com/api/v10/channels/${reviewsChannelId}/messages`, {

@@ -89,7 +89,7 @@ function DashboardContent() {
   const fetchOrders = async (userId: string) => {
     const { data, error } = await supabase
       .from("orders")
-      .select("*")
+      .select("*, reviews(id)")
       .eq("user_id", userId)
       .order("created_at", { ascending: false });
 
@@ -630,6 +630,14 @@ function DashboardContent() {
       if (!res.ok) throw new Error(data.error || "Failed to submit review");
       
       toast.success("Review submitted successfully! Thank you.");
+      
+      // Update local state to mark this order as reviewed
+      setOrders(prev => prev.map(o => 
+        o.id === reviewOrder.id 
+          ? { ...o, reviews: [{ id: 'new-review' }] } 
+          : o
+      ));
+      
       setReviewModalOpen(false);
       setReviewOrder(null);
       setReviewComment("");
@@ -1206,17 +1214,26 @@ function DashboardContent() {
                           </div>
                           
                           <div className="mt-4 pt-4 border-t border-white/5 flex justify-end">
-                            <button
-                              onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                setReviewOrder(order);
-                                setReviewModalOpen(true);
-                              }}
-                              className="text-xs bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold px-4 py-2 rounded-lg transition-colors flex items-center gap-1.5 z-20 relative"
-                            >
-                              ⭐ Leave a Review
-                            </button>
+                            {order.reviews && order.reviews.length > 0 ? (
+                              <button
+                                disabled
+                                className="text-xs bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-bold px-4 py-2 rounded-lg flex items-center gap-1.5 z-20 relative cursor-not-allowed opacity-80"
+                              >
+                                ✓ Already Reviewed
+                              </button>
+                            ) : (
+                              <button
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  setReviewOrder(order);
+                                  setReviewModalOpen(true);
+                                }}
+                                className="text-xs bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold px-4 py-2 rounded-lg transition-colors flex items-center gap-1.5 z-20 relative"
+                              >
+                                ⭐ Leave a Review
+                              </button>
+                            )}
                           </div>
                         </Link>
                       );

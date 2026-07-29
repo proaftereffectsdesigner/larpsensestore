@@ -1,4 +1,4 @@
-import FAQ from "@/components/FAQ";
+
 import ParticlesBackground from "@/components/ParticlesBackground";
 import TicketForm from "@/components/TicketForm";
 import { Mail, MessageSquare } from "lucide-react";
@@ -47,9 +47,7 @@ export default function SupportPage() {
           <TicketForm />
         </div>
 
-        <div id="faq" className="bg-[#111]/80 backdrop-blur-xl border border-white/10 rounded-3xl shadow-2xl overflow-hidden">
-          <FAQ />
-        </div>
+
       </div>
     </div>
   );

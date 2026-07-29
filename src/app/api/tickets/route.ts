@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase-client';
+import { createClient } from '@supabase/supabase-js';
 
 export async function POST(req: Request) {
   try {
@@ -10,13 +11,21 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing parameters or token" }, { status: 400 });
     }
 
-    const { data: { user }, error: userError } = await supabase.auth.getUser(token);
+    const authenticatedSupabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        global: { headers: { Authorization: `Bearer ${token}` } }
+      }
+    );
+
+    const { data: { user }, error: userError } = await authenticatedSupabase.auth.getUser();
     if (userError || !user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     // Rate limit: Check if user already has an open ticket
-    const { data: existingTickets } = await supabase
+    const { data: existingTickets } = await authenticatedSupabase
       .from('tickets')
       .select('id')
       .eq('user_id', user.id)
@@ -27,14 +36,14 @@ export async function POST(req: Request) {
     }
 
     // Get user's profile to see if they have discord linked
-    const { data: profile } = await supabase
+    const { data: profile } = await authenticatedSupabase
       .from('profiles')
       .select('discord_id, email, display_name')
       .eq('id', user.id)
       .single();
 
     // Create the ticket in Supabase
-    const { data: ticketData, error: ticketError } = await supabase
+    const { data: ticketData, error: ticketError } = await authenticatedSupabase
       .from('tickets')
       .insert({
         user_id: user.id,
@@ -94,7 +103,7 @@ export async function POST(req: Request) {
           const channel = await channelRes.json();
           
           // Update supabase with discord channel id
-          await supabase.from('tickets').update({ discord_channel_id: channel.id }).eq('id', ticketData.id);
+          await authenticatedSupabase.from('tickets').update({ discord_channel_id: channel.id }).eq('id', ticketData.id);
 
           // Post initial message
           await fetch(`https://discord.com/api/v10/channels/${channel.id}/messages`, {

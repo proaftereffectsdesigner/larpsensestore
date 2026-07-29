@@ -51,7 +51,13 @@ export default function Footer() {
               <li>
                 <Link href="/support" className="text-sm text-gray-400 hover:text-white transition-colors flex items-center gap-2 group">
                   <span className="w-1.5 h-1.5 rounded-full bg-white/20 group-hover:bg-white transition-colors"></span>
-                  Support & FAQ
+                  Support
+                </Link>
+              </li>
+              <li>
+                <Link href="/faq" className="text-sm text-gray-400 hover:text-white transition-colors flex items-center gap-2 group">
+                  <span className="w-1.5 h-1.5 rounded-full bg-white/20 group-hover:bg-white transition-colors"></span>
+                  FAQ
                 </Link>
               </li>
               <li>

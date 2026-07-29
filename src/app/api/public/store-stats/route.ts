@@ -31,13 +31,13 @@ export async function GET() {
       avgRating = Number((totalStars / reviewCount).toFixed(1));
     }
 
-    // Get latest 4 reviews
+    // Get up to 200 latest reviews for the homepage carousel
     const { data: reviews } = await supabaseAdmin
       .from('reviews')
       .select('rating, comment, created_at, product_type, profiles!inner(id, display_name, avatar_url, is_private)')
       .eq('is_published', true)
       .order('created_at', { ascending: false })
-      .limit(4);
+      .limit(200);
 
     return NextResponse.json({
       orders: orderCount || 0,

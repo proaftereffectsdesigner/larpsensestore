@@ -20,6 +20,20 @@ import { DateRangePicker } from "@/components/admin/DateRangePicker";
 import { DateRange } from "react-day-picker";
 import { format } from "date-fns";
 
+const renderCustomizedLabel = ({ cx, cy, midAngle = 0, innerRadius, outerRadius, percent = 0 }: any) => {
+  const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+  const x = cx + radius * Math.cos(-midAngle * Math.PI / 180);
+  const y = cy + radius * Math.sin(-midAngle * Math.PI / 180);
+  
+  if (percent < 0.05) return null; // Don't show label for very small slices
+  
+  return (
+    <text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central" fontSize={12} fontWeight="bold">
+      {`${(percent * 100).toFixed(0)}%`}
+    </text>
+  );
+};
+
 export default function AnalyticsDashboard() {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -344,16 +358,8 @@ export default function AnalyticsDashboard() {
                             dataKey="value"
                             stroke="none"
                             labelLine={false}
-                            label={({ cx, cy, midAngle = 0, innerRadius, outerRadius, percent = 0 }: any) => {
-                              const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
-                              const x = cx + radius * Math.cos(-midAngle * Math.PI / 180);
-                              const y = cy + radius * Math.sin(-midAngle * Math.PI / 180);
-                              return (
-                                <text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central" fontSize={14} fontWeight="bold">
-                                  {`${(percent * 100).toFixed(0)}%`}
-                                </text>
-                              );
-                            }}
+                            isAnimationActive={false}
+                            label={renderCustomizedLabel}
                           >
                             <Cell key="cell-0" fill="#8b5cf6" />
                             <Cell key="cell-1" fill="#10b981" />
@@ -509,6 +515,9 @@ export default function AnalyticsDashboard() {
                           paddingAngle={5}
                           dataKey="value"
                           stroke="none"
+                          labelLine={false}
+                          isAnimationActive={false}
+                          label={renderCustomizedLabel}
                         >
                           {data.advanced.devices.map((entry: any, index: number) => (
                             <Cell key={`cell-${index}`} fill={entry.fill} />

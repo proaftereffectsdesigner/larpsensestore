@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
-import Stripe from "stripe";
+import { Polar } from "@polar-sh/sdk";
 import { createClient } from "@supabase/supabase-js";
 import { rateLimit, getClientIp } from "@/lib/rate-limit";
 
-// Initialize Stripe with the secret key from env
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2025-01-27.acacia" as any, // using any to bypass strict version typings if needed, but it's fine
+// Initialize Polar with the secret key from env
+const polar = new Polar({
+  accessToken: process.env.POLAR_ACCESS_TOKEN || "",
 });
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -47,43 +47,48 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "You are currently restricted from adding balance." }, { status: 403 });
     }
 
-    // Calculate fees (currently only Card/Stripe uses this gateway in checkout)
+    // We keep the old Stripe fee formula unless requested otherwise, as it covers standard card processing.
     const feeMultiplier = 0.015;
     const fixedFee = 0.25;
 
     const cardFee = Number((amount * feeMultiplier + fixedFee).toFixed(2));
     const totalAmount = amount + cardFee;
 
-    // Create Checkout Sessions from body params.
-    const session = await stripe.checkout.sessions.create({
-      line_items: [
-        {
-          price_data: {
-            currency: 'eur',
-            product_data: {
-              name: 'LarpSense Store Balance Top-Up',
-              description: `Top up €${amount.toFixed(2)} to your balance.`,
-            },
-            unit_amount: Math.round(totalAmount * 100), // Stripe expects amounts in cents
-          },
-          quantity: 1,
-        },
-      ],
-      mode: 'payment',
-      // Pass the userId in metadata so we can identify the user in the webhook
-      client_reference_id: userId,
-      metadata: {
-        userId: userId,
-        addedAmount: amount.toString(), // Store the pure amount without fee to add to balance
+    if (!process.env.POLAR_TOPUP_PRODUCT_ID) {
+      console.error("Missing POLAR_TOPUP_PRODUCT_ID in environment variables");
+      return NextResponse.json({ error: "Polar configuration missing." }, { status: 500 });
+    }
+
+    // Create Checkout Session using Polar API directly to avoid type mismatches
+    const response = await fetch("https://api.polar.sh/v1/checkouts/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${process.env.POLAR_ACCESS_TOKEN}`
       },
-      // Redirect URLs
-      success_url: `${req.headers.get("origin")}/dashboard?topup=success`,
-      cancel_url: `${req.headers.get("origin")}/`,
+      body: JSON.stringify({
+        payment_processor: "stripe", // Polar uses Stripe under the hood
+        products: [process.env.POLAR_TOPUP_PRODUCT_ID],
+        amount: Math.round(totalAmount * 100), // Polar expects cents
+        success_url: `${req.headers.get("origin")}/dashboard?topup=success`,
+        metadata: {
+          userId: userId,
+          addedAmount: amount.toString(), // Store the pure amount without fee to add to balance
+          type: "topup"
+        }
+      })
     });
 
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("Polar Checkout Error:", errorText);
+      return NextResponse.json({ error: "Failed to create Polar checkout" }, { status: 500 });
+    }
+
+    const session = await response.json();
     return NextResponse.json({ id: session.id, url: session.url });
   } catch (err: any) {
-    console.error("Stripe Checkout Error:", err);
+    console.error("Polar Checkout Error:", err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }

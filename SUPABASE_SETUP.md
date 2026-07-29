@@ -110,6 +110,10 @@ Utwórz w głównym folderze projektu plik `.env.local` i wklej do niego swoje d
 ```env
 NEXT_PUBLIC_SUPABASE_URL=twoj_url_supabase
 NEXT_PUBLIC_SUPABASE_ANON_KEY=twoj_anon_key_supabase
+# Polar.sh
+POLAR_ACCESS_TOKEN=your_polar_access_token
+POLAR_WEBHOOK_SECRET=your_polar_webhook_secret
+POLAR_TOPUP_PRODUCT_ID=your_polar_topup_product_id
 NFA_API_KEY=your_nfa_api_key_here_rotate_immediately
 ```
 

@@ -65,42 +65,51 @@ export async function POST(req: Request) {
       return NextResponse.json({ url: "/crypto-mock" });
     }
 
-    if (paymentMethod === "stripe") {
-      const Stripe = require('stripe');
-      const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2025-01-27.acacia" as any });
-
+    if (paymentMethod === "polar") {
       const feeMultiplier = 0.015;
       const fixedFee = 0.25;
       const cardFee = Number((totalPrice * feeMultiplier + fixedFee).toFixed(2));
       const finalAmount = totalPrice + cardFee;
 
-      const session = await stripe.checkout.sessions.create({
-        line_items: [
-          {
-            price_data: {
-              currency: 'eur',
-              product_data: {
-                name: `LarpSense Store - ${product.name} (x${quantity})`,
-              },
-              unit_amount: Math.round(finalAmount * 100),
-            },
-            quantity: 1,
-          },
-        ],
-        mode: 'payment',
-        client_reference_id: userId,
-        metadata: {
-          type: "product_checkout",
-          userId: userId,
-          productId: product.id,
-          quantity: quantity.toString(),
-          totalPrice: totalPrice.toString()
-        },
-        success_url: `${req.headers.get("origin")}/dashboard?order=success`,
-        cancel_url: `${req.headers.get("origin")}/category/${product.id}`,
-      });
+      if (!process.env.POLAR_TOPUP_PRODUCT_ID) {
+        console.error("Missing POLAR_TOPUP_PRODUCT_ID in environment variables");
+        return NextResponse.json({ error: "Polar configuration missing." }, { status: 500 });
+      }
 
-      return NextResponse.json({ url: session.url });
+      try {
+        const response = await fetch("https://api.polar.sh/v1/checkouts/", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${process.env.POLAR_ACCESS_TOKEN}`
+          },
+          body: JSON.stringify({
+            payment_processor: "stripe",
+            products: [process.env.POLAR_TOPUP_PRODUCT_ID], // We use the same base product, overriding price
+            amount: Math.round(finalAmount * 100),
+            success_url: `${req.headers.get("origin")}/dashboard?order=success`,
+            metadata: {
+              type: "product_checkout",
+              userId: userId,
+              productId: product.id,
+              quantity: quantity.toString(),
+              totalPrice: totalPrice.toString()
+            }
+          })
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error("Polar Checkout Error:", errorText);
+          return NextResponse.json({ error: "Failed to create Polar checkout" }, { status: 500 });
+        }
+
+        const session = await response.json();
+        return NextResponse.json({ url: session.url });
+      } catch (err: any) {
+        console.error("Polar Checkout Error:", err);
+        return NextResponse.json({ error: err.message }, { status: 500 });
+      }
     }
 
     // Jeśli zapłacono przez Balance, kontynuujemy z realizacją natychmiastową

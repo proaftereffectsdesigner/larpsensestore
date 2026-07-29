@@ -6,7 +6,8 @@ import { products } from "@/lib/products";
 import { supabase } from "@/lib/supabase-client";
 import { User } from "@supabase/supabase-js";
 import { CheckCircle2, CreditCard, Wallet, ChevronDown, ChevronRight, ChevronLeft, Minus, Plus, ShieldCheck, Gamepad2, Info, Zap, Lock, RefreshCcw, ShieldAlert, Star } from "lucide-react";
-import { SiStripe, SiSolana, SiLitecoin, SiTether, SiBitcoin } from "react-icons/si";
+import { SiSolana, SiLitecoin, SiTether, SiBitcoin } from "react-icons/si";
+
 import ParticlesBackground from "@/components/ParticlesBackground";
 import Image from "next/image";
 import Link from "next/link";
@@ -48,7 +49,7 @@ export default function CategoryPage() {
   const [user, setUser] = useState<User | null>(null);
   const [authChecked, setAuthChecked] = useState(false);
   
-  const [paymentMethod, setPaymentMethod] = useState<"stripe" | "crypto" | "balance">("stripe");
+  const [paymentMethod, setPaymentMethod] = useState<"polar" | "crypto" | "balance">("polar");
   const [selectedCryptoCoin, setSelectedCryptoCoin] = useState<string | null>(null);
   const [isCryptoExpanded, setIsCryptoExpanded] = useState(false);
   const [isVariantDropdownOpen, setIsVariantDropdownOpen] = useState(false);
@@ -404,17 +405,17 @@ export default function CategoryPage() {
             <div className="text-[10px] font-bold text-gray-500 tracking-widest uppercase mb-2">Payment method</div>
             <div ref={paymentDropdownRef} className="flex flex-col gap-2">
 
-              {/* Stripe */}
-              <button
-                onClick={() => { setPaymentMethod("stripe"); setIsCryptoExpanded(false); }}
-                className={`w-full px-4 py-3 rounded-xl text-left flex items-center gap-3 border transition-all ${paymentMethod === "stripe" ? "bg-white/5 border-white/20" : "bg-[#0a0a0a]/50 border-white/10 hover:bg-white/5 hover:border-white/20"}`}
+              {/* Polar */}
+              <button 
+                onClick={() => { setPaymentMethod("polar"); setIsCryptoExpanded(false); }}
+                className={`w-full px-4 py-3 rounded-xl text-left flex items-center gap-3 border transition-all ${paymentMethod === "polar" ? "bg-white/5 border-white/20" : "bg-[#0a0a0a]/50 border-white/10 hover:bg-white/5 hover:border-white/20"}`}
               >
-                <div className="w-8 h-8 bg-[#635BFF]/10 rounded-full flex items-center justify-center shrink-0">
-                  <SiStripe className="w-5 h-5 text-[#635BFF]" />
+                <div className={`flex items-center justify-center w-10 h-10 rounded-lg shrink-0 ${paymentMethod === "polar" ? "bg-gray-500/10" : "bg-[#141414] border border-white/5"}`}>
+                  <CreditCard className="w-5 h-5 text-gray-400" />
                 </div>
                 <div>
-                  <div className="text-sm text-white font-medium">Debit / Credit Card</div>
-                  <div className="text-xs text-gray-500">Mastercard, Visa, Apple Pay <span className="text-indigo-400">(1.5% + €0.25 fee)</span></div>
+                  <div className={`font-bold text-sm ${paymentMethod === "polar" ? "text-white" : "text-gray-400"}`}>Debit / Credit Card</div>
+                  <div className="text-xs text-gray-500">Mastercard, Visa, Apple Pay etc. <span className="text-indigo-400 font-bold">(1.5% + €0.25 fee)</span></div>
                 </div>
               </button>
 
@@ -510,7 +511,7 @@ export default function CategoryPage() {
               {loadingCheckout ? (
                 <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin" />
               ) : (
-                `Pay €${totalPrice.toFixed(2)}`
+                  `Pay €${totalPrice.toFixed(2)} with ${paymentMethod === "polar" ? "Card" : paymentMethod === "crypto" ? "Crypto" : "Balance"}`
               )}
             </button>
           )}

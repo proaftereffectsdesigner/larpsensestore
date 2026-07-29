@@ -6,7 +6,8 @@ import { products } from "@/lib/products";
 import { supabase } from "@/lib/supabase-client";
 import { User } from "@supabase/supabase-js";
 import { CheckCircle2, CreditCard, Wallet, ChevronDown, ChevronRight, Minus, Plus, ShieldCheck, ShieldAlert } from "lucide-react";
-import { SiStripe, SiSolana, SiLitecoin, SiTether, SiBitcoin } from "react-icons/si";
+import { SiSolana, SiLitecoin, SiTether, SiBitcoin } from "react-icons/si";
+
 
 export default function ProductPage() {
   const { id } = useParams();
@@ -28,7 +29,7 @@ export default function ProductPage() {
   const [user, setUser] = useState<User | null>(null);
   const [authChecked, setAuthChecked] = useState(false);
   
-  const [paymentMethod, setPaymentMethod] = useState<"stripe" | "crypto" | "balance">("stripe");
+  const [paymentMethod, setPaymentMethod] = useState<"polar" | "crypto" | "balance">("polar");
   const [selectedCryptoCoin, setSelectedCryptoCoin] = useState<string | null>(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isCryptoExpanded, setIsCryptoExpanded] = useState(false);
@@ -230,9 +231,9 @@ export default function ProductPage() {
               className="w-full bg-[#1c1c1c] border border-white/5 rounded-xl px-4 py-3 text-white flex items-center justify-between hover:bg-[#222] transition-colors"
             >
               <div className="flex items-center gap-3">
-                {paymentMethod === "stripe" ? (
-                  <div className="w-8 h-8 bg-[#635BFF]/10 rounded-full flex items-center justify-center">
-                    <SiStripe className="w-5 h-5 text-[#635BFF]" />
+                {paymentMethod === "polar" ? (
+                  <div className="w-8 h-8 bg-gray-500/10 rounded-full flex items-center justify-center shrink-0">
+                    <CreditCard className="w-5 h-5 text-gray-400" />
                   </div>
                 ) : paymentMethod === "crypto" ? (
                   <div className="w-8 h-8 bg-amber-500/10 rounded-full flex items-center justify-center">
@@ -244,11 +245,11 @@ export default function ProductPage() {
                   </div>
                 )}
                 <div className="text-left">
-                  <div className="text-sm font-medium">
-                    {paymentMethod === "stripe" ? "Debit / Credit Card" : paymentMethod === "crypto" ? "Cryptocurrency" : "Balance"}
+                  <div className="font-bold text-sm text-white">
+                    {paymentMethod === "polar" ? "Debit / Credit Card" : paymentMethod === "crypto" ? "Cryptocurrency" : "Balance"}
                   </div>
-                  <div className="text-xs text-gray-500 truncate block mt-0.5">
-                    {paymentMethod === "stripe" ? "Mastercard, Visa, Apple Pay etc. via Stripe (1.5% + €0.25 fee)" : paymentMethod === "crypto" ? (selectedCryptoCoin ? `${CRYPTO_COINS.find(c => c.id === selectedCryptoCoin)?.name} (0.5% fee)` : "SOL, LTC, USDT (0.5% fee)") : "Pay with your NFA Store balance"}
+                  <div className="text-[11px] text-gray-500 font-medium">
+                    {paymentMethod === "polar" ? "Mastercard, Visa, Apple Pay etc. (1.5% + €0.25 fee)" : paymentMethod === "crypto" ? (selectedCryptoCoin ? `${CRYPTO_COINS.find(c => c.id === selectedCryptoCoin)?.name} (0.5% fee)` : "SOL, LTC, USDT (0.5% fee)") : "Pay with your NFA Store balance"}
                   </div>
                 </div>
               </div>
@@ -268,15 +269,15 @@ export default function ProductPage() {
                 onTouchMove={e => e.stopPropagation()}
               >
                 <button 
-                  onClick={() => { setPaymentMethod("stripe"); setIsDropdownOpen(false); }}
+                  onClick={() => { setPaymentMethod("polar"); setIsDropdownOpen(false); }}
                   className="w-full px-4 py-3 text-left hover:bg-white/5 transition-colors flex items-center gap-3 border-b border-white/5"
                 >
-                  <div className="flex items-center justify-center w-8 h-8 bg-[#635BFF]/10 rounded-full">
-                    <SiStripe className="w-5 h-5 text-[#635BFF]" />
+                  <div className="flex items-center justify-center w-8 h-8 bg-gray-500/10 rounded-lg">
+                    <CreditCard className="w-5 h-5 text-gray-400" />
                   </div>
                   <div>
                     <div className="text-sm text-white">Debit / Credit Card</div>
-                    <div className="text-xs text-gray-500">Mastercard, Visa, Apple Pay etc. via Stripe <span className="text-indigo-400">(1.5% + €0.25 fee)</span></div>
+                    <div className="text-xs text-gray-500">Mastercard, Visa, Apple Pay etc. <span className="text-indigo-400">(1.5% + €0.25 fee)</span></div>
                   </div>
                 </button>
                 <button 
@@ -396,7 +397,7 @@ export default function ProductPage() {
             {loadingCheckout ? (
               <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin" />
             ) : (
-              `Pay €${totalPrice.toFixed(2)} with ${paymentMethod === "stripe" ? "Stripe" : "Balance"}`
+              `Pay €${totalPrice.toFixed(2)} with ${paymentMethod === "polar" ? "Card" : "Balance"}`
             )}
           </button>
         )}

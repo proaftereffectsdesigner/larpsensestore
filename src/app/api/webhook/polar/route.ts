@@ -1,32 +1,41 @@
 import { NextResponse } from 'next/server';
-import Stripe from 'stripe';
+import { validateEvent, WebhookVerificationError } from "@polar-sh/sdk/webhooks";
 import { createClient } from "@supabase/supabase-js";
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2025-01-27.acacia" as any,
-});
-
-const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET!;
 
 export async function POST(req: Request) {
   const payload = await req.text();
-  const signature = req.headers.get('stripe-signature');
+  const headers = req.headers;
+  
+  const webhookSecret = process.env.POLAR_WEBHOOK_SECRET;
+  
+  if (!webhookSecret) {
+    console.error("Missing POLAR_WEBHOOK_SECRET");
+    return NextResponse.json({ error: "Configuration error" }, { status: 500 });
+  }
 
-  let event: Stripe.Event;
-
+  let event;
   try {
-    if (!signature || !endpointSecret) throw new Error("Missing signature or webhook secret");
-    event = stripe.webhooks.constructEvent(payload, signature, endpointSecret);
-  } catch (err: any) {
-    console.error(`⚠️ Webhook signature verification failed.`, err.message);
-    return NextResponse.json({ error: err.message }, { status: 400 });
+    event = validateEvent(payload, Object.fromEntries(headers.entries()), webhookSecret);
+  } catch (error) {
+    if (error instanceof WebhookVerificationError) {
+      console.error(`⚠️ Webhook signature verification failed.`, error.message);
+      return NextResponse.json({ error: error.message }, { status: 403 });
+    }
+    console.error("Webhook error:", error);
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 
   // Handle the event
-  if (event.type === 'checkout.session.completed') {
-    const session = event.data.object as Stripe.Checkout.Session;
-    const type = session.metadata?.type || "topup"; // default to topup for backward compatibility
+  // Depending on Polar API version, it's checkout.updated or order.created
+  if (event.type === 'checkout.updated') {
+    const session = event.data;
     
+    // Process only succeeded checkouts
+    if (session.status !== 'succeeded') {
+      return NextResponse.json({ received: true });
+    }
+
+    const type = session.metadata?.type || "topup"; // default to topup
     const userId = session.metadata?.userId;
     
     if (!userId) {
@@ -51,14 +60,13 @@ export async function POST(req: Request) {
         if (error) {
           console.error("Error updating balance in webhook:", error);
         } else {
-          // Record top-up in orders table so it shows up in dashboard
           await supabaseAdmin.from("orders").insert({
             user_id: userId,
             product_id: "topup",
             quantity: 1,
             total_price: addedAmount,
             status: "completed",
-            accounts_data: `Balance Top-up (Stripe) [${session.id}]`
+            accounts_data: `Balance Top-up (Polar) [${session.id}]`
           });
         }
       }
@@ -69,22 +77,21 @@ export async function POST(req: Request) {
 
       console.log(`Fulfilling product checkout for user ${userId}, product ${productId}, quantity ${quantity}`);
 
-      // Use Stripe session ID as idempotency key — safe to retry
       const { buyNfaAccounts } = await import("@/lib/nfa");
       let accountsStr = "";
       let fulfilled = false;
 
       try {
         const nfaResult = await buyNfaAccounts(
-          productId!, // NFA type matches our product type exactly
+          String(productId),
           quantity,
-          `stripe-${session.id}` // unique per Stripe session → no double charges
+          `polar-${session.id}` // unique idempotency key
         );
         accountsStr = nfaResult.accounts.join("\n");
         fulfilled = nfaResult.accounts.length > 0;
         console.log(`NFA delivered ${nfaResult.accounts.length} accounts for ${productId}`);
       } catch (nfaErr) {
-        console.error("NFA API error during Stripe fulfillment:", nfaErr);
+        console.error("NFA API error during Polar fulfillment:", nfaErr);
       }
 
       if (fulfilled) {
@@ -101,9 +108,11 @@ export async function POST(req: Request) {
           
         if (dbError) {
           console.error("Supabase error saving completed order in webhook:", dbError);
+          // FALLBACK
+          console.error("FALLBACK ALERT: Saving accounts locally or to Discord webhook because DB failed!");
         }
       } else {
-        // Refund to balance if NFA failed or returned no accounts
+        // Refund to balance if NFA failed
         const { data: profile } = await supabaseAdmin
           .from("profiles")
           .select("balance")
@@ -125,19 +134,19 @@ export async function POST(req: Request) {
               quantity: quantity,
               total_price: totalPrice,
               status: "refunded",
-              accounts_data: `Refund — NFA fulfillment failed [Stripe: ${session.id}]`,
+              accounts_data: `Refund — NFA fulfillment failed [Polar: ${session.id}]`,
             });
         }
       }
-        // Push updated metadata to Discord if user is linked
-        fetch(new URL('/api/discord/update-metadata', req.url).toString(), {
-          method: 'POST',
-          body: JSON.stringify({ userId }),
-          headers: { 
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${process.env.VERIFICATION_JWT_SECRET}`
-          }
-        }).catch(console.error);
+      // Push updated metadata to Discord if user is linked
+      fetch(new URL('/api/discord/update-metadata', req.url).toString(), {
+        method: 'POST',
+        body: JSON.stringify({ userId }),
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${process.env.VERIFICATION_JWT_SECRET}`
+        }
+      }).catch(console.error);
     }
   }
 

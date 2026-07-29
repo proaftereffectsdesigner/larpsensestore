@@ -1,38 +1,11 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
-
-// We use the service role key to bypass RLS and fetch all users
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+import { requireAdmin } from '@/lib/auth';
 
 export async function GET(req: Request) {
   try {
-    // 1. Verify caller is admin
-    // We expect the client to send their Authorization token
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
-      return NextResponse.json({ error: "Missing authorization" }, { status: 401 });
-    }
-
-    const token = authHeader.replace("Bearer ", "");
-    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
-
-    if (authError || !user) {
-      return NextResponse.json({ error: "Invalid token" }, { status: 401 });
-    }
-
-    // Check if the user is an admin in the profiles table
-    const { data: profile } = await supabaseAdmin
-      .from("profiles")
-      .select("is_admin")
-      .eq("id", user.id)
-      .single();
-
-    if (!profile || !profile.is_admin) {
-      return NextResponse.json({ error: "Forbidden: Not an admin" }, { status: 403 });
-    }
+    const authResult = await requireAdmin(req);
+    if ('error' in authResult) return authResult.error;
+    const { supabaseAdmin } = authResult;
 
     // 2. Fetch all users from profiles table
     // Note: To get the actual Auth emails, we would need to query auth.users, 

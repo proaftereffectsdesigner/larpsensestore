@@ -1,15 +1,21 @@
 import { NextResponse } from 'next/server';
 import { Resend } from 'resend';
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
-const JWT_SECRET = process.env.VERIFICATION_JWT_SECRET || 'fallback_secret';
 
 // Simple in-memory rate limiter to prevent spamming
 const rateLimitMap = new Map<string, number>();
 
 export async function POST(request: Request) {
   try {
+    if (!process.env.VERIFICATION_JWT_SECRET) {
+      console.error('CRITICAL: VERIFICATION_JWT_SECRET is missing');
+      return NextResponse.json({ error: 'Server misconfiguration' }, { status: 500 });
+    }
+    const JWT_SECRET = process.env.VERIFICATION_JWT_SECRET;
+    
     const { email } = await request.json();
 
     if (!email) {
@@ -36,9 +42,10 @@ export async function POST(request: Request) {
 
     // Generate a random 6-digit code
     const code = Math.floor(100000 + Math.random() * 900000).toString();
+    const codeHash = crypto.createHash('sha256').update(code).digest('hex');
 
     // Sign a JWT valid for 5 minutes
-    const token = jwt.sign({ email, code }, JWT_SECRET, { expiresIn: '5m' });
+    const token = jwt.sign({ email, codeHash }, JWT_SECRET, { expiresIn: '5m' });
 
     // HTML Email Template (10x Better Design)
     const htmlContent = `

@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import jwt from 'jsonwebtoken';
-
-const JWT_SECRET = process.env.VERIFICATION_JWT_SECRET || 'fallback_secret';
+import crypto from 'crypto';
 
 // Use the Service Role Key to bypass RLS and create confirmed users
 const supabaseAdmin = createClient(
@@ -24,6 +23,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Token, code, and password are required' }, { status: 400 });
     }
 
+    if (!process.env.VERIFICATION_JWT_SECRET) {
+      console.error('CRITICAL: VERIFICATION_JWT_SECRET is missing');
+      return NextResponse.json({ error: 'Server misconfiguration' }, { status: 500 });
+    }
+    const JWT_SECRET = process.env.VERIFICATION_JWT_SECRET;
+
     let decoded: any;
     try {
       decoded = jwt.verify(token, JWT_SECRET);
@@ -31,7 +36,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid or expired verification code' }, { status: 400 });
     }
 
-    if (decoded.code !== code) {
+    const hashedInputCode = crypto.createHash('sha256').update(code).digest('hex');
+
+    if (decoded.codeHash !== hashedInputCode) {
       return NextResponse.json({ error: 'Incorrect verification code' }, { status: 400 });
     }
 

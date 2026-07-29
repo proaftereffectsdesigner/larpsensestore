@@ -18,10 +18,23 @@ export async function POST(req: Request) {
       );
     }
 
-    const { userId, token, amount, currency, type = "topup", productId, quantity } = await req.json();
+    const { userId, token, amount: clientAmount, currency, type = "topup", productId, quantity: clientQuantity } = await req.json();
+
+    let amount = Number(clientAmount);
+    let quantity = Number(clientQuantity || 1);
 
     if (!userId || !token || !amount) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+    }
+
+    // CRITICAL SECURITY FIX: Never trust client-provided amount for products
+    if (type === "product_checkout" && productId) {
+      const { products } = await import("@/lib/products");
+      const product = products.find(p => p.id === productId);
+      if (!product) {
+        return NextResponse.json({ error: "Product not found" }, { status: 404 });
+      }
+      amount = product.price * quantity;
     }
 
     if (!PLISIO_SECRET_KEY) {

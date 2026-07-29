@@ -110,7 +110,7 @@ Utwórz w głównym folderze projektu plik `.env.local` i wklej do niego swoje d
 ```env
 NEXT_PUBLIC_SUPABASE_URL=twoj_url_supabase
 NEXT_PUBLIC_SUPABASE_ANON_KEY=twoj_anon_key_supabase
-NFA_API_KEY=rsk_test_uMKWV_LizLQdCUkG-ht7V7Bq8gr2zbe6bhEpE8DSs8M
+NFA_API_KEY=your_nfa_api_key_here_rotate_immediately
 ```
 
 Url oraz anon key znajdziesz w panelu Supabase w: **Project Settings -> API**.

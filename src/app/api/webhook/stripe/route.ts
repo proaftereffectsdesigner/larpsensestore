@@ -93,7 +93,10 @@ export async function POST(req: Request) {
         fetch(new URL('/api/discord/update-metadata', req.url).toString(), {
           method: 'POST',
           body: JSON.stringify({ userId }),
-          headers: { 'Content-Type': 'application/json' }
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${process.env.VERIFICATION_JWT_SECRET}`
+          }
         }).catch(console.error);
       }
     }

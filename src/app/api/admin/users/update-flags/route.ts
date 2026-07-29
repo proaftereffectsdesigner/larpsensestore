@@ -1,36 +1,11 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
-
-// Initialize Supabase client with the Service Role key to bypass RLS
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
+import { requireAdmin } from '@/lib/auth';
 
 export async function POST(req: Request) {
   try {
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
-      return NextResponse.json({ error: "Missing authorization header" }, { status: 401 });
-    }
-
-    const token = authHeader.replace("Bearer ", "");
-    
-    // Verify that the user making the request is an admin
-    const { data: { user }, error: userError } = await supabase.auth.getUser(token);
-    if (userError || !user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("is_admin, is_banned")
-      .eq("id", user.id)
-      .single();
-
-    if (!profile || !profile.is_admin) {
-      return NextResponse.json({ error: "Forbidden: Admins only" }, { status: 403 });
-    }
+    const authResult = await requireAdmin(req);
+    if ('error' in authResult) return authResult.error;
+    const { supabaseAdmin, user } = authResult;
 
     // Process the request
     const { targetUserId, flags } = await req.json();
@@ -45,7 +20,7 @@ export async function POST(req: Request) {
     }
 
     // Get target user's current data to know their IP
-    const { data: targetUser } = await supabase
+    const { data: targetUser } = await supabaseAdmin
       .from("profiles")
       .select("last_ip, is_banned")
       .eq("id", targetUserId)
@@ -74,7 +49,7 @@ export async function POST(req: Request) {
     };
     if (banned_at !== undefined) updateData.banned_at = banned_at;
 
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin
       .from("profiles")
       .update(updateData)
       .eq("id", targetUserId)
@@ -95,7 +70,7 @@ export async function POST(req: Request) {
     // Cascade ban to other accounts on the same IP if this is a ban action
     if (flags.is_banned === true && targetUser?.last_ip) {
       cascadeType = 'ban';
-      const { error: cascadeError } = await supabase
+      const { error: cascadeError } = await supabaseAdmin
         .from("profiles")
         .update({
           is_banned: true,
@@ -118,7 +93,7 @@ export async function POST(req: Request) {
     } else if (flags.is_banned === false && isFullUnban && targetUser?.last_ip) {
       cascadeType = 'unban';
       // Cascade UNBAN to all related accounts
-      const { error: cascadeUnbanError } = await supabase
+      const { error: cascadeUnbanError } = await supabaseAdmin
         .from("profiles")
         .update({
           is_banned: false,
@@ -141,7 +116,7 @@ export async function POST(req: Request) {
     } else if (flags.is_banned === false && !isFullUnban && targetUser?.last_ip) {
       cascadeType = 'restrict';
       // Cascade RESTRICTION to all related accounts
-      const { error: cascadeRestrictError } = await supabase
+      const { error: cascadeRestrictError } = await supabaseAdmin
         .from("profiles")
         .update({
           is_banned: false,

@@ -166,7 +166,9 @@ export async function POST(req: Request) {
         let fulfilled = false;
         let accountsStr = "";
 
-        if (product) {
+        // CRITICAL SECURITY FIX: Verify the amount paid actually covers the product price
+        const expectedPrice = product ? product.price * quantity : Infinity;
+        if (product && amountPaid >= expectedPrice) {
           try {
             const { buyNfaAccounts } = await import("@/lib/nfa");
             // Use txnId as idempotency key — Plisio can retry webhooks,

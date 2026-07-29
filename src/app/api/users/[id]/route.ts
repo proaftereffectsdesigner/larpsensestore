@@ -30,20 +30,9 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    // Fetch extra data not returned by the RPC
-    const { data: extraData, error: adminError } = await supabaseAdmin
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .single();
-
-    if (adminError) {
-      console.error("Admin fetch error:", adminError);
-    }
-
     const profileData = Array.isArray(data) ? data[0] : data;
 
-    return NextResponse.json({ ...(profileData || {}), ...(extraData || {}) });
+    return NextResponse.json({ ...(profileData || {}) });
   } catch (err) {
     return NextResponse.json({ error: "Internal error" }, { status: 500 });
   }

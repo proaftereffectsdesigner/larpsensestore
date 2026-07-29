@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import jwt from 'jsonwebtoken';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -8,10 +9,25 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const code = searchParams.get('code');
-  const userId = searchParams.get('state');
+  const stateToken = searchParams.get('state');
   
-  if (!code || !userId) {
+  if (!code || !stateToken) {
     return NextResponse.redirect(new URL('/dashboard?tab=security&error=DiscordAuthFailed', request.url));
+  }
+
+  if (!process.env.VERIFICATION_JWT_SECRET) {
+    console.error('CRITICAL: VERIFICATION_JWT_SECRET is missing');
+    return NextResponse.json({ error: 'Server misconfiguration' }, { status: 500 });
+  }
+
+  let userId = '';
+  try {
+    const decoded = jwt.verify(stateToken, process.env.VERIFICATION_JWT_SECRET) as any;
+    userId = decoded.userId;
+    if (!userId) throw new Error('No userId in state token');
+  } catch (err) {
+    console.error('Invalid state token during Discord OAuth:', err);
+    return NextResponse.redirect(new URL('/dashboard?tab=security&error=InvalidStateToken', request.url));
   }
 
   const clientId = process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID;
@@ -56,7 +72,10 @@ export async function GET(request: Request) {
     await fetch(new URL('/api/discord/update-metadata', request.url).toString(), {
       method: 'POST',
       body: JSON.stringify({ userId }),
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${process.env.VERIFICATION_JWT_SECRET}`
+      }
     });
 
     return NextResponse.redirect(new URL('/dashboard?tab=security&discord=linked', request.url));

@@ -66,8 +66,8 @@ export async function POST(req: Request) {
     }
 
     if (paymentMethod === "polar") {
-      const feeMultiplier = 0.015;
-      const fixedFee = 0.25;
+      const feeMultiplier = 0.05;
+      const fixedFee = 0.50;
       const cardFee = Number((totalPrice * feeMultiplier + fixedFee).toFixed(2));
       const finalAmount = totalPrice + cardFee;
 

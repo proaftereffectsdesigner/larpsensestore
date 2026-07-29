@@ -249,7 +249,7 @@ export default function ProductPage() {
                     {paymentMethod === "polar" ? "Debit / Credit Card" : paymentMethod === "crypto" ? "Cryptocurrency" : "Balance"}
                   </div>
                   <div className="text-[11px] text-gray-500 font-medium">
-                    {paymentMethod === "polar" ? "Mastercard, Visa, Apple Pay etc. (1.5% + €0.25 fee)" : paymentMethod === "crypto" ? (selectedCryptoCoin ? `${CRYPTO_COINS.find(c => c.id === selectedCryptoCoin)?.name} (0.5% fee)` : "SOL, LTC, USDT (0.5% fee)") : "Pay with your NFA Store balance"}
+                    {paymentMethod === "polar" ? "Mastercard, Visa, Apple Pay etc. (5% + €0.50 fee)" : paymentMethod === "crypto" ? (selectedCryptoCoin ? `${CRYPTO_COINS.find(c => c.id === selectedCryptoCoin)?.name} (0.5% fee)` : "SOL, LTC, USDT (0.5% fee)") : "Pay with your NFA Store balance"}
                   </div>
                 </div>
               </div>
@@ -277,7 +277,7 @@ export default function ProductPage() {
                   </div>
                   <div>
                     <div className="text-sm text-white">Debit / Credit Card</div>
-                    <div className="text-xs text-gray-500">Mastercard, Visa, Apple Pay etc. <span className="text-indigo-400">(1.5% + €0.25 fee)</span></div>
+                    <div className="text-xs text-gray-500">Mastercard, Visa, Apple Pay etc. <span className="text-indigo-400">(5% + €0.50 fee)</span></div>
                   </div>
                 </button>
                 <button 

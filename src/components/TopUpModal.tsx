@@ -237,7 +237,7 @@ export default function TopUpModal() {
                       </div>
                       <div className="text-left">
                         <div className={`font-bold text-sm ${method === 'card' ? 'text-white' : 'text-gray-300'}`}>Debit / Credit Card</div>
-                        <div className="text-[11px] text-gray-500 font-medium">Mastercard, Visa, Apple Pay etc. <span className="text-indigo-400 font-bold">(1.5% + €0.25 fee)</span></div>
+                        <div className="text-[11px] text-gray-500 font-medium">Mastercard, Visa, Apple Pay etc. <span className="text-indigo-400 font-bold">(5% + €0.50 fee)</span></div>
                       </div>
                     </div>
                     <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${method === 'card' ? 'border-[#635BFF]' : 'border-gray-600'}`}>

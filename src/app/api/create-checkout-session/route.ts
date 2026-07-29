@@ -48,8 +48,8 @@ export async function POST(req: Request) {
     }
 
     // We keep the old Stripe fee formula unless requested otherwise, as it covers standard card processing.
-    const feeMultiplier = 0.015;
-    const fixedFee = 0.25;
+    const feeMultiplier = 0.05;
+    const fixedFee = 0.50;
 
     const cardFee = Number((amount * feeMultiplier + fixedFee).toFixed(2));
     const totalAmount = amount + cardFee;

@@ -118,7 +118,7 @@ export default function Navbar() {
           <Link href="/" className="text-sm font-medium text-gray-400 hover:text-white transition-colors">Home</Link>
           <Link href="/support" className="text-sm font-medium text-gray-400 hover:text-white transition-colors">Support</Link>
           <Link href="/faq" className="text-sm font-medium text-gray-400 hover:text-white transition-colors">FAQ</Link>
-          <Link href="/about" className="text-sm font-medium text-gray-400 hover:text-white transition-colors">About Us</Link>
+
         </div>
 
         <div className="flex items-center gap-3 sm:gap-4">

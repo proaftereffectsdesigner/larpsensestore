@@ -40,6 +40,7 @@ export async function GET(request: Request) {
     
     let points = 30;
     let customStartDate = new Date();
+    let isHourly = false;
     
     if (daysParam === 'custom' && fromParam && toParam) {
       const from = new Date(fromParam);
@@ -49,8 +50,11 @@ export async function GET(request: Request) {
       customStartDate = to;
     } else if (daysParam === 'all') {
       points = 365;
+    } else if (daysParam === 'today') {
+      points = 24;
+      isHourly = true;
     } else if (daysParam) {
-      points = parseInt(daysParam, 10);
+      points = parseInt(daysParam, 10) || 30;
     }
 
     // Simulated Advanced Metrics
@@ -61,9 +65,16 @@ export async function GET(request: Request) {
     let baseUniques = 120;
 
     for (let i = points - 1; i >= 0; i--) {
-      const d = new Date(customStartDate);
-      d.setDate(d.getDate() - i);
-      const dateStr = d.toISOString().split('T')[0];
+      let dateStr = '';
+      if (isHourly) {
+        const d = new Date();
+        d.setHours(d.getHours() - i);
+        dateStr = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      } else {
+        const d = new Date(customStartDate);
+        d.setDate(d.getDate() - i);
+        dateStr = d.toISOString().split('T')[0];
+      }
       
       // Add some randomness
       const dailyViews = Math.floor(basePageviews + (Math.random() * 100 - 30));

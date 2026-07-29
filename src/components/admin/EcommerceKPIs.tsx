@@ -1,9 +1,10 @@
 import { Euro, TrendingUp, ShoppingCart, ArrowUpRight, ArrowDownRight } from "lucide-react";
 
-const TrendIndicator = ({ trend }: { trend: string }) => {
+const TrendIndicator = ({ trend, inverse = false }: { trend: string, inverse?: boolean }) => {
   const isPositive = trend.startsWith('+');
+  const isGood = inverse ? !isPositive : isPositive;
   return (
-    <span className={`flex items-center text-xs font-bold px-2 py-1 rounded-full ${isPositive ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'}`}>
+    <span className={`flex items-center text-xs font-bold px-2 py-1 rounded-full ${isGood ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'}`}>
       {isPositive ? <ArrowUpRight className="w-3 h-3 mr-1" /> : <ArrowDownRight className="w-3 h-3 mr-1" />}
       {trend}
     </span>
@@ -76,7 +77,7 @@ export default function EcommerceKPIs({ data, hideTrends = false }: { data: any,
         </div>
         <div className="flex items-end justify-between">
           <p className="text-3xl font-black text-white">{data?.advanced?.ecommerce?.cartAbandonmentRate?.value || '65.4%'}</p>
-          {!hideTrends && <TrendIndicator trend={data?.advanced?.ecommerce?.cartAbandonmentRate?.trend || '-1.2%'} />}
+          {!hideTrends && <TrendIndicator trend={data?.advanced?.ecommerce?.cartAbandonmentRate?.trend || '-1.2%'} inverse={true} />}
         </div>
       </div>
     </>

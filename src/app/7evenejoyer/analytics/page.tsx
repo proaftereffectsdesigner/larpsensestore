@@ -338,11 +338,22 @@ export default function AnalyticsDashboard() {
                               { name: 'Returning', value: 45, fill: '#8b5cf6' },
                               { name: 'New', value: 55, fill: '#10b981' }
                             ]}
-                            innerRadius={70}
+                            innerRadius={60}
                             outerRadius={100}
                             paddingAngle={5}
                             dataKey="value"
                             stroke="none"
+                            labelLine={false}
+                            label={({ cx, cy, midAngle = 0, innerRadius, outerRadius, percent = 0 }: any) => {
+                              const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+                              const x = cx + radius * Math.cos(-midAngle * Math.PI / 180);
+                              const y = cy + radius * Math.sin(-midAngle * Math.PI / 180);
+                              return (
+                                <text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central" fontSize={14} fontWeight="bold">
+                                  {`${(percent * 100).toFixed(0)}%`}
+                                </text>
+                              );
+                            }}
                           >
                             <Cell key="cell-0" fill="#8b5cf6" />
                             <Cell key="cell-1" fill="#10b981" />

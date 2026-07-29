@@ -1520,10 +1520,14 @@ function DashboardContent() {
                 </div>
                 <div className="shrink-0 text-right hidden sm:block">
                   <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-0.5">Current Rank</div>
-                  {totalSpent > 50 ? (
-                    <div className="flex items-center justify-end gap-1.5 text-accent"><Crown className="w-3.5 h-3.5" /><span className="text-xs font-bold uppercase tracking-widest">Elite Buyer</span></div>
+                  {totalSpent >= 250 ? (
+                    <div className="flex items-center justify-end gap-1.5 text-cyan-400"><Gem className="w-3.5 h-3.5" /><span className="text-xs font-bold uppercase tracking-widest">VIP Status</span></div>
+                  ) : totalSpent >= 50 ? (
+                    <div className="flex items-center justify-end gap-1.5 text-yellow-400"><Coins className="w-3.5 h-3.5" /><span className="text-xs font-bold uppercase tracking-widest">Premium Tier</span></div>
+                  ) : totalOrders > 0 ? (
+                    <div className="flex items-center justify-end gap-1.5 text-green-400"><ShoppingBag className="w-3.5 h-3.5" /><span className="text-xs font-bold uppercase tracking-widest">Verified Buyer</span></div>
                   ) : (
-                    <div className="flex items-center justify-end gap-1.5 text-emerald-400"><ShieldCheck className="w-3.5 h-3.5" /><span className="text-xs font-bold uppercase tracking-widest">Verified Member</span></div>
+                    <div className="flex items-center justify-end gap-1.5 text-gray-400"><UserPlus className="w-3.5 h-3.5" /><span className="text-xs font-bold uppercase tracking-widest">Registered</span></div>
                   )}
                 </div>
               </div>
@@ -1554,39 +1558,39 @@ function DashboardContent() {
                 <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest px-2">Purchase Badges</h4>
                 <div className="grid grid-cols-1 gap-3">
                   <div className={`flex items-center gap-4 p-3 rounded-2xl border ${totalOrders > 0 ? 'bg-[#0a0a0a] border-white/10' : 'bg-transparent border-transparent opacity-50 grayscale'}`}>
-                    <div className={`p-3 rounded-xl border shrink-0 ${totalOrders > 0 ? 'bg-accent/10 border-accent/20' : 'bg-white/5 border-white/10'}`}>
-                      <Package className={`w-6 h-6 ${totalOrders > 0 ? 'text-accent' : 'text-gray-400'}`} />
+                    <div className={`p-3 rounded-xl border shrink-0 ${totalOrders > 0 ? 'bg-green-500/10 border-green-500/20 shadow-[0_0_8px_rgba(34,197,94,0.3)]' : 'bg-white/5 border-white/10'}`}>
+                      <ShoppingBag className={`w-6 h-6 ${totalOrders > 0 ? 'text-green-400' : 'text-gray-400'}`} />
                     </div>
                     <div className="flex-1">
-                      <div className={`font-bold text-sm ${totalOrders > 0 ? 'text-accent' : 'text-gray-400'}`}>Verified Buyer</div>
+                      <div className={`font-bold text-sm ${totalOrders > 0 ? 'text-green-400' : 'text-gray-400'}`}>Verified Buyer</div>
                       <div className="text-xs text-gray-500 mt-1">Has purchased at least one item from the store.</div>
                     </div>
                     {totalOrders > 0 && <div className="text-[10px] uppercase font-bold text-accent tracking-widest px-2">Owned</div>}
                     {totalOrders === 0 && <div className="text-[10px] uppercase font-bold text-gray-600 tracking-widest px-2">0/1 Orders</div>}
                   </div>
 
-                  <div className={`flex items-center gap-4 p-3 rounded-2xl border ${totalSpent > 50 ? 'bg-[#0a0a0a] border-white/10' : 'bg-transparent border-transparent opacity-50 grayscale'}`}>
-                    <div className={`p-3 rounded-xl border shrink-0 ${totalSpent > 50 ? 'bg-blue-500/10 border-blue-500/20 shadow-[0_0_15px_rgba(59,130,246,0.4)]' : 'bg-white/5 border-white/10'}`}>
-                      <Gem className={`w-6 h-6 ${totalSpent > 50 ? 'text-blue-400' : 'text-gray-400'}`} />
+                  <div className={`flex items-center gap-4 p-3 rounded-2xl border ${totalSpent >= 50 ? 'bg-[#0a0a0a] border-white/10' : 'bg-transparent border-transparent opacity-50 grayscale'}`}>
+                    <div className={`p-3 rounded-xl border shrink-0 ${totalSpent >= 50 ? 'bg-yellow-500/10 border-yellow-500/30 shadow-[0_0_15px_rgba(234,179,8,0.5)]' : 'bg-white/5 border-white/10'}`}>
+                      <Coins className={`w-6 h-6 ${totalSpent >= 50 ? 'text-yellow-400' : 'text-gray-400'}`} />
                     </div>
                     <div className="flex-1">
-                      <div className={`font-bold text-sm ${totalSpent > 50 ? 'text-blue-400' : 'text-gray-400'}`}>Elite Spender</div>
-                      <div className="text-xs text-gray-500 mt-1">Has spent over $50.00 in the store.</div>
+                      <div className={`font-bold text-sm ${totalSpent >= 50 ? 'text-yellow-400' : 'text-gray-400'}`}>Premium Tier</div>
+                      <div className="text-xs text-gray-500 mt-1">Accumulative spend over $50.00.</div>
                     </div>
-                    {totalSpent > 50 && <div className="text-[10px] uppercase font-bold text-accent tracking-widest px-2">Owned</div>}
-                    {totalSpent <= 50 && <div className="text-[10px] uppercase font-bold text-gray-600 tracking-widest px-2">${totalSpent.toFixed(2)} / $50.00</div>}
+                    {totalSpent >= 50 && <div className="text-[10px] uppercase font-bold text-accent tracking-widest px-2">Owned</div>}
+                    {totalSpent < 50 && <div className="text-[10px] uppercase font-bold text-gray-600 tracking-widest px-2">${totalSpent.toFixed(2)} / $50.00</div>}
                   </div>
 
-                  <div className={`flex items-center gap-4 p-3 rounded-2xl border ${totalSpent > 250 ? 'bg-[#0a0a0a] border-white/10' : 'bg-transparent border-transparent opacity-50 grayscale'}`}>
-                    <div className={`p-3 rounded-xl border shrink-0 ${totalSpent > 250 ? 'bg-yellow-500/10 border-yellow-500/30 shadow-[0_0_20px_rgba(234,179,8,0.5)]' : 'bg-white/5 border-white/10'}`}>
-                      <Zap className={`w-6 h-6 ${totalSpent > 250 ? 'text-yellow-400' : 'text-gray-400'}`} />
+                  <div className={`flex items-center gap-4 p-3 rounded-2xl border ${totalSpent >= 250 ? 'bg-[#0a0a0a] border-white/10' : 'bg-transparent border-transparent opacity-50 grayscale'}`}>
+                    <div className={`p-3 rounded-xl border shrink-0 ${totalSpent >= 250 ? 'bg-cyan-500/10 border-cyan-500/30 shadow-[0_0_15px_rgba(34,211,238,0.5)]' : 'bg-white/5 border-white/10'}`}>
+                      <Gem className={`w-6 h-6 ${totalSpent >= 250 ? 'text-cyan-400' : 'text-gray-400'}`} />
                     </div>
                     <div className="flex-1">
-                      <div className={`font-bold text-sm ${totalSpent > 250 ? 'text-yellow-400' : 'text-gray-400'}`}>High Roller</div>
-                      <div className="text-xs text-gray-500 mt-1">Has spent an incredible $250.00+ in the store.</div>
+                      <div className={`font-bold text-sm ${totalSpent >= 250 ? 'text-cyan-400' : 'text-gray-400'}`}>VIP Status</div>
+                      <div className="text-xs text-gray-500 mt-1">Exclusive status for $250.00+ spend.</div>
                     </div>
-                    {totalSpent > 250 && <div className="text-[10px] uppercase font-bold text-accent tracking-widest px-2">Owned</div>}
-                    {totalSpent <= 250 && <div className="text-[10px] uppercase font-bold text-gray-600 tracking-widest px-2">${totalSpent.toFixed(2)} / $250.00</div>}
+                    {totalSpent >= 250 && <div className="text-[10px] uppercase font-bold text-accent tracking-widest px-2">Owned</div>}
+                    {totalSpent < 250 && <div className="text-[10px] uppercase font-bold text-gray-600 tracking-widest px-2">${totalSpent.toFixed(2)} / $250.00</div>}
                   </div>
                 </div>
               </div>

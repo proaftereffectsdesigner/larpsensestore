@@ -1178,18 +1178,28 @@ function DashboardContent() {
                           
                           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 relative z-10">
                             <div className="flex items-center gap-4">
-                              <div className="w-16 h-12 rounded-xl border border-white/10 flex items-center justify-center shadow-inner group-hover:scale-105 transition-transform overflow-hidden relative">
-                                <Image 
-                                  src={order.product_id === "prime" ? "/prime-bg.png" : "/premier-bg.jpg"} 
-                                  alt={pInfo?.name || "Product"} 
-                                  fill 
-                                  className="object-cover scale-[1.15]"
-                                />
+                              <div className="w-16 h-12 rounded-xl border border-white/10 flex items-center justify-center shadow-inner group-hover:scale-105 transition-transform overflow-hidden relative bg-black/50">
+                                {order.product_id === "topup" ? (
+                                  <Wallet className="w-6 h-6 text-accent z-10" />
+                                ) : (
+                                  <Image 
+                                    src={order.product_id === "prime" ? "/prime-bg.png" : "/premier-bg.jpg"} 
+                                    alt={pInfo?.name || "Product"} 
+                                    fill 
+                                    className="object-cover scale-[1.15]"
+                                  />
+                                )}
                                 <div className="absolute inset-0 bg-black/20 pointer-events-none" />
                               </div>
                               <div>
-                                <div className="text-[10px] uppercase tracking-widest font-bold text-emerald-500 mb-0.5">Counter Strike 2</div>
-                                <div className="font-bold text-white text-lg tracking-tight group-hover:text-emerald-400 transition-colors">{pInfo?.name || "Premier Ready"}</div>
+                                {order.product_id === "topup" ? (
+                                  <div className="text-[10px] uppercase tracking-widest font-bold text-accent mb-0.5">Store Balance</div>
+                                ) : (
+                                  <div className="text-[10px] uppercase tracking-widest font-bold text-emerald-500 mb-0.5">Counter Strike 2</div>
+                                )}
+                                <div className="font-bold text-white text-lg tracking-tight group-hover:text-emerald-400 transition-colors">
+                                  {order.product_id === "topup" ? "Balance Top-up" : pInfo?.name || "Premier Ready"}
+                                </div>
                                 <div className="text-xs text-gray-500 font-mono mt-1">#{order.id.split('-')[0]} • {new Date(order.created_at).toLocaleString('en-GB')}</div>
                               </div>
                             </div>
@@ -1211,15 +1221,15 @@ function DashboardContent() {
                                 order.status === 'refunded' ? 'bg-indigo-500/10 border-indigo-500/20 text-indigo-400' :
                                 'bg-yellow-500/10 border-yellow-500/20 text-yellow-400'
                               }`}>
-                                <div className="text-lg font-black leading-none">{order.quantity}</div>
+                                <div className="text-lg font-black leading-none">{order.product_id === 'topup' ? '€' : order.quantity}</div>
                                 <div className="text-[9px] uppercase tracking-widest font-bold opacity-80 mt-0.5">
-                                  {order.quantity === 1 ? "Account" : "Accounts"}
+                                  {order.product_id === 'topup' ? "Top-up" : order.quantity === 1 ? "Account" : "Accounts"}
                                 </div>
                               </div>
                             </div>
                           </div>
                           
-                          {order.status === 'completed' && (
+                          {order.status === 'completed' && order.product_id !== 'topup' && (
                             <div className="mt-4 pt-4 border-t border-white/5 flex justify-end">
                             {order.reviews ? (
                               <button

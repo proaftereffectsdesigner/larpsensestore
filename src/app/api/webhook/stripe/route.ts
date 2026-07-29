@@ -48,7 +48,19 @@ export async function POST(req: Request) {
         const newBalance = currentBalance + addedAmount;
 
         const { error } = await supabaseAdmin.from("profiles").update({ balance: newBalance }).eq("id", userId);
-        if (error) console.error("Error updating balance in webhook:", error);
+        if (error) {
+          console.error("Error updating balance in webhook:", error);
+        } else {
+          // Record top-up in orders table so it shows up in dashboard
+          await supabaseAdmin.from("orders").insert({
+            user_id: userId,
+            product_id: "topup",
+            quantity: 1,
+            total_price: addedAmount,
+            status: "completed",
+            accounts_data: `Balance Top-up (Stripe) [${session.id}]`
+          });
+        }
       }
     } else if (type === "product_checkout") {
       const productId = session.metadata?.productId;
@@ -75,20 +87,48 @@ export async function POST(req: Request) {
         console.error("NFA API error during Stripe fulfillment:", nfaErr);
       }
 
-      const { error: dbError } = await supabaseAdmin
-        .from("orders")
-        .insert({
-          user_id: userId,
-          product_id: productId,
-          quantity: quantity,
-          total_price: totalPrice,
-          status: fulfilled ? "completed" : "failed",
-          accounts_data: accountsStr || null,
-        });
-
-      if (dbError) {
-        console.error("Supabase error saving order in webhook:", dbError);
+      if (fulfilled) {
+        const { error: dbError } = await supabaseAdmin
+          .from("orders")
+          .insert({
+            user_id: userId,
+            product_id: productId,
+            quantity: quantity,
+            total_price: totalPrice,
+            status: "completed",
+            accounts_data: accountsStr,
+          });
+          
+        if (dbError) {
+          console.error("Supabase error saving completed order in webhook:", dbError);
+        }
       } else {
+        // Refund to balance if NFA failed or returned no accounts
+        const { data: profile } = await supabaseAdmin
+          .from("profiles")
+          .select("balance")
+          .eq("id", userId)
+          .single();
+
+        if (profile) {
+          const newBalance = Number(profile.balance) + totalPrice;
+          await supabaseAdmin
+            .from("profiles")
+            .update({ balance: newBalance })
+            .eq("id", userId);
+
+          await supabaseAdmin
+            .from("orders")
+            .insert({
+              user_id: userId,
+              product_id: productId,
+              quantity: quantity,
+              total_price: totalPrice,
+              status: "refunded",
+              accounts_data: `Refund — NFA fulfillment failed [Stripe: ${session.id}]`,
+            });
+        }
+      }
         // Push updated metadata to Discord if user is linked
         fetch(new URL('/api/discord/update-metadata', req.url).toString(), {
           method: 'POST',

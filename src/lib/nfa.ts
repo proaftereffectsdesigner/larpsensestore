@@ -27,10 +27,12 @@ export async function buyNfaAccounts(
   const apiKey = process.env.NFA_API_KEY;
   if (!apiKey) throw new Error("NFA_API_KEY is not set");
 
-  const url = `${NFA_BASE}/cs2?key=${encodeURIComponent(apiKey)}&type=${encodeURIComponent(type)}&quantity=${quantity}&result=json`;
+  const url = `${NFA_BASE}/cs2?type=${encodeURIComponent(type)}&quantity=${quantity}&result=json`;
 
   const res = await fetch(url, {
+    method: "POST",
     headers: {
+      "X-Api-Key": apiKey,
       // Idempotency-Key prevents double charges if the webhook fires twice
       "Idempotency-Key": idempotencyKey,
     },

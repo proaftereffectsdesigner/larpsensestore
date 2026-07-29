@@ -122,13 +122,14 @@ export async function POST(req: Request) {
       const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE);
 
       // Check if this transaction was already processed
+      // We store the txnId in accounts_data to avoid schema issues
       const { data: existingTx } = await supabaseAdmin
         .from("orders")
         .select("id")
-        .eq("payment_intent_id", txnId)
-        .single();
+        .like("accounts_data", `%${txnId}%`)
+        .limit(1);
 
-      if (existingTx) {
+      if (existingTx && existingTx.length > 0) {
         return NextResponse.json({ received: true });
       }
 
@@ -152,10 +153,11 @@ export async function POST(req: Request) {
             .from("orders")
             .insert({
               user_id: userId,
-              product_name: "Balance Top-up (Crypto)",
+              product_id: "topup",
+              quantity: 1,
               total_price: amountPaid,
               status: "completed",
-              payment_intent_id: txnId
+              accounts_data: `Balance Top-up (Crypto) [${txnId}]`
             });
         }
       } else if (type === "PROD") {
@@ -193,12 +195,10 @@ export async function POST(req: Request) {
             .insert({
               user_id: userId,
               product_id: productId,
-              product_name: product?.name || productId,
+              quantity: quantity,
               total_price: amountPaid,
               status: "completed",
-              payment_intent_id: txnId,
-              accounts_data: accountsStr,
-              quantity: quantity,
+              accounts_data: `${accountsStr}\n\n[Plisio Txn: ${txnId}]`,
             });
         } else {
           // Refund to balance if NFA failed or returned no accounts
@@ -219,10 +219,11 @@ export async function POST(req: Request) {
               .from("orders")
               .insert({
                 user_id: userId,
-                product_name: `Refund — out of stock: ${product?.name || productId}`,
+                product_id: productId,
+                quantity: quantity,
                 total_price: amountPaid,
                 status: "refunded",
-                payment_intent_id: txnId,
+                accounts_data: `Refund — out of stock [Txn: ${txnId}]`,
               });
           }
         }

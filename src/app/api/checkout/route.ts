@@ -106,44 +106,47 @@ export async function POST(req: Request) {
     // Jeśli zapłacono przez Balance, kontynuujemy z realizacją natychmiastową
 
     let accountsStr = "";
-    const NFA_API_KEY = process.env.NFA_API_KEY;
-    const NFA_API_URL = process.env.NFA_API_URL || "https://www.nfa.pub/api/v1";
-
-    if (!NFA_API_KEY) {
-      return NextResponse.json({ error: "Missing NFA_API_KEY in environment" }, { status: 500 });
-    }
-
-    // TEMPORARY MOCK FOR NFA API
-    // TODO: Replace with real NFA API fetch when documentation and keys are ready
-    const nfaData = {
-      ok: true,
-      accounts: Array.from({ length: quantity }, (_, i) => `mock_account_${i + 1}@example.com:password123`)
-    };
-
-    /*
+    
     // TRYB PRAWDZIWY: STRIPE / BALANCE -> NFA API
-    const nfaRes = await fetch(`${NFA_API_URL}/cs2?type=${product.type}&quantity=${quantity}&result=json`, {
-      method: "POST",
-      headers: {
-        "X-Api-Key": NFA_API_KEY,
-      },
-    });
-
-    let nfaData;
-    const rawText = await nfaRes.text();
+    let fulfilled = false;
     try {
-      nfaData = JSON.parse(rawText);
-    } catch(e) {
-      // Jeśli pobrano kasę, a API NFA nie działa - idealnie byłoby zwrócić środki.
-      return NextResponse.json({ error: "Invalid NFA API Response", raw: rawText }, { status: 400 });
+      const { buyNfaAccounts } = await import("@/lib/nfa");
+      // Use timestamp + userId as idempotency key for balance checkouts
+      const nfaResult = await buyNfaAccounts(
+        product.type,
+        quantity,
+        `balance-${userId}-${Date.now()}`
+      );
+      accountsStr = nfaResult.accounts.join("\n");
+      fulfilled = nfaResult.accounts.length > 0;
+    } catch (nfaErr) {
+      console.error("NFA API error during Balance fulfillment:", nfaErr);
     }
 
-    if (!nfaRes.ok || !nfaData.ok) {
-      return NextResponse.json({ error: nfaData.error || nfaData.code || "Failed at NFA API" }, { status: 400 });
-    }
-    */
+    if (!fulfilled) {
+      // Jeśli NFA zawiodło (brak kont, zły klucz), musimy ZWRÓCIĆ ŚRODKI na saldo
+      const { data: profile } = await supabaseAdmin.from("profiles").select("balance").eq("id", userId).single();
+      if (profile) {
+        const newBalance = Number(profile.balance) + totalPrice;
+        await supabaseAdmin.from("profiles").update({ balance: newBalance }).eq("id", userId);
+      }
 
-    accountsStr = nfaData.accounts.join("\n");
+      // Zapisz zamówienie jako zrefundowane
+      const { data: orderData } = await supabase
+        .from("orders")
+        .insert({
+          user_id: userId,
+          product_id: product.id,
+          quantity: quantity,
+          total_price: totalPrice,
+          status: "refunded",
+          accounts_data: "Refund — NFA fulfillment failed",
+        })
+        .select()
+        .single();
+        
+      return NextResponse.json({ url: `/order/${orderData?.id || 'error'}` });
+    }
 
     // Zapis do Supabase używając prawdziwego ID użytkownika
     const { data: orderData, error: dbError } = await supabase
@@ -152,7 +155,7 @@ export async function POST(req: Request) {
         user_id: userId,
         product_id: product.id,
         quantity: quantity,
-        total_price: product.price * quantity,
+        total_price: totalPrice,
         status: "completed",
         accounts_data: accountsStr,
       })

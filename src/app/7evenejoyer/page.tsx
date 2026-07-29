@@ -341,14 +341,14 @@ export default function AdminDashboard() {
 
   const handleSort = (field: 'orders' | 'spent' | 'balance') => {
     if (sortField === field) {
-      if (sortOrder === 'asc') setSortOrder('desc');
-      else if (sortOrder === 'desc') {
+      if (sortOrder === 'desc') setSortOrder('asc');
+      else if (sortOrder === 'asc') {
         setSortField(null);
         setSortOrder(null);
       }
     } else {
       setSortField(field);
-      setSortOrder('asc');
+      setSortOrder('desc');
     }
   };
 
@@ -409,13 +409,13 @@ export default function AdminDashboard() {
                 <th className="p-4 font-bold">User</th>
                 <th className="p-4 font-bold">Discord</th>
                 <th className="p-4 font-bold cursor-pointer hover:text-white transition-colors select-none" onClick={() => handleSort('orders')}>
-                  Orders {sortField === 'orders' && (sortOrder === 'asc' ? '↑' : '↓')}
+                  Orders {sortField === 'orders' && (sortOrder === 'desc' ? '↑' : '↓')}
                 </th>
                 <th className="p-4 font-bold cursor-pointer hover:text-white transition-colors select-none" onClick={() => handleSort('spent')}>
-                  Total Spent {sortField === 'spent' && (sortOrder === 'asc' ? '↑' : '↓')}
+                  Total Spent {sortField === 'spent' && (sortOrder === 'desc' ? '↑' : '↓')}
                 </th>
                 <th className="p-4 font-bold cursor-pointer hover:text-white transition-colors select-none" onClick={() => handleSort('balance')}>
-                  Balance {sortField === 'balance' && (sortOrder === 'asc' ? '↑' : '↓')}
+                  Balance {sortField === 'balance' && (sortOrder === 'desc' ? '↑' : '↓')}
                 </th>
                 <th className="p-4 font-bold text-right">Actions</th>
               </tr>

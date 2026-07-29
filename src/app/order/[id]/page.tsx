@@ -335,7 +335,19 @@ export default function OrderDetails() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
             
             {/* Left Column - Accounts */}
-            {accounts.length > 0 ? (
+            {order?.product_id === 'topup' ? (
+              <div className="bg-[#0f0f0f] border border-white/5 rounded-3xl p-6 md:p-8 flex flex-col items-center justify-center text-center h-full min-h-[300px]">
+                <div className="w-16 h-16 rounded-full bg-accent/10 border border-accent/20 flex items-center justify-center mb-4">
+                  <Wallet className="w-8 h-8 text-accent" />
+                </div>
+                <h2 className="text-xl font-bold text-white mb-2">Balance Top-up</h2>
+                <p className="text-gray-400 text-sm max-w-[250px]">Your balance has been successfully credited with €{Number(order.total_price).toFixed(2)}.</p>
+                <div className="mt-6 inline-flex flex-col gap-1 items-center bg-white/5 px-6 py-4 rounded-xl border border-white/10">
+                  <span className="text-[10px] text-gray-500 uppercase font-bold tracking-widest">Transaction Ref</span>
+                  <span className="font-mono text-gray-300 text-xs">{order.accounts_data}</span>
+                </div>
+              </div>
+            ) : accounts.length > 0 ? (
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
                   <h2 className="text-xl font-bold text-white tracking-tight">Your Accounts</h2>
@@ -381,96 +393,98 @@ export default function OrderDetails() {
             )}
 
             {/* Right Column - Instructions */}
-            <div className="bg-[#0f0f0f] border border-white/5 rounded-3xl p-6 md:p-8">
-              <h2 className="text-xl font-bold text-white tracking-tight mb-8">How to login?</h2>
+            {order?.product_id !== 'topup' && (
+              <div className="bg-[#0f0f0f] border border-white/5 rounded-3xl p-6 md:p-8">
+                <h2 className="text-xl font-bold text-white tracking-tight mb-8">How to login?</h2>
 
-              <div className="space-y-8 relative before:absolute before:inset-0 before:ml-[1.1rem] before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-white/10 before:via-white/5 before:to-transparent">
-                
-                {/* Step 1 */}
-                <div className="relative flex items-start gap-6">
-                  <div className="absolute left-0 md:left-1/2 w-9 h-9 rounded-full bg-[#1a1a1a] border border-white/10 flex items-center justify-center -translate-x-1/2 mt-0.5 shadow-xl z-10">
-                    <Download className="w-4 h-4 text-gray-400" />
+                <div className="space-y-8 relative before:absolute before:inset-0 before:ml-[1.1rem] before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-white/10 before:via-white/5 before:to-transparent">
+                  
+                  {/* Step 1 */}
+                  <div className="relative flex items-start gap-6">
+                    <div className="absolute left-0 md:left-1/2 w-9 h-9 rounded-full bg-[#1a1a1a] border border-white/10 flex items-center justify-center -translate-x-1/2 mt-0.5 shadow-xl z-10">
+                      <Download className="w-4 h-4 text-gray-400" />
+                    </div>
+                    <div className="ml-10 md:ml-0 md:w-1/2 md:pr-10 md:text-right flex flex-col md:items-end">
+                      <h3 className="text-sm font-bold text-white mb-2">Get the login tool</h3>
+                      <p className="text-xs text-gray-400 leading-relaxed mb-4">We use a dedicated app instead of standard passwords. Grab the software here.</p>
+                      
+                      {toolLoading ? (
+                        <div className="inline-flex items-center gap-2 bg-white/20 text-white/50 px-4 py-2 rounded-xl text-xs font-bold cursor-not-allowed">
+                          <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> Loading...
+                        </div>
+                      ) : (
+                        <div className="flex flex-col md:items-end items-start gap-2">
+                          <a 
+                            href={toolUrl || "#"} 
+                            download
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center justify-center gap-2 bg-white text-black px-4 py-2 rounded-xl text-xs font-bold hover:bg-gray-200 transition-colors shadow-lg"
+                          >
+                            <Download className="w-3.5 h-3.5" /> Download Login Tool
+                          </a>
+                          {toolVersion && (
+                            <span className="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded flex items-center gap-1 mt-1">
+                              LATEST RELEASE ({toolVersion})
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <div className="ml-10 md:ml-0 md:w-1/2 md:pr-10 md:text-right flex flex-col md:items-end">
-                    <h3 className="text-sm font-bold text-white mb-2">Get the login tool</h3>
-                    <p className="text-xs text-gray-400 leading-relaxed mb-4">We use a dedicated app instead of standard passwords. Grab the software here.</p>
-                    
-                    {toolLoading ? (
-                      <div className="inline-flex items-center gap-2 bg-white/20 text-white/50 px-4 py-2 rounded-xl text-xs font-bold cursor-not-allowed">
-                        <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> Loading...
-                      </div>
-                    ) : (
-                      <div className="flex flex-col md:items-end items-start gap-2">
-                        <a 
-                          href={toolUrl || "#"} 
-                          download
-                          target="_blank"
-                          rel="noreferrer"
-                          className="inline-flex items-center justify-center gap-2 bg-white text-black px-4 py-2 rounded-xl text-xs font-bold hover:bg-gray-200 transition-colors shadow-lg"
-                        >
-                          <Download className="w-3.5 h-3.5" /> Download Login Tool
-                        </a>
-                        {toolVersion && (
-                          <span className="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded flex items-center gap-1 mt-1">
-                            LATEST RELEASE ({toolVersion})
-                          </span>
-                        )}
-                      </div>
-                    )}
+
+                  {/* Step 2 */}
+                  <div className="relative flex items-start gap-6 md:flex-row-reverse">
+                    <div className="absolute left-0 md:left-1/2 w-9 h-9 rounded-full bg-[#1a1a1a] border border-white/10 flex items-center justify-center -translate-x-1/2 mt-0.5 shadow-xl z-10">
+                      <Copy className="w-4 h-4 text-gray-400" />
+                    </div>
+                    <div className="ml-10 md:ml-0 md:w-1/2 md:pl-10">
+                      <h3 className="text-sm font-bold text-white mb-2">Copy your unique credentials</h3>
+                      <p className="text-xs text-gray-400 leading-relaxed">Head to your order accounts and hit copy. You'll receive a special token and Steam ID combination instead of a traditional email and password.</p>
+                    </div>
                   </div>
+
+                  {/* Step 3 */}
+                  <div className="relative flex items-start gap-6">
+                    <div className="absolute left-0 md:left-1/2 w-9 h-9 rounded-full bg-[#1a1a1a] border border-white/10 flex items-center justify-center -translate-x-1/2 mt-0.5 shadow-xl z-10">
+                      <Box className="w-4 h-4 text-gray-400" />
+                    </div>
+                    <div className="ml-10 md:ml-0 md:w-1/2 md:pr-10 md:text-right">
+                      <h3 className="text-sm font-bold text-white mb-2">Load your account</h3>
+                      <p className="text-xs text-gray-400 leading-relaxed">Insert your copied credentials directly into our app. The system will automatically configure your account.</p>
+                    </div>
+                  </div>
+
+                  {/* Step 4 */}
+                  <div className="relative flex items-start gap-6 md:flex-row-reverse">
+                    <div className="absolute left-0 md:left-1/2 w-9 h-9 rounded-full bg-[#1a1a1a] border border-white/10 flex items-center justify-center -translate-x-1/2 mt-0.5 shadow-xl z-10">
+                      <Play className="w-4 h-4 text-gray-400" />
+                    </div>
+                    <div className="ml-10 md:ml-0 md:w-1/2 md:pl-10">
+                      <h3 className="text-sm font-bold text-white mb-2">Start Steam via the software</h3>
+                      <p className="text-xs text-gray-400 leading-relaxed">Boot up Steam using the provided button inside the authentication app to gain access. Always use this method when you're ready to play.</p>
+                    </div>
+                  </div>
+
                 </div>
 
-                {/* Step 2 */}
-                <div className="relative flex items-start gap-6 md:flex-row-reverse">
-                  <div className="absolute left-0 md:left-1/2 w-9 h-9 rounded-full bg-[#1a1a1a] border border-white/10 flex items-center justify-center -translate-x-1/2 mt-0.5 shadow-xl z-10">
-                    <Copy className="w-4 h-4 text-gray-400" />
+                {/* Warning Box */}
+                <div className="mt-10 bg-orange-500/5 border border-orange-500/20 rounded-2xl p-5 shadow-[0_0_20px_rgba(249,115,22,0.05)]">
+                  <div className="flex items-start gap-3 mb-2">
+                    <AlertTriangle className="w-5 h-5 text-orange-500 shrink-0 mt-0.5" />
+                    <h4 className="text-sm font-bold text-orange-500">Warning: Never log out of Steam manually</h4>
                   </div>
-                  <div className="ml-10 md:ml-0 md:w-1/2 md:pl-10">
-                    <h3 className="text-sm font-bold text-white mb-2">Copy your unique credentials</h3>
-                    <p className="text-xs text-gray-400 leading-relaxed">Head to your order accounts and hit copy. You'll receive a special token and Steam ID combination instead of a traditional email and password.</p>
-                  </div>
+                  <p className="text-xs text-orange-500/80 leading-relaxed ml-8">
+                    Manually signing out will permanently invalidate your token and destroy your access. Just simply switch accounts or just close steam normally.
+                  </p>
                 </div>
 
-                {/* Step 3 */}
-                <div className="relative flex items-start gap-6">
-                  <div className="absolute left-0 md:left-1/2 w-9 h-9 rounded-full bg-[#1a1a1a] border border-white/10 flex items-center justify-center -translate-x-1/2 mt-0.5 shadow-xl z-10">
-                    <Box className="w-4 h-4 text-gray-400" />
-                  </div>
-                  <div className="ml-10 md:ml-0 md:w-1/2 md:pr-10 md:text-right">
-                    <h3 className="text-sm font-bold text-white mb-2">Load your account</h3>
-                    <p className="text-xs text-gray-400 leading-relaxed">Insert your copied credentials directly into our app. The system will automatically configure your account.</p>
-                  </div>
-                </div>
-
-                {/* Step 4 */}
-                <div className="relative flex items-start gap-6 md:flex-row-reverse">
-                  <div className="absolute left-0 md:left-1/2 w-9 h-9 rounded-full bg-[#1a1a1a] border border-white/10 flex items-center justify-center -translate-x-1/2 mt-0.5 shadow-xl z-10">
-                    <Play className="w-4 h-4 text-gray-400" />
-                  </div>
-                  <div className="ml-10 md:ml-0 md:w-1/2 md:pl-10">
-                    <h3 className="text-sm font-bold text-white mb-2">Start Steam via the software</h3>
-                    <p className="text-xs text-gray-400 leading-relaxed">Boot up Steam using the provided button inside the authentication app to gain access. Always use this method when you're ready to play.</p>
-                  </div>
-                </div>
-
-              </div>
-
-              {/* Warning Box */}
-              <div className="mt-10 bg-orange-500/5 border border-orange-500/20 rounded-2xl p-5 shadow-[0_0_20px_rgba(249,115,22,0.05)]">
-                <div className="flex items-start gap-3 mb-2">
-                  <AlertTriangle className="w-5 h-5 text-orange-500 shrink-0 mt-0.5" />
-                  <h4 className="text-sm font-bold text-orange-500">Warning: Never log out of Steam manually</h4>
-                </div>
-                <p className="text-xs text-orange-500/80 leading-relaxed ml-8">
-                  Manually signing out will permanently invalidate your token and destroy your access. Just simply switch accounts or just close steam normally.
+                <p className="text-[11px] text-gray-600 mt-6 text-center leading-relaxed">
+                  If your account faces any issues, navigate back to your order details to request a hassle-free replacement under your warranty.
                 </p>
+
               </div>
-
-              <p className="text-[11px] text-gray-600 mt-6 text-center leading-relaxed">
-                If your account faces any issues, navigate back to your order details to request a hassle-free replacement under your warranty.
-              </p>
-
-            </div>
+            )}
 
           </div>
         </div>

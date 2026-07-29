@@ -122,10 +122,10 @@ export default function Hero() {
           <div className={`transition-all duration-700 delay-500 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
             <div className="relative w-full sm:w-auto inline-block">
               {/* Glow Effect with negative inset so it's physically larger, preventing blur clipping */}
-              <div className="absolute -inset-6 bg-accent rounded-[2.5rem] blur-[24px] opacity-30 mix-blend-screen pointer-events-none"></div>
+              <div className="absolute -inset-3 bg-accent rounded-2xl blur-xl opacity-20 pointer-events-none"></div>
               <button 
                 onClick={() => document.getElementById('products')?.scrollIntoView({ behavior: 'smooth' })}
-                className="relative w-full sm:w-auto bg-accent text-white px-10 py-4 rounded-xl font-bold text-lg hover:bg-accent/90 hover:scale-105 flex items-center justify-center gap-2 transition-all duration-300"
+                className="relative w-full sm:w-auto bg-accent text-white px-8 py-3 rounded-lg font-bold text-base hover:bg-accent/90 hover:scale-105 flex items-center justify-center gap-2 transition-all duration-300"
               >
                 View Accounts <ChevronDown className="w-5 h-5" />
               </button>

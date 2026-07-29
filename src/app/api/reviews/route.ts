@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase-client';
+import { createClient } from '@supabase/supabase-js';
 import { products } from '@/lib/products';
 
 export async function POST(req: Request) {
@@ -11,13 +12,21 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing parameters or token" }, { status: 400 });
     }
 
-    const { data: { user }, error: userError } = await supabase.auth.getUser(token);
+    const authenticatedSupabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        global: { headers: { Authorization: `Bearer ${token}` } }
+      }
+    );
+
+    const { data: { user }, error: userError } = await authenticatedSupabase.auth.getUser();
     if (userError || !user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     // Check if the order belongs to this user and is completed
-    const { data: order, error: orderError } = await supabase
+    const { data: order, error: orderError } = await authenticatedSupabase
       .from('orders')
       .select('*')
       .eq('id', orderId)
@@ -33,12 +42,12 @@ export async function POST(req: Request) {
     }
 
     // Insert the review
-    const { error: insertError } = await supabase
+    const { error: insertError } = await authenticatedSupabase
       .from('reviews')
       .insert({
         user_id: user.id,
         order_id: order.id,
-        product_type: order.product_type,
+        product_type: order.product_id || 'premier', // Fallback to product_id since product_type isn't in orders table
         rating: Number(rating),
         comment: comment || null,
         is_published: true

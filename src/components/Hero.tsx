@@ -86,7 +86,7 @@ export default function Hero() {
   };
 
   return (
-    <div className="relative w-full pt-20 pb-16 md:pt-32 md:pb-24 z-10 max-w-7xl mx-auto px-4 overflow-hidden">
+    <div className="relative w-full pt-20 pb-16 md:pt-32 md:pb-24 z-10 max-w-7xl mx-auto px-4">
       
       {/* Top Section: Two Columns */}
       <div className="flex flex-col lg:flex-row items-center gap-12 mb-20 lg:mb-24">

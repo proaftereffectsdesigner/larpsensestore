@@ -53,13 +53,19 @@ export async function POST(req: Request) {
 
     // Try to notify Discord silently (if bot token exists)
     try {
-      const webhookUrl = process.env.DISCORD_REVIEWS_WEBHOOK_URL;
-      if (webhookUrl) {
+      const botToken = process.env.DISCORD_BOT_TOKEN;
+      const reviewsChannelId = process.env.DISCORD_REVIEWS_CHANNEL_ID;
+      
+      if (botToken && reviewsChannelId) {
         const product = products.find(p => p.type === order.product_type) || { name: order.product_type };
         const stars = '⭐'.repeat(rating) + '☆'.repeat(5 - rating);
-        await fetch(webhookUrl, {
+        
+        await fetch(`https://discord.com/api/v10/channels/${reviewsChannelId}/messages`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Authorization': `Bot ${botToken}`,
+            'Content-Type': 'application/json' 
+          },
           body: JSON.stringify({
             embeds: [{
               title: `New Review for ${product.name}`,

@@ -47,6 +47,8 @@ export default function CategoryPage() {
   // Reviews state
   const [reviews, setReviews] = useState<any[]>([]);
   const [reviewsLoading, setReviewsLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const reviewsPerPage = 8;
 
 
 
@@ -204,10 +206,11 @@ export default function CategoryPage() {
 
   if (!selectedProduct) return null;
 
-  const totalPrice = selectedProduct.price * quantity;
+  const totalReviews = reviews.length;
+  const averageRating = totalReviews > 0 ? (reviews.reduce((acc, rev) => acc + rev.rating, 0) / totalReviews).toFixed(1) : "0.0";
 
   return (
-    <div className="flex justify-center items-start py-12 px-4 relative z-10 min-h-[calc(100vh-80px)] mt-8">
+    <div className="flex flex-col items-center py-12 px-4 relative z-10 min-h-[calc(100vh-80px)] mt-8">
       <div className="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
         
         {/* Lewa kolumna: Grafika i Opis */}
@@ -255,7 +258,18 @@ export default function CategoryPage() {
         {/* Prawa kolumna: Konfigurator i Płatność */}
         <div className="bg-[#141414]/60 backdrop-blur-xl border border-white/10 rounded-3xl p-6 md:p-8 w-full shadow-[0_20px_60px_rgba(0,0,0,0.8)] relative lg:sticky lg:top-24 overflow-visible">
           
-          <h1 className="text-2xl font-bold text-white mb-8 relative z-10">Configure your order</h1>
+          <div className="flex items-center justify-between mb-8 relative z-10">
+            <h1 className="text-2xl font-bold text-white">Configure your order</h1>
+            {!reviewsLoading && totalReviews > 0 && (
+              <div className="flex items-center gap-2">
+                <div className="flex text-yellow-500">
+                  <Star className="w-4 h-4 fill-current" />
+                </div>
+                <span className="text-sm font-bold text-white">{averageRating}</span>
+                <span className="text-xs text-gray-500 font-medium">({totalReviews} reviews)</span>
+              </div>
+            )}
+          </div>
 
           {/* Sekcja Wybór Wariantu */}
           {categoryProducts.length > 1 && (
@@ -486,47 +500,78 @@ export default function CategoryPage() {
 
       {/* Reviews Section */}
       <div className="w-full max-w-5xl mt-16 px-4 pb-20">
-        <h2 className="text-2xl font-bold text-white mb-8 flex items-center gap-3">
-          <Star className="w-6 h-6 text-yellow-500" />
-          Verified Reviews for {selectedProduct.name}
-        </h2>
+        <div className="flex items-center justify-between mb-8">
+          <h2 className="text-2xl font-bold text-white flex items-center gap-3">
+            <Star className="w-6 h-6 text-yellow-500" />
+            Verified Reviews for {selectedProduct.name}
+          </h2>
+          {!reviewsLoading && totalReviews > 0 && (
+            <div className="text-sm text-gray-400 font-medium">
+              <span className="text-white font-bold text-lg mr-1">{averageRating}</span>/ 5.0
+            </div>
+          )}
+        </div>
         
         {reviewsLoading ? (
           <div className="flex justify-center p-12">
             <div className="w-8 h-8 border-2 border-accent/30 border-t-accent rounded-full animate-spin"></div>
           </div>
         ) : reviews.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {reviews.map((review, i) => (
-              <div key={i} className="p-6 bg-[#0a0a0a]/80 backdrop-blur-xl border border-white/5 rounded-2xl hover:border-white/10 transition-colors shadow-xl">
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="flex text-yellow-500">
-                    {Array.from({ length: 5 }).map((_, idx) => (
-                      <Star key={idx} className={`w-4 h-4 ${idx < review.rating ? 'fill-current' : 'text-gray-700'}`} />
-                    ))}
-                  </div>
-                  <span className="text-gray-500 text-xs font-bold">{new Date(review.created_at).toLocaleDateString()}</span>
-                  <span className="text-[10px] ml-auto bg-green-500/10 text-green-400 px-2 py-1 rounded font-bold uppercase tracking-widest flex items-center gap-1">
-                    <CheckCircle2 className="w-3 h-3" /> Verified
-                  </span>
-                </div>
-                <p className="text-gray-300 italic mb-4">"{review.comment || 'Great service!'}"</p>
-                <div className="flex items-center gap-3 border-t border-white/5 pt-4">
-                  {review.profiles?.avatar_url ? (
-                    <img src={review.profiles.avatar_url} alt="Avatar" className="w-8 h-8 rounded-full border border-white/10" />
-                  ) : (
-                    <div className="w-8 h-8 bg-[#1a1a1a] border border-white/10 rounded-full flex items-center justify-center text-gray-500">
-                      <UserIcon className="w-4 h-4" />
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {reviews.slice((currentPage - 1) * reviewsPerPage, currentPage * reviewsPerPage).map((review, i) => (
+                <div key={i} className="p-6 bg-[#0a0a0a]/80 backdrop-blur-xl border border-white/5 rounded-2xl hover:border-white/10 transition-colors shadow-xl">
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="flex text-yellow-500">
+                      {Array.from({ length: 5 }).map((_, idx) => (
+                        <Star key={idx} className={`w-4 h-4 ${idx < review.rating ? 'fill-current' : 'text-gray-700'}`} />
+                      ))}
                     </div>
-                  )}
-                  <Link href={`/user/${review.profiles?.id}`} className="text-sm font-bold text-gray-300 hover:text-white transition-colors flex flex-col leading-tight">
-                    <span>{review.profiles?.display_name || 'Anonymous'}</span>
-                    <span className="text-[10px] text-accent font-normal hover:underline">View Profile</span>
-                  </Link>
+                    <span className="text-gray-500 text-xs font-bold">{new Date(review.created_at).toLocaleDateString()}</span>
+                    <span className="text-[10px] ml-auto bg-green-500/10 text-green-400 px-2 py-1 rounded font-bold uppercase tracking-widest flex items-center gap-1">
+                      <CheckCircle2 className="w-3 h-3" /> Verified
+                    </span>
+                  </div>
+                  <p className="text-gray-300 italic mb-4">"{review.comment || 'Great service!'}"</p>
+                  <div className="flex items-center gap-3 border-t border-white/5 pt-4">
+                    {review.profiles?.avatar_url ? (
+                      <img src={review.profiles.avatar_url} alt="Avatar" className="w-8 h-8 rounded-full border border-white/10" />
+                    ) : (
+                      <div className="w-8 h-8 bg-[#1a1a1a] border border-white/10 rounded-full flex items-center justify-center text-gray-500">
+                        <UserIcon className="w-4 h-4" />
+                      </div>
+                    )}
+                    <Link href={`/user/${review.profiles?.id}`} className="text-sm font-bold text-gray-300 hover:text-white transition-colors flex flex-col leading-tight">
+                      <span>{review.profiles?.display_name || 'Anonymous'}</span>
+                      <span className="text-[10px] text-accent font-normal hover:underline">View Profile</span>
+                    </Link>
+                  </div>
                 </div>
+              ))}
+            </div>
+            
+            {/* Pagination Controls */}
+            {Math.ceil(reviews.length / reviewsPerPage) > 1 && (
+              <div className="flex justify-center mt-12 gap-2">
+                {Array.from({ length: Math.ceil(reviews.length / reviewsPerPage) }).map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => {
+                      setCurrentPage(i + 1);
+                      window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+                    }}
+                    className={`w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold transition-all ${
+                      currentPage === i + 1 
+                        ? 'bg-emerald-500 text-black' 
+                        : 'bg-[#141414] border border-white/10 text-gray-400 hover:text-white hover:border-white/20'
+                    }`}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
               </div>
-            ))}
-          </div>
+            )}
+          </>
         ) : (
           <div className="p-12 bg-[#0a0a0a]/80 backdrop-blur-xl border border-white/5 rounded-2xl text-center shadow-xl">
             <Star className="w-12 h-12 text-gray-600 mx-auto mb-4 opacity-50" />

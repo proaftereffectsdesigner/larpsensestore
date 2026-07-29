@@ -28,6 +28,7 @@ export async function middleware(req: NextRequest) {
     }
 
     const ipAddress = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
+    const referer = req.headers.get('referer') || '';
 
     // Fire and forget tracking
     fetch(`${supabaseUrl}/rest/v1/page_views`, {
@@ -43,7 +44,8 @@ export async function middleware(req: NextRequest) {
         path: pathname,
         user_agent: userAgent,
         device_type: deviceType,
-        ip_address: ipAddress
+        ip_address: ipAddress,
+        referer: referer
       })
     }).catch(() => {});
 

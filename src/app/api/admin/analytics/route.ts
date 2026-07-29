@@ -54,7 +54,7 @@ export async function GET(request: Request) {
     const { data: ordersData } = await supabaseAdmin.from('orders').select('created_at, total_price, product_type, status, profiles(email)').gte('created_at', startISO);
     
     // 2. Fetch Traffic (Page Views, Unique Users, Devices, Top Pages, Traffic Chart)
-    const { data: trafficData } = await supabaseAdmin.from('page_views').select('created_at, session_id, path, device_type, ip_address').gte('created_at', startISO);
+    const { data: trafficData } = await supabaseAdmin.from('page_views').select('created_at, session_id, path, device_type, ip_address, referer').gte('created_at', startISO);
 
     // 3. Fetch Checkouts (Abandonment Rate)
     const { data: checkoutData } = await supabaseAdmin.from('checkout_sessions').select('status, created_at').gte('created_at', startISO);
@@ -99,17 +99,39 @@ export async function GET(request: Request) {
     
     // Devices
     let mobile = 0, desktop = 0, tablet = 0;
+    
+    // Traffic Sources
+    let direct = 0, organic = 0, social = 0, referral = 0;
+
     traffic.forEach(t => {
       if (t.device_type === 'Mobile') mobile++;
       else if (t.device_type === 'Tablet') tablet++;
       else desktop++;
+      
+      const ref = t.referer || '';
+      if (!ref || ref.includes('localhost') || ref.includes('larpsense')) {
+        direct++;
+      } else if (ref.includes('google.') || ref.includes('bing.') || ref.includes('yahoo.')) {
+        organic++;
+      } else if (ref.includes('twitter.') || ref.includes('x.com') || ref.includes('facebook.') || ref.includes('instagram.') || ref.includes('tiktok.')) {
+        social++;
+      } else {
+        referral++;
+      }
     });
 
-    const deviceTotal = mobile + desktop + tablet;
     const devices = [
-      { name: 'Mobile', value: deviceTotal ? Math.round((mobile/deviceTotal)*100) : 0, fill: '#3b82f6' },
-      { name: 'Desktop', value: deviceTotal ? Math.round((desktop/deviceTotal)*100) : 0, fill: '#10b981' },
-      { name: 'Tablet', value: deviceTotal ? Math.round((tablet/deviceTotal)*100) : 0, fill: '#8b5cf6' }
+      { name: 'Mobile', value: mobile, fill: '#3b82f6' },
+      { name: 'Desktop', value: desktop, fill: '#10b981' },
+      { name: 'Tablet', value: tablet, fill: '#8b5cf6' }
+    ];
+
+    const trafficTotal = direct + organic + social + referral;
+    const trafficSources = [
+      { name: 'Direct', value: trafficTotal ? Math.round((direct/trafficTotal)*100) : 0, color: 'bg-blue-500' },
+      { name: 'Organic Search', value: trafficTotal ? Math.round((organic/trafficTotal)*100) : 0, color: 'bg-emerald-500' },
+      { name: 'Social', value: trafficTotal ? Math.round((social/trafficTotal)*100) : 0, color: 'bg-purple-500' },
+      { name: 'Referral', value: trafficTotal ? Math.round((referral/trafficTotal)*100) : 0, color: 'bg-orange-500' },
     ];
 
     // Top Pages
@@ -132,14 +154,6 @@ export async function GET(request: Request) {
     let topProducts = Object.entries(productCounts)
       .sort((a, b) => b[1].revenue - a[1].revenue)
       .map(([name, stats]) => ({ name, revenue: stats.revenue, units: stats.units }));
-
-    if (topProducts.length === 0) {
-      topProducts = [
-        { name: 'NFA Tool License', revenue: 0, units: 0 },
-        { name: 'VIP Package', revenue: 0, units: 0 },
-        { name: 'Standard Subscription', revenue: 0, units: 0 },
-      ];
-    }
 
     // Conversion & Abandonment
     const newOrdersToday = completedOrders.filter(o => new Date(o.created_at) > new Date(Date.now() - 24*60*60*1000)).length;
@@ -261,12 +275,7 @@ export async function GET(request: Request) {
           { name: 'Returning', value: 0, fill: '#8b5cf6' },
           { name: 'New', value: uniqueUsers, fill: '#10b981' }
         ],
-        trafficSources: [
-          { name: 'Direct', value: 45, color: 'bg-blue-500' },
-          { name: 'Organic Search', value: 30, color: 'bg-emerald-500' },
-          { name: 'Social', value: 15, color: 'bg-purple-500' },
-          { name: 'Referral', value: 10, color: 'bg-orange-500' },
-        ],
+        trafficSources,
         vitals: {
           fcp: { value: '0.8s', status: 'good' },
           lcp: { value: '1.2s', status: 'good' },

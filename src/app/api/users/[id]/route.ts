@@ -30,9 +30,16 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
+    // Fetch is_private which is missing from get_public_profile RPC
+    const { data: profileRow } = await supabaseAdmin
+      .from('profiles')
+      .select('is_private')
+      .eq('id', userId)
+      .single();
+
     const profileData = Array.isArray(data) ? data[0] : data;
 
-    return NextResponse.json({ ...(profileData || {}) });
+    return NextResponse.json({ ...(profileData || {}), is_private: profileRow?.is_private || false });
   } catch (err) {
     return NextResponse.json({ error: "Internal error" }, { status: 500 });
   }

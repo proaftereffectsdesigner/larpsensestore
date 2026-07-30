@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ShoppingCart, LogOut, LayoutGrid, Plus, User as UserIcon, Lock, Shield } from "lucide-react";
+import { ShoppingCart, LogOut, LayoutGrid, Plus, User as UserIcon, Lock, Shield, AlertTriangle } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase-client";
 import { User } from "@supabase/supabase-js";
@@ -95,8 +95,13 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="border-b border-white/5 bg-[#0a0a0a]/30 backdrop-blur-2xl sticky top-0 z-50">
-      <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+    <div className="sticky top-0 z-50 flex flex-col w-full">
+      <div className="bg-amber-500/10 border-b border-amber-500/20 text-amber-200 py-3 px-4 flex items-center justify-center gap-3 text-sm md:text-base font-bold shadow-lg backdrop-blur-xl">
+        <AlertTriangle className="w-5 h-5 shrink-0 text-amber-400" />
+        <p>Due to technical reasons, Stripe payments are temporarily unavailable. We apologize for the inconvenience.</p>
+      </div>
+      <nav className="border-b border-white/5 bg-[#0a0a0a]/80 backdrop-blur-2xl w-full">
+        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
         <Link 
           href="/" 
           onClick={(e) => {
@@ -270,6 +275,7 @@ export default function Navbar() {
         </div>
       </div>
 
-    </nav>
+      </nav>
+    </div>
   );
 }

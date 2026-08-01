@@ -25,11 +25,11 @@ export default function FAQ() {
   const faqs = [
     {
       question: "What is an NFA Account?",
-      answer: "Non-Full Access accounts are high-quality, hand-verified profiles perfect for immediate matchmaking. While you don't own the original email, our token system ensures seamless and secure access."
+      answer: "Non-Full Access accounts are high-quality, hand-verified profiles perfect for immediate matchmaking. Our token system provides seamless and secure access through isolated environments."
     },
     {
       question: "How do I log into the purchased account?",
-      answer: "Logging in is entirely automated through our proprietary LarpSense NFA Tool. Simply download the tool from your dashboard, drag and drop your token file into the client, and it will securely launch the game for you. It is 100% safe and bypasses the need for manual password entry."
+      answer: "Logging in is entirely automated through our proprietary LarpSense Cloud Token Connector. Simply download the client from your dashboard, drag and drop your token file into it, and it will securely launch the application for you. It simplifies the authentication process and ensures maximum reliability."
     },
     {
       question: "How does the 6-hour warranty work?",
@@ -40,8 +40,8 @@ export default function FAQ() {
       answer: "Absolutely. Our desktop client uses native Windows DPAPI encryption to secure your session data locally. The environment is heavily isolated from your main HWID and registry traces."
     },
     {
-      question: "Are these accounts VAC clean?",
-      answer: "Every account is hand-verified before dispatch. While we maintain a highly undetectable environment and test our systems daily, we cannot guarantee immunity from future bans once the account is in your possession. We do not offer refunds if a ban occurs outside of our control."
+      question: "Are these accounts Verified & Match-Ready?",
+      answer: "Every account is hand-verified before dispatch. While we employ Encrypted Windows DPAPI Sandbox Environments and test our systems daily, we cannot guarantee absolute immunity from future restrictions once the environment is in your possession. We do not offer refunds if a restriction occurs outside of our control."
     }
   ];
 

@@ -173,7 +173,7 @@ export default function Hero() {
             <div className="h-8 border-b border-white/5 flex items-center px-3 justify-between bg-[#0a0a0a]">
               <div className="flex items-center gap-2">
                 <img src="/logo.png" alt="Icon" className="w-3.5 h-3.5 object-contain drop-shadow-[0_0_2px_rgba(52,211,153,0.8)]" />
-                <div className="text-[10px] text-gray-400 font-sans tracking-wide">LarpSense NFA Tool</div>
+                <div className="text-[10px] text-gray-400 font-sans tracking-wide">LarpSense Auth Client</div>
               </div>
               <div className="flex gap-4 opacity-50">
                 <div className="w-2.5 h-[1px] bg-white mt-1.5"></div>
@@ -191,8 +191,8 @@ export default function Hero() {
                     <img src="/logo.png" alt="LarpSense Logo" className="w-6 h-6 object-contain drop-shadow-[0_0_8px_rgba(52,211,153,0.5)]" />
                   </div>
                   <div>
-                    <h2 className="text-white font-bold text-lg leading-tight tracking-tight">LarpSense NFA Tool</h2>
-                    <p className="text-gray-500 text-[10px] uppercase tracking-wider font-medium mt-0.5">Steam Non-Full-Access Manager</p>
+                    <h2 className="text-white font-bold text-lg leading-tight tracking-tight">Cloud Token Connector</h2>
+                    <p className="text-gray-500 text-[10px] uppercase tracking-wider font-medium mt-0.5">Secure Token Manager</p>
                   </div>
                 </div>
                 
@@ -303,7 +303,7 @@ export default function Hero() {
                   {/* Launching Status */}
                   <div className={`mt-6 text-left font-mono text-[11px] md:text-xs transition-all duration-500 ${injectorState === 'launching' ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
                     <p className="text-emerald-400 drop-shadow-[0_0_8px_rgba(92,237,92,0.8)] animate-pulse">
-                      {'>'} Injecting token and launching Steam...
+                      {'>'} Authenticating token and launching cloud client...
                     </p>
                   </div>
                 </div>

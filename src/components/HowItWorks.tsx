@@ -30,12 +30,12 @@ export default function HowItWorks() {
     {
       icon: <Download className="w-6 h-6 text-emerald-500" />,
       title: "2. Download Client",
-      description: "Get our proprietary LarpSense NFA Tool directly from your user dashboard."
+      description: "Get our proprietary LarpSense Cloud Token Connector directly from your user dashboard."
     },
     {
       icon: <Terminal className="w-6 h-6 text-emerald-500" />,
-      title: "3. Inject & Play",
-      description: "Drag & drop your token to bypass manual logins and jump straight into Premier matchmaking."
+      title: "3. Direct Token Authentication",
+      description: "Drag & drop your token for seamless authentication and jump straight into Premier matchmaking."
     }
   ];
 

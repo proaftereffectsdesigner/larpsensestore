@@ -24,7 +24,7 @@ export default function HowItWorks() {
   const steps = [
     {
       icon: <Package className="w-6 h-6 text-emerald-500" />,
-      title: "1. Get Your Account",
+      title: "1. Get Your Token",
       description: "Instant delivery of your secure token file right after the payment clears."
     },
     {

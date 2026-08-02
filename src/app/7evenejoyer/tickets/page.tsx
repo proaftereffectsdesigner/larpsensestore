@@ -212,7 +212,7 @@ export default function AdminTickets() {
                   <td className="p-4 text-right">
                     {ticket.transcript_url ? (
                       <a 
-                        href={`/api/tickets/transcript?url=${encodeURIComponent(ticket.transcript_url)}`} 
+                        href={`/api/tickets/transcript?url=${encodeURIComponent(ticket.transcript_url)}&token=${sessionToken}`} 
                         target="_blank" 
                         rel="noopener noreferrer"
                         className="bg-accent/10 hover:bg-accent/20 border border-accent/20 text-accent px-4 py-2.5 rounded-xl text-xs font-bold transition-all inline-flex items-center gap-2"

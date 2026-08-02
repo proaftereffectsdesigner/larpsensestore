@@ -20,6 +20,7 @@ function DashboardContent() {
   const [tickets, setTickets] = useState<any[]>([]);
   const [balance, setBalance] = useState<number>(0);
   const [loading, setLoading] = useState(true);
+  const [sessionToken, setSessionToken] = useState<string | null>(null);
   
   const searchParams = useSearchParams();
   const initialTab = searchParams.get('tab') || 'orders';
@@ -214,6 +215,7 @@ function DashboardContent() {
       if (event === 'SIGNED_OUT' || !session) {
         window.location.href = "/";
       } else {
+        setSessionToken(session.access_token);
         setUser(session.user);
         loadDashboardData(session.user);
       }
@@ -225,6 +227,7 @@ function DashboardContent() {
           window.location.href = "/";
           return;
         }
+        setSessionToken(session.access_token);
         setUser(session.user);
         loadDashboardData(session.user);
       });
@@ -1382,7 +1385,7 @@ function DashboardContent() {
                             </a>
                           )}
                           {ticket.transcript_url && (
-                            <a href={`/api/tickets/transcript?url=${encodeURIComponent(ticket.transcript_url)}`} target="_blank" rel="noreferrer" className="flex-1 sm:flex-none text-xs bg-white/5 border border-white/10 hover:bg-white/10 text-white font-bold px-4 py-2.5 rounded-xl transition-colors flex items-center justify-center gap-2 text-center">
+                            <a href={`/api/tickets/transcript?url=${encodeURIComponent(ticket.transcript_url)}&token=${sessionToken}`} target="_blank" rel="noreferrer" className="flex-1 sm:flex-none text-xs bg-white/5 border border-white/10 hover:bg-white/10 text-white font-bold px-4 py-2.5 rounded-xl transition-colors flex items-center justify-center gap-2 text-center">
                               <ExternalLink className="w-3.5 h-3.5" />
                               View Transcript
                             </a>

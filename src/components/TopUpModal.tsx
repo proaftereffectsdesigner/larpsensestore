@@ -37,7 +37,6 @@ export default function TopUpModal() {
         console.error(err);
       }
     };
-    fetchSettings();
 
     const handleOpen = () => {
       setIsOpen(true);
@@ -46,6 +45,7 @@ export default function TopUpModal() {
       setRawAmount('10');
       setMethod(null);
       setErrorMsg(null);
+      fetchSettings();
     };
     window.addEventListener('open-topup', handleOpen);
     return () => window.removeEventListener('open-topup', handleOpen);
@@ -250,14 +250,21 @@ export default function TopUpModal() {
                 <div className="space-y-2">
                   
                   {/* Card */}
-                  <button onClick={() => setMethod('card')} className={`w-full flex items-center justify-between p-4 border rounded-2xl transition-all ${method === 'card' ? 'bg-white/10 border-white/20' : 'bg-[#141414] border-white/5 hover:bg-white/5'}`}>
+                  <button 
+                    onClick={() => settings.stripe_enabled && setMethod('card')} 
+                    disabled={!settings.stripe_enabled}
+                    className={`w-full flex items-center justify-between p-4 border rounded-2xl transition-all ${
+                      !settings.stripe_enabled ? 'opacity-50 cursor-not-allowed bg-[#141414] border-white/5 grayscale' :
+                      method === 'card' ? 'bg-white/10 border-white/20' : 'bg-[#141414] border-white/5 hover:bg-white/5'
+                    }`}
+                  >
                     <div className="flex items-center gap-4">
                       <div className="flex items-center justify-center w-10 h-10 bg-[#635BFF]/10 rounded-xl">
                         <CreditCard className="w-5 h-5 text-gray-400" />
                       </div>
                       <div className="text-left">
                         <div className={`font-bold text-sm ${method === 'card' ? 'text-white' : 'text-gray-300'}`}>Debit / Credit Card</div>
-                        <div className="text-[11px] text-gray-500 font-medium">Mastercard, Visa, Apple Pay etc. <span className="text-indigo-400 font-bold">(5% + €0.50 fee)</span></div>
+                        <div className="text-[11px] text-gray-500 font-medium">{!settings.stripe_enabled ? 'Temporarily disabled' : 'Mastercard, Visa, Apple Pay etc.'} <span className="text-indigo-400 font-bold">(5% + €0.50 fee)</span></div>
                       </div>
                     </div>
                     <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${method === 'card' ? 'border-[#635BFF]' : 'border-gray-600'}`}>
@@ -266,15 +273,22 @@ export default function TopUpModal() {
                   </button>
 
                   {/* Crypto */}
-                  <div className={`border rounded-2xl transition-all overflow-hidden ${method === 'crypto' ? 'bg-white/5 border-white/20' : 'bg-[#141414] border-white/5 hover:bg-white/5'}`}>
-                    <button onClick={() => { setMethod('crypto'); if (!selectedCryptoCoin) setSelectedCryptoCoin(CRYPTO_COINS[0].id); }} className="w-full flex items-center justify-between p-4">
+                  <div className={`border rounded-2xl transition-all overflow-hidden ${
+                    !settings.crypto_enabled ? 'opacity-50 cursor-not-allowed bg-[#141414] border-white/5 grayscale' :
+                    method === 'crypto' ? 'bg-white/5 border-white/20' : 'bg-[#141414] border-white/5 hover:bg-white/5'
+                  }`}>
+                    <button 
+                      onClick={() => { if (settings.crypto_enabled) { setMethod('crypto'); if (!selectedCryptoCoin) setSelectedCryptoCoin(CRYPTO_COINS[0].id); } }} 
+                      disabled={!settings.crypto_enabled}
+                      className="w-full flex items-center justify-between p-4"
+                    >
                       <div className="flex items-center gap-4">
                         <div className="flex items-center justify-center w-10 h-10 bg-amber-500/10 rounded-xl">
                           <SiBitcoin className="w-5 h-5 text-amber-400" />
                         </div>
                         <div className="text-left">
                           <div className={`font-bold text-sm ${method === 'crypto' ? 'text-white' : 'text-gray-300'}`}>Cryptocurrency</div>
-                          <div className="text-[11px] text-gray-500 font-medium">SOL, LTC, USDT <span className="text-amber-400 font-bold">(0.5% fee)</span></div>
+                          <div className="text-[11px] text-gray-500 font-medium">{!settings.crypto_enabled ? 'Temporarily disabled' : 'SOL, LTC, USDT'} <span className="text-amber-400 font-bold">(0.5% fee)</span></div>
                         </div>
                       </div>
                       <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${method === 'crypto' ? 'border-amber-400' : 'border-gray-600'}`}>

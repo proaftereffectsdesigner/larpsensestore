@@ -36,6 +36,7 @@ export default function ProductPage() {
   const paymentDropdownRef = useRef<HTMLDivElement>(null);
   const paymentButtonRef = useRef<HTMLButtonElement>(null);
   const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0, width: 0 });
+  const [settings, setSettings] = useState({ stripe_enabled: true, crypto_enabled: true });
 
   // Recalculate dropdown position whenever it opens or window resizes
   const updateDropdownPos = useCallback(() => {
@@ -79,6 +80,19 @@ export default function ProductPage() {
       setUser(session?.user ?? null);
       setAuthChecked(true);
     });
+
+    const fetchSettings = async () => {
+      try {
+        const res = await fetch("/api/settings");
+        if (res.ok) {
+          const data = await res.json();
+          setSettings({ stripe_enabled: data.stripe_enabled ?? true, crypto_enabled: data.crypto_enabled ?? true });
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    fetchSettings();
   }, []);
 
   useEffect(() => {
@@ -268,50 +282,42 @@ export default function ProductPage() {
                 onWheel={e => e.stopPropagation()}
                 onTouchMove={e => e.stopPropagation()}
               >
+                <div className="p-2 space-y-1">
                 <button 
-                  onClick={() => { setPaymentMethod("polar"); setIsDropdownOpen(false); }}
-                  className="w-full px-4 py-3 text-left hover:bg-white/5 transition-colors flex items-center gap-3 border-b border-white/5"
+                  onClick={() => { if (settings.stripe_enabled) { setPaymentMethod("polar"); setIsDropdownOpen(false); } }}
+                  disabled={!settings.stripe_enabled}
+                  className={`w-full px-4 py-3 text-left transition-colors flex items-center gap-3 ${!settings.stripe_enabled ? 'opacity-50 cursor-not-allowed grayscale' : 'hover:bg-white/5'}`}
                 >
-                  <div className="flex items-center justify-center w-8 h-8 bg-gray-500/10 rounded-lg">
-                    <CreditCard className="w-5 h-5 text-gray-400" />
+                  <div className="flex items-center justify-center w-8 h-8 bg-indigo-500/10 rounded-full shrink-0">
+                    <CreditCard className="w-4 h-4 text-indigo-400" />
                   </div>
                   <div>
-                    <div className="text-sm text-white">Debit / Credit Card</div>
-                    <div className="text-xs text-gray-500">Mastercard, Visa, Apple Pay etc. <span className="text-indigo-400">(5% + €0.50 fee)</span></div>
+                    <div className="text-sm text-white">Credit Card / Apple Pay</div>
+                    <div className="text-xs text-gray-500">{!settings.stripe_enabled ? 'Temporarily disabled' : 'Mastercard, Visa etc. (5% + €0.50 fee)'}</div>
                   </div>
                 </button>
                 <button 
-                  onClick={() => { 
-                    if (paymentMethod === "crypto") {
-                      setIsCryptoExpanded(!isCryptoExpanded);
-                    } else {
-                      setPaymentMethod("crypto"); 
-                      setIsCryptoExpanded(true);
-                      if (!selectedCryptoCoin) setSelectedCryptoCoin(CRYPTO_COINS[0].id); 
-                    }
-                  }}
-                  className={`w-full px-4 py-3 text-left transition-colors flex flex-col border-b border-white/5 ${paymentMethod === "crypto" ? 'bg-white/5' : 'hover:bg-white/5'}`}
+                  onClick={() => { if (settings.crypto_enabled) { setIsCryptoExpanded(!isCryptoExpanded); if (!isCryptoExpanded) setPaymentMethod("crypto"); } }}
+                  disabled={!settings.crypto_enabled}
+                  className={`w-full px-4 py-3 text-left transition-colors flex items-center justify-between ${!settings.crypto_enabled ? 'opacity-50 cursor-not-allowed grayscale' : 'hover:bg-white/5'}`}
                 >
-                  <div className="flex items-center justify-between w-full">
-                    <div className="flex items-center gap-3">
-                      <div className="flex items-center justify-center w-8 h-8 bg-amber-500/10 rounded-full">
-                        <SiBitcoin className="w-4 h-4 text-amber-400" />
-                      </div>
-                      <div>
-                        <div className="text-sm text-white">Cryptocurrency</div>
-                        <div className="text-xs text-gray-500">SOL, LTC, USDT <span className="text-amber-400">(0.5% fee)</span></div>
-                      </div>
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center justify-center w-8 h-8 bg-amber-500/10 rounded-full shrink-0">
+                      <SiBitcoin className="w-4 h-4 text-amber-400" />
                     </div>
-                    <ChevronRight className={`w-4 h-4 text-gray-500 transition-transform ${isCryptoExpanded && paymentMethod === 'crypto' ? 'rotate-90' : ''}`} />
+                    <div>
+                      <div className="text-sm text-white">Cryptocurrency</div>
+                      <div className="text-xs text-gray-500">{!settings.crypto_enabled ? 'Temporarily disabled' : 'SOL, LTC, USDT'} <span className="text-amber-400">{!settings.crypto_enabled ? '' : '(0.5% fee)'}</span></div>
+                    </div>
                   </div>
+                  <ChevronRight className={`w-4 h-4 text-gray-500 transition-transform ${isCryptoExpanded && paymentMethod === 'crypto' ? 'rotate-90' : ''}`} />
+                </button>               </div>
                   {paymentMethod === 'crypto' && selectedCryptoCoin === 'USDT_TON' && totalPrice < 5 && (
                     <div className="mt-4 text-xs font-medium text-emerald-400/90 bg-emerald-400/10 p-3 rounded-xl flex items-center gap-2">
                       <ShieldAlert className="w-4 h-4 shrink-0" />
                       Minimum total amount for Tether USDT is €5.00
                     </div>
                   )}
-                </button>
-                
                 {paymentMethod === 'crypto' && isCryptoExpanded && (
                   <div className="p-3 bg-[#111] border-b border-white/5 animate-in slide-in-from-top-2 duration-200">
                     <div className="text-[10px] font-bold text-gray-500 uppercase mb-2">Select Currency</div>

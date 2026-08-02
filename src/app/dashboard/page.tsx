@@ -53,6 +53,7 @@ function DashboardContent() {
   const [resetEmailSent, setResetEmailSent] = useState(false);
   const [revealedIdx, setRevealedIdx] = useState<{orderId: string, idx: number} | null>(null);
   const [ordersPage, setOrdersPage] = useState(1);
+  const [ticketsPage, setTicketsPage] = useState(1);
 
   const [newName, setNewName] = useState("");
   const [newAvatar, setNewAvatar] = useState("");
@@ -1353,7 +1354,7 @@ function DashboardContent() {
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 gap-4 z-10 flex-1 content-start">
-                    {tickets.map((ticket, i) => (
+                    {tickets.slice((ticketsPage - 1) * 5, ticketsPage * 5).map((ticket, i) => (
                       <div key={ticket.id} className="bg-[#0a0a0a] rounded-2xl border border-white/5 hover:border-white/10 transition-colors p-4 md:p-6 group relative overflow-hidden flex flex-col sm:flex-row gap-4 sm:items-center justify-between">
                         <div className="flex-1 min-w-0 flex items-start gap-4">
                           <div className={`shrink-0 w-12 h-12 rounded-full border flex items-center justify-center ${ticket.status === 'open' ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-gray-500/10 border-gray-500/30'}`}>
@@ -1389,6 +1390,43 @@ function DashboardContent() {
                         </div>
                       </div>
                     ))}
+                  </div>
+                )}
+                
+                {/* Pagination Controls */}
+                {tickets.length > 5 && (
+                  <div className="flex items-center justify-center gap-2 pt-6 border-t border-white/5 mt-auto z-10">
+                    <button
+                      onClick={() => setTicketsPage(Math.max(1, ticketsPage - 1))}
+                      disabled={ticketsPage === 1}
+                      className="w-10 h-10 flex items-center justify-center bg-white/5 hover:bg-white/10 disabled:opacity-50 disabled:hover:bg-white/5 rounded-xl transition-all"
+                    >
+                      <ChevronLeft className="w-5 h-5 text-gray-400" />
+                    </button>
+                    
+                    <div className="flex items-center gap-2 px-2">
+                      {Array.from({ length: Math.ceil(tickets.length / 5) }).map((_, i) => (
+                        <button
+                          key={i}
+                          onClick={() => setTicketsPage(i + 1)}
+                          className={`w-10 h-10 flex items-center justify-center rounded-xl text-sm font-bold transition-all ${
+                            ticketsPage === i + 1 
+                              ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
+                              : 'text-gray-400 hover:text-white hover:bg-white/5 border border-transparent'
+                          }`}
+                        >
+                          {i + 1}
+                        </button>
+                      ))}
+                    </div>
+
+                    <button
+                      onClick={() => setTicketsPage(Math.min(Math.ceil(tickets.length / 5), ticketsPage + 1))}
+                      disabled={ticketsPage === Math.ceil(tickets.length / 5)}
+                      className="w-10 h-10 flex items-center justify-center bg-white/5 hover:bg-white/10 disabled:opacity-50 disabled:hover:bg-white/5 rounded-xl transition-all"
+                    >
+                      <ChevronRight className="w-5 h-5 text-gray-400" />
+                    </button>
                   </div>
                 )}
               </div>

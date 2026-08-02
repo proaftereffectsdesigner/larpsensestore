@@ -78,6 +78,12 @@ export async function POST(req: Request) {
     .timestamp { font-size: 12px; color: #666; }
     .content { color: #ddd; line-height: 1.5; white-space: pre-wrap; }
     .bot-tag { background: #5865F2; color: #fff; font-size: 10px; padding: 2px 6px; border-radius: 4px; border: none; font-weight: bold; }
+    .embed { border-left: 4px solid #5865F2; background: #202225; padding: 10px 15px; border-radius: 4px; margin-top: 8px; }
+    .embed-title { font-weight: bold; margin-bottom: 5px; color: #fff; }
+    .embed-desc { font-size: 13px; color: #dcddde; white-space: pre-wrap; }
+    .embed-field { margin-top: 8px; }
+    .embed-field-name { font-size: 12px; font-weight: bold; color: #fff; }
+    .embed-field-value { font-size: 13px; color: #dcddde; white-space: pre-wrap; }
   </style>
 </head>
 <body>
@@ -99,6 +105,24 @@ export async function POST(req: Request) {
       const date = new Date(msg.timestamp).toLocaleString();
       const botTag = msg.author.bot ? '<span class="bot-tag">BOT</span>' : '';
 
+      let embedsHtml = '';
+      if (msg.embeds && msg.embeds.length > 0) {
+        for (const embed of msg.embeds) {
+          embedsHtml += `<div class="embed">`;
+          if (embed.title) embedsHtml += `<div class="embed-title">${embed.title}</div>`;
+          if (embed.description) embedsHtml += `<div class="embed-desc">${embed.description}</div>`;
+          if (embed.fields && embed.fields.length > 0) {
+            for (const field of embed.fields) {
+              embedsHtml += `<div class="embed-field">
+                <div class="embed-field-name">${field.name}</div>
+                <div class="embed-field-value">${field.value}</div>
+              </div>`;
+            }
+          }
+          embedsHtml += `</div>`;
+        }
+      }
+
       html += `
       <div class="message">
         <img src="${avatarUrl}" class="avatar" alt="avatar" />
@@ -108,6 +132,7 @@ export async function POST(req: Request) {
             <span class="timestamp">${date}</span>
           </div>
           <div class="content">${msg.content}</div>
+          ${embedsHtml}
         </div>
       </div>`;
     }

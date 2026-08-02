@@ -125,8 +125,8 @@ export async function POST(req: Request) {
     const fileName = `ticket-${ticket.id}-${Date.now()}.html`;
     const { error: uploadError } = await supabaseAdmin.storage
       .from('transcripts')
-      .upload(fileName, Buffer.from(html, 'utf-8'), {
-        contentType: 'text/html',
+      .upload(fileName, html, {
+        contentType: 'text/html; charset=utf-8',
         upsert: true
       });
 

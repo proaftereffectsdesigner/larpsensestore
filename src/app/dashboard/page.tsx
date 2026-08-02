@@ -199,7 +199,7 @@ function DashboardContent() {
         } catch (e) {
           console.error(e);
         }
-        fetchBalance(session.user.id);
+        fetchBalance(session.user);
         fetchOrders(session.user.id);
         fetchTickets(session.user.id);
         fetchLoginActivity(session.user.id);

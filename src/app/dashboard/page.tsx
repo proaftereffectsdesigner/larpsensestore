@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { supabase } from "@/lib/supabase-client";
 import ParticlesBackground from "@/components/ParticlesBackground";
 import { User } from "@supabase/supabase-js";
-import { Copy, Search, RefreshCw, Lock, Package, KeyRound, Wallet, Plus, Eye, EyeOff, TrendingUp, Gamepad, ShoppingBag, User as UserIcon, LayoutGrid, Shield, Mail, Upload, X, Crop, Trash2, Crown, ShieldCheck, MessageSquare, Award, Gem, Zap, ExternalLink, ArrowRight, ChevronLeft, ChevronRight, Smartphone, Monitor, UserPlus, CalendarCheck, Medal, Coins, ShieldAlert } from "lucide-react";
+import { Copy, Search, RefreshCw, Lock, Package, KeyRound, Wallet, Plus, Eye, EyeOff, TrendingUp, Gamepad, ShoppingBag, User as UserIcon, LayoutGrid, Shield, Mail, Upload, X, Crop, Trash2, Crown, ShieldCheck, MessageSquare, Award, Gem, Zap, ExternalLink, ArrowRight, ChevronLeft, ChevronRight, Smartphone, Monitor, UserPlus, CalendarCheck, Medal, Coins, ShieldAlert, Star } from "lucide-react";
 import Cropper from 'react-easy-crop';
 import getCroppedImg from '@/lib/cropImage';
 import { products } from "@/lib/products";
@@ -18,6 +18,7 @@ function DashboardContent() {
   const [profile, setProfile] = useState<any>(null);
   const [orders, setOrders] = useState<any[]>([]);
   const [tickets, setTickets] = useState<any[]>([]);
+  const [myReviews, setMyReviews] = useState<any[]>([]);
   const [balance, setBalance] = useState<number>(0);
   const [loading, setLoading] = useState(true);
   const [sessionToken, setSessionToken] = useState<string | null>(null);
@@ -55,6 +56,7 @@ function DashboardContent() {
   const [revealedIdx, setRevealedIdx] = useState<{orderId: string, idx: number} | null>(null);
   const [ordersPage, setOrdersPage] = useState(1);
   const [ticketsPage, setTicketsPage] = useState(1);
+  const [myReviewsPage, setMyReviewsPage] = useState(1);
 
   const [newName, setNewName] = useState("");
   const [newAvatar, setNewAvatar] = useState("");
@@ -110,6 +112,18 @@ function DashboardContent() {
 
     if (!error && data) {
       setTickets(data);
+    }
+  };
+
+  const fetchMyReviews = async (userId: string) => {
+    const { data, error } = await supabase
+      .from("reviews")
+      .select("*")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false });
+
+    if (!error && data) {
+      setMyReviews(data);
     }
   };
 
@@ -204,6 +218,7 @@ function DashboardContent() {
         fetchBalance(session.user);
         fetchOrders(session.user.id);
         fetchTickets(session.user.id);
+        fetchMyReviews(session.user.id);
         fetchLoginActivity(session.user.id);
       }
       setLoading(false);
@@ -890,6 +905,12 @@ function DashboardContent() {
           <button onClick={() => handleTabChange('security')} className={`w-full flex items-center gap-3 px-5 py-3.5 rounded-2xl transition-all ${activeTab === 'security' ? 'bg-white/10 text-white font-bold shadow-lg' : 'text-gray-400 hover:bg-white/5 hover:text-gray-200 font-medium'}`}>
             <Shield className={`w-5 h-5 ${activeTab === 'security' ? 'text-accent' : ''}`} /> Security
           </button>
+          <button onClick={() => handleTabChange('tickets')} className={`w-full flex items-center gap-3 px-5 py-3.5 rounded-2xl transition-all ${activeTab === 'tickets' ? 'bg-white/10 text-white font-bold shadow-lg' : 'text-gray-400 hover:bg-white/5 hover:text-gray-200 font-medium'}`}>
+            <MessageSquare className={`w-5 h-5 ${activeTab === 'tickets' ? 'text-accent' : ''}`} /> Support Tickets
+          </button>
+          <button onClick={() => handleTabChange('reviews')} className={`w-full flex items-center gap-3 px-5 py-3.5 rounded-2xl transition-all ${activeTab === 'reviews' ? 'bg-white/10 text-white font-bold shadow-lg' : 'text-gray-400 hover:bg-white/5 hover:text-gray-200 font-medium'}`}>
+            <Star className={`w-5 h-5 ${activeTab === 'reviews' ? 'text-accent' : ''}`} /> Reviews
+          </button>
         </div>
 
         {/* Main Content Layout */}
@@ -1430,6 +1451,103 @@ function DashboardContent() {
                     <button
                       onClick={() => setTicketsPage(Math.min(Math.ceil(tickets.length / 5), ticketsPage + 1))}
                       disabled={ticketsPage === Math.ceil(tickets.length / 5)}
+                      className="w-10 h-10 flex items-center justify-center bg-white/5 hover:bg-white/10 disabled:opacity-50 disabled:hover:bg-white/5 rounded-xl transition-all"
+                    >
+                      <ChevronRight className="w-5 h-5 text-gray-400" />
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* REVIEWS TAB */}
+          {activeTab === 'reviews' && (
+            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <div className="flex items-center justify-between mb-8 border-b border-white/10 pb-4">
+                <h2 className="text-2xl font-bold text-white tracking-tight flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-[#141414] border border-white/10 flex items-center justify-center">
+                    <Star className="w-5 h-5 text-gray-300" />
+                  </div>
+                  My Reviews
+                </h2>
+              </div>
+
+              <div className="bg-[#141414] border border-white/5 rounded-3xl p-4 md:p-8 shadow-2xl relative overflow-hidden min-h-[400px] flex flex-col">
+                <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-accent/5 rounded-full blur-3xl pointer-events-none" />
+                
+                {myReviews.length === 0 ? (
+                  <div className="flex-1 flex flex-col items-center justify-center text-center max-w-sm mx-auto z-10 py-10">
+                    <div className="w-20 h-20 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mb-6">
+                      <Star className="w-8 h-8 text-gray-500" />
+                    </div>
+                    <h3 className="text-xl font-bold text-white mb-2">No reviews yet</h3>
+                    <p className="text-gray-400 text-sm leading-relaxed mb-6">
+                      You haven't submitted any reviews. Purchase a product to share your feedback.
+                    </p>
+                    <button onClick={() => handleTabChange('orders')} className="bg-white text-black hover:bg-gray-200 font-bold rounded-xl px-8 py-3 transition-colors text-sm flex items-center justify-center gap-2">
+                      <LayoutGrid className="w-4 h-4" />
+                      View My Orders
+                    </button>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 z-10 flex-1 content-start">
+                    {myReviews.slice((myReviewsPage - 1) * 8, myReviewsPage * 8).map((review) => (
+                      <div key={review.id} className="bg-[#0a0a0a] rounded-2xl border border-white/5 p-5 relative overflow-hidden flex flex-col">
+                        <div className="flex items-center justify-between mb-3 border-b border-white/5 pb-3">
+                          <div className="text-xs text-gray-400 font-bold uppercase tracking-wider">
+                            {products.find(p => p.id === review.product_type)?.name || review.product_type}
+                          </div>
+                          <div className="flex text-yellow-500">
+                            {Array.from({ length: 5 }).map((_, idx) => (
+                              <Star key={idx} className={`w-3.5 h-3.5 ${idx < review.rating ? 'fill-current' : 'text-gray-700'}`} />
+                            ))}
+                          </div>
+                        </div>
+                        <p className="text-gray-300 italic text-sm mb-4 line-clamp-3 leading-relaxed">
+                          "{review.comment || 'Great service!'}"
+                        </p>
+                        <div className="mt-auto flex items-center justify-between pt-3 border-t border-white/5">
+                          <span className="text-[10px] text-gray-500 font-bold">{new Date(review.created_at).toLocaleDateString()}</span>
+                          <span className={`text-[10px] font-bold tracking-widest uppercase px-2 py-1 rounded ${review.is_published ? 'bg-green-500/10 text-green-400' : 'bg-yellow-500/10 text-yellow-400'}`}>
+                            {review.is_published ? 'Published' : 'Pending'}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                
+                {/* Pagination Controls */}
+                {myReviews.length > 8 && (
+                  <div className="flex items-center justify-center gap-2 pt-6 border-t border-white/5 mt-auto z-10">
+                    <button
+                      onClick={() => setMyReviewsPage(Math.max(1, myReviewsPage - 1))}
+                      disabled={myReviewsPage === 1}
+                      className="w-10 h-10 flex items-center justify-center bg-white/5 hover:bg-white/10 disabled:opacity-50 disabled:hover:bg-white/5 rounded-xl transition-all"
+                    >
+                      <ChevronLeft className="w-5 h-5 text-gray-400" />
+                    </button>
+                    
+                    <div className="flex items-center gap-2 px-2">
+                      {Array.from({ length: Math.ceil(myReviews.length / 8) }).map((_, i) => (
+                        <button
+                          key={i}
+                          onClick={() => setMyReviewsPage(i + 1)}
+                          className={`w-10 h-10 flex items-center justify-center rounded-xl text-sm font-bold transition-all ${
+                            myReviewsPage === i + 1 
+                              ? 'bg-accent/10 text-accent border border-accent/20' 
+                              : 'text-gray-400 hover:text-white hover:bg-white/5 border border-transparent'
+                          }`}
+                        >
+                          {i + 1}
+                        </button>
+                      ))}
+                    </div>
+
+                    <button
+                      onClick={() => setMyReviewsPage(Math.min(Math.ceil(myReviews.length / 8), myReviewsPage + 1))}
+                      disabled={myReviewsPage === Math.ceil(myReviews.length / 8)}
                       className="w-10 h-10 flex items-center justify-center bg-white/5 hover:bg-white/10 disabled:opacity-50 disabled:hover:bg-white/5 rounded-xl transition-all"
                     >
                       <ChevronRight className="w-5 h-5 text-gray-400" />

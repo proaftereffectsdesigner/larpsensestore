@@ -24,18 +24,18 @@ export default function HowItWorks() {
   const steps = [
     {
       icon: <Package className="w-6 h-6 text-emerald-500" />,
-      title: "1. Get Your Token",
-      description: "Instant delivery of your secure token file right after the payment clears."
+      title: "1. Get Your Access",
+      description: "Instant delivery of your secure session file right after the payment clears."
     },
     {
       icon: <Download className="w-6 h-6 text-emerald-500" />,
       title: "2. Download Client",
-      description: "Get our proprietary LarpSense Cloud Token Connector directly from your user dashboard."
+      description: "Get our proprietary LarpSense Cloud Connector directly from your user dashboard."
     },
     {
       icon: <Terminal className="w-6 h-6 text-emerald-500" />,
-      title: "3. Direct Token Authentication",
-      description: "Drag & drop your token for seamless authentication and jump straight into Premier matchmaking."
+      title: "3. Direct Session Authentication",
+      description: "Launch the connector, drag & drop your session file, and let the system securely establish your access in seconds."
     }
   ];
 

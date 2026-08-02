@@ -38,7 +38,7 @@ export default function Footer() {
               </div>
             </Link>
             <p className="text-gray-400 text-sm leading-relaxed max-w-sm mb-6">
-              Your trusted destination for premium, instantly delivered access tokens. Experience seamless verification, backed by our automated warranty.
+              Your trusted destination for premium, instantly delivered access sessions. Experience seamless verification, backed by our automated warranty.
             </p>
             <div className="text-xs text-gray-500 space-y-1">
               <a href="mailto:support@larpsensestore.com" className="text-accent hover:text-white transition-colors mt-2 inline-block">support@larpsensestore.com</a>

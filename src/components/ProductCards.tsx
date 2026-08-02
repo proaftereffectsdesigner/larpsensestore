@@ -58,21 +58,21 @@ export default function ProductCards() {
     {
       id: "prime",
       title: "Prime Ready",
-      desc: "Standard Prime access tokens for verification. Instantly delivered.",
+      desc: "Standard Prime access for verification. Instantly delivered.",
       products: primeProducts,
       img: "/prime-bg.png"
     },
     {
       id: "premier",
       title: "Premier Ready",
-      desc: "Standard tokens ready for Premier integration. Blank slate for your journey.",
+      desc: "Standard access ready for Premier integration. Blank slate for your journey.",
       products: premierBaseProducts,
       img: "/premier-bg.jpg"
     },
     {
       id: "premier-4-medals", 
       title: "Premier with Medals",
-      desc: "Premier tokens loaded with service tier status. Show off your veteran status.",
+      desc: "Premier access loaded with service tier status. Show off your veteran status.",
       products: premierMedalsProducts,
       img: "/premier-bg.jpg" 
     },
@@ -86,7 +86,7 @@ export default function ProductCards() {
     {
       id: "premier-rare", 
       title: "Premier Rare",
-      desc: "The ultimate flex. Tokens loaded with premium tier assets.",
+      desc: "The ultimate flex. Sessions loaded with premium tier assets.",
       products: premierRareProducts,
       img: "/premier-bg.jpg" 
     }

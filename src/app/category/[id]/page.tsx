@@ -256,11 +256,11 @@ export default function CategoryPage() {
             <ul className="space-y-3 text-sm leading-relaxed">
               <li className="flex items-start gap-2">
                 <Zap className="w-4 h-4 text-green-400 mt-0.5 shrink-0" />
-                <span><strong>Instant Delivery:</strong> Secure token file dispatched to your email immediately after purchase.</span>
+                <span><strong>Instant Delivery:</strong> Secure Session File dispatched to your email immediately after purchase.</span>
               </li>
               <li className="flex items-start gap-2">
                 <Lock className="w-4 h-4 text-green-400 mt-0.5 shrink-0" />
-                <span><strong>Cloud Token Access:</strong> Connect seamlessly using our Cloud Token Connector. This is a pre-configured token session (manual login credentials are not required).</span>
+                <span><strong>Cloud Session Access:</strong> Connect seamlessly using our LarpSense App. This is a pre-configured session (manual login credentials are not required).</span>
               </li>
               {id === "prime" && (
                 <li className="flex items-start gap-2">
@@ -271,12 +271,48 @@ export default function CategoryPage() {
               {id === "premier" && (
                 <li className="flex items-start gap-2">
                   <CheckCircle2 className="w-4 h-4 text-green-400 mt-0.5 shrink-0" />
-                  <span><strong>Premier Ready:</strong> Level 10 reached and ready to calibrate your Premier Rating. Various medal and inventory tiers available below.</span>
+                  <span><strong>Premier Ready:</strong> Level 10 reached and ready to calibrate your Premier Rating.</span>
+                </li>
+              )}
+              {id === "premier-4-medals" && (
+                <li className="flex items-start gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-green-400 mt-0.5 shrink-0" />
+                  <span><strong>Premier with Medals:</strong> Premier-ready access equipped with at least 4 in-game service medals.</span>
+                </li>
+              )}
+              {id === "premier-10-medals" && (
+                <li className="flex items-start gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-green-400 mt-0.5 shrink-0" />
+                  <span><strong>Premier Elite Medals:</strong> Premier-ready access equipped with 10 or more in-game service medals.</span>
+                </li>
+              )}
+              {id === "premier-10k" && (
+                <li className="flex items-start gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-green-400 mt-0.5 shrink-0" />
+                  <span><strong>10,000+ Rating:</strong> Calibrated and secured at a guaranteed 10,000+ CS Rating.</span>
+                </li>
+              )}
+              {id === "premier-15k" && (
+                <li className="flex items-start gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-green-400 mt-0.5 shrink-0" />
+                  <span><strong>15,000+ Rating:</strong> Calibrated and secured at a guaranteed 15,000+ CS Rating.</span>
+                </li>
+              )}
+              {id === "premier-20k" && (
+                <li className="flex items-start gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-green-400 mt-0.5 shrink-0" />
+                  <span><strong>20,000+ Rating:</strong> High-tier calibration secured at a guaranteed 20,000+ CS Rating.</span>
+                </li>
+              )}
+              {id === "premier-rare" && (
+                <li className="flex items-start gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-green-400 mt-0.5 shrink-0" />
+                  <span><strong>Rare Inventory:</strong> Equipped with premium assets, guaranteeing at least one Knife or Glove item.</span>
                 </li>
               )}
               <li className="flex items-start gap-2">
                 <RefreshCcw className="w-4 h-4 text-green-400 mt-0.5 shrink-0" />
-                <span><strong>Automated Warranty:</strong> Covered by our automated 1:1 replacement system if the token expires within the 6-hour window.</span>
+                <span><strong>Automated Warranty:</strong> Covered by our automated 1:1 replacement system if the session expires within the 6-hour window.</span>
               </li>
             </ul>
           </div>

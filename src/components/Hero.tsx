@@ -107,7 +107,7 @@ export default function Hero() {
 
           {/* Headline */}
           <h1 className={`text-5xl md:text-6xl lg:text-7xl font-black tracking-tighter mb-6 text-white leading-[1.1] text-balance transition-all duration-700 delay-200 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-            Premium Access Tokens. <br />
+            Premium Access Sessions. <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-emerald-600">
               Secure & Instant
             </span> Access.
@@ -115,7 +115,7 @@ export default function Hero() {
 
           {/* Sub-headline */}
           <p className={`text-lg md:text-xl text-gray-400 mb-10 leading-relaxed max-w-2xl transition-all duration-700 delay-300 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-            Enterprise-grade access tokens paired with a proprietary client. Experience secure, automated delivery and seamless authentication without compromising privacy.
+            Enterprise-grade access sessions paired with a proprietary client. Experience secure, automated delivery and seamless authentication without compromising privacy.
           </p>
 
           {/* Action Button */}
@@ -149,7 +149,7 @@ export default function Hero() {
                   <FileKey2 className="w-5 h-5 text-emerald-400" />
                 </div>
                 <div>
-                  <div className="text-xs font-bold text-white">access_tokens.txt</div>
+                  <div className="text-xs font-bold text-white">sessions.txt</div>
                   <div className="text-[10px] text-gray-500">Drag into the tool</div>
                 </div>
               </div>
@@ -191,8 +191,8 @@ export default function Hero() {
                     <img src="/logo.png" alt="LarpSense Logo" className="w-6 h-6 object-contain drop-shadow-[0_0_8px_rgba(52,211,153,0.5)]" />
                   </div>
                   <div>
-                    <h2 className="text-white font-bold text-lg leading-tight tracking-tight">Cloud Token Connector</h2>
-                    <p className="text-gray-500 text-[10px] uppercase tracking-wider font-medium mt-0.5">Secure Token Manager</p>
+                    <h2 className="text-white font-bold text-lg leading-tight tracking-tight">Cloud Session Connector</h2>
+                    <p className="text-gray-500 text-[10px] uppercase tracking-wider font-medium mt-0.5">Secure Session Manager</p>
                   </div>
                 </div>
                 
@@ -200,7 +200,7 @@ export default function Hero() {
                 <div className="hidden sm:flex gap-6 text-center">
                   <div>
                     <div className="text-white font-black text-lg">0</div>
-                    <div className="text-gray-500 text-[8px] uppercase tracking-widest font-bold">Tokens</div>
+                    <div className="text-gray-500 text-[8px] uppercase tracking-widest font-bold">Sessions</div>
                   </div>
                   <div>
                     <div className="text-white font-black text-lg">0</div>
@@ -216,7 +216,7 @@ export default function Hero() {
               {/* Input Row */}
               <div className="flex gap-2">
                 <div className="flex-1 bg-[#141414] border border-white/10 rounded-md px-3 flex items-center text-[11px] text-gray-500 font-mono overflow-hidden">
-                  Paste your JWT token or full access string...
+                  Paste your JWT string or full access string...
                 </div>
                 <button className="hidden sm:flex px-3 py-1.5 border border-white/20 rounded-md text-white text-[11px] font-bold items-center gap-1.5">
                   <ShieldCheck className="w-3 h-3" /> Verify
@@ -231,20 +231,20 @@ export default function Hero() {
             <div className="flex-1 p-5 flex flex-col relative">
               {isDraggingOver && (
                 <div className="absolute inset-0 z-10 bg-emerald-500/5 backdrop-blur-[2px] flex items-center justify-center border-2 border-emerald-500/50 border-dashed m-2 rounded-lg pointer-events-none">
-                  <p className="text-emerald-400 font-bold bg-black/50 px-4 py-2 rounded-md">Drop file to parse tokens...</p>
+                  <p className="text-emerald-400 font-bold bg-black/50 px-4 py-2 rounded-md">Drop file to parse sessions...</p>
                 </div>
               )}
               
               {injectorState === 'idle' && (
                 <div className="flex-1 flex items-center justify-center opacity-40 font-mono text-[11px] md:text-xs text-gray-400 pointer-events-none">
-                  <p className="text-center">No profiles yet — paste a JWT token<br/>or drag an access string file here.</p>
+                  <p className="text-center">No profiles yet — paste a JWT string<br/>or drag an access string file here.</p>
                 </div>
               )}
 
               {injectorState === 'parsing' && (
                 <div className="flex-1 flex flex-col space-y-2.5 pt-2 font-mono text-[11px] md:text-xs text-gray-400 pointer-events-none">
-                  <p className="text-gray-300">{'>'} Parsing access_tokens.txt...</p>
-                  <p className="text-emerald-400/80">{'>'} Validating tokens... <span className="text-emerald-400 font-bold">[OK]</span></p>
+                  <p className="text-gray-300">{'>'} Parsing sessions.txt...</p>
+                  <p className="text-emerald-400/80">{'>'} Validating sessions... <span className="text-emerald-400 font-bold">[OK]</span></p>
                   <p className="animate-pulse">_</p>
                 </div>
               )}
@@ -303,7 +303,7 @@ export default function Hero() {
                   {/* Launching Status */}
                   <div className={`mt-6 text-left font-mono text-[11px] md:text-xs transition-all duration-500 ${injectorState === 'launching' ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
                     <p className="text-emerald-400 drop-shadow-[0_0_8px_rgba(92,237,92,0.8)] animate-pulse">
-                      {'>'} Authenticating token and launching cloud client...
+                      {'>'} Authenticating session and launching cloud client...
                     </p>
                   </div>
                 </div>
@@ -324,7 +324,7 @@ export default function Hero() {
             </div>
             <h3 className="text-white font-bold mb-3 text-xl">Instant Auto-Delivery</h3>
             <p className="text-sm text-gray-400 leading-relaxed font-medium">
-              Credentials and secure tokens are dispatched to your email instantly after the payment clears.
+              Credentials and secure sessions are dispatched to your email instantly after the payment clears.
             </p>
           </div>
         </div>
@@ -337,7 +337,7 @@ export default function Hero() {
             </div>
             <h3 className="text-white font-bold mb-3 text-xl">Enterprise-Grade Security</h3>
             <p className="text-sm text-gray-400 leading-relaxed font-medium">
-              Our desktop client utilizes native Windows DPAPI encryption to secure your tokens locally. Your gaming sessions are airtight.
+              Our desktop client utilizes native Windows DPAPI encryption to secure your sessions locally. Your gaming sessions are airtight.
             </p>
           </div>
         </div>
@@ -350,7 +350,7 @@ export default function Hero() {
             </div>
             <h3 className="text-white font-bold mb-3 text-xl">Automated Warranty</h3>
             <p className="text-sm text-gray-400 leading-relaxed font-medium">
-              If a token goes down, our system verifies it and issues a 1:1 replacement within your warranty window.
+              If a session goes down, our system verifies it and issues a 1:1 replacement within your warranty window.
             </p>
           </div>
         </div>

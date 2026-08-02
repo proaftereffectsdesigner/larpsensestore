@@ -24,7 +24,7 @@ export default function FinalCTA() {
     <section ref={containerRef} className={`w-full max-w-7xl mx-auto py-32 md:py-48 px-4 flex flex-col items-center justify-center text-center border-t border-white/5 transition-all duration-1000 ease-out ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-20'}`}>
       <div className="flex flex-col items-center max-w-2xl">
         <p className="font-mono text-gray-600 text-xs md:text-sm mb-6 animate-pulse">
-          {'>'} status: awaiting_token...
+          {'>'} status: awaiting_session...
         </p>
         <h2 className="text-4xl md:text-5xl font-black text-white mb-10 tracking-tight leading-tight">
           The client is ready. <br className="hidden md:block" />

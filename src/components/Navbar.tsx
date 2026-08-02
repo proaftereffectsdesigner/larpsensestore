@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ShoppingCart, LogOut, LayoutGrid, Plus, User as UserIcon, Lock, Shield, AlertTriangle, MessageSquare } from "lucide-react";
+import { ShoppingCart, LogOut, LayoutGrid, Plus, User as UserIcon, Lock, Shield, AlertTriangle, MessageSquare, Star } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase-client";
 import { User } from "@supabase/supabase-js";
@@ -244,6 +244,11 @@ export default function Navbar() {
                     <Link href="/dashboard?tab=tickets" onClick={() => setShowDropdown(false)} className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-gray-300 hover:text-white hover:bg-white/5 rounded-xl transition-colors">
                       <MessageSquare className="w-4 h-4 text-gray-400" />
                       Support Tickets
+                    </Link>
+
+                    <Link href="/dashboard?tab=reviews" onClick={() => setShowDropdown(false)} className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-gray-300 hover:text-white hover:bg-white/5 rounded-xl transition-colors">
+                      <Star className="w-4 h-4 text-gray-400" />
+                      My Reviews
                     </Link>
 
                     <Link href="/dashboard?tab=security" onClick={() => setShowDropdown(false)} className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-gray-300 hover:text-white hover:bg-white/5 rounded-xl transition-colors">

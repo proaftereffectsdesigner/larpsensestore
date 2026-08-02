@@ -1376,7 +1376,7 @@ function DashboardContent() {
                         </div>
                         <div className="flex items-center gap-3 sm:ml-auto">
                           {ticket.discord_channel_id && ticket.status === 'open' && (
-                            <a href={`https://discord.com/channels/${process.env.NEXT_PUBLIC_DISCORD_GUILD_ID || ''}/${ticket.discord_channel_id}`} target="_blank" rel="noreferrer" className="flex-1 sm:flex-none text-xs bg-[#5865F2]/10 border border-[#5865F2]/30 hover:bg-[#5865F2]/20 text-[#5865F2] font-bold px-4 py-2.5 rounded-xl transition-colors flex items-center justify-center gap-2 text-center">
+                            <a href={`https://discord.com/channels/1531836463585558608/${ticket.discord_channel_id}`} target="_blank" rel="noreferrer" className="flex-1 sm:flex-none text-xs bg-[#5865F2]/10 border border-[#5865F2]/30 hover:bg-[#5865F2]/20 text-[#5865F2] font-bold px-4 py-2.5 rounded-xl transition-colors flex items-center justify-center gap-2 text-center">
                               View in Discord
                             </a>
                           )}

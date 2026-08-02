@@ -9,7 +9,7 @@ export async function GET(req: Request) {
 
     const { data: tickets, error } = await supabaseAdmin
       .from('tickets')
-      .select('*')
+      .select('*, profiles(email, display_name, avatar_url, discord_username)')
       .order('created_at', { ascending: false });
 
     if (error) {

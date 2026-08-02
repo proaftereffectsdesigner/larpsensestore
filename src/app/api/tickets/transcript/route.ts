@@ -55,12 +55,20 @@ export async function GET(req: Request) {
       }
     }
 
-    const res = await fetch(targetUrl);
-    if (!res.ok) {
-      return new NextResponse("Failed to fetch transcript", { status: res.status });
+    const fileName = targetUrl.split('/').pop();
+    if (!fileName) {
+      return new NextResponse("Invalid file name", { status: 400 });
     }
 
-    const html = await res.text();
+    const { data: fileBlob, error: downloadError } = await supabaseAdmin.storage
+      .from('transcripts')
+      .download(fileName);
+
+    if (downloadError || !fileBlob) {
+      return new NextResponse("Failed to download transcript (or it is not accessible)", { status: 404 });
+    }
+
+    const html = await fileBlob.text();
 
     return new NextResponse(html, {
       headers: {

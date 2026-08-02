@@ -144,7 +144,7 @@ export async function POST(req: Request) {
 </html>`;
 
     // 4. Make sure bucket exists (ignore error if it does)
-    await supabaseAdmin.storage.createBucket('transcripts', { public: true });
+    await supabaseAdmin.storage.createBucket('transcripts', { public: false });
 
     // 5. Upload to Supabase Storage
     const fileName = `ticket-${ticket.id}-${Date.now()}.html`;

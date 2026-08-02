@@ -123,10 +123,11 @@ export async function POST(req: Request) {
 
     // 5. Upload to Supabase Storage
     const fileName = `ticket-${ticket.id}-${Date.now()}.html`;
+    const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
     const { error: uploadError } = await supabaseAdmin.storage
       .from('transcripts')
-      .upload(fileName, html, {
-        contentType: 'text/html; charset=utf-8',
+      .upload(fileName, blob, {
+        contentType: 'text/html;charset=utf-8',
         upsert: true
       });
 

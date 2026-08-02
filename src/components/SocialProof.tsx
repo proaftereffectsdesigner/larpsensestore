@@ -125,7 +125,7 @@ export default function SocialProof() {
                   <span className="text-gray-500 text-xs font-bold">{new Date(review.created_at).toLocaleDateString()}</span>
                   <span className="text-[10px] ml-auto bg-green-500/10 text-green-400 px-2 py-1 rounded font-bold uppercase tracking-widest">Verified Purchase</span>
                 </div>
-                <p className="text-gray-300 italic mb-4">"{review.comment || 'Great service!'}"</p>
+                <p className="text-gray-300 italic mb-4">"{review.comment ? (review.comment.length > 150 ? review.comment.slice(0, 150) + '...' : review.comment) : 'Great service!'}"</p>
                 
                 <div className="flex items-center gap-3 border-t border-white/5 pt-4">
                   {review.profiles?.avatar_url ? (

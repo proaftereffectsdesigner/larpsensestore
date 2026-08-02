@@ -795,11 +795,15 @@ function DashboardContent() {
                 </div>
               </div>
               <div>
-                <label className="block text-xs font-bold tracking-widest text-gray-500 mb-2 uppercase">Comment (Optional)</label>
+                <div className="flex justify-between items-center mb-2">
+                  <label className="block text-xs font-bold tracking-widest text-gray-500 uppercase">Comment (Optional)</label>
+                  <span className="text-[10px] text-gray-500 font-mono">{reviewComment.length}/400</span>
+                </div>
                 <textarea 
                   value={reviewComment}
                   onChange={(e) => setReviewComment(e.target.value)}
                   rows={4}
+                  maxLength={400}
                   className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-3 text-gray-300 focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/50 transition-all resize-none"
                   placeholder="Tell us what you think..."
                 />

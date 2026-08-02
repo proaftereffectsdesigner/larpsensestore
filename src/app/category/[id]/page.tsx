@@ -61,6 +61,14 @@ export default function CategoryPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [sortBy, setSortBy] = useState<"newest" | "oldest" | "best" | "worst">("newest");
   const reviewsPerPage = 8;
+  const [expandedReviews, setExpandedReviews] = useState<Set<number>>(new Set());
+
+  const toggleReview = (index: number) => {
+    const newSet = new Set(expandedReviews);
+    if (newSet.has(index)) newSet.delete(index);
+    else newSet.add(index);
+    setExpandedReviews(newSet);
+  };
 
 
 
@@ -610,7 +618,22 @@ export default function CategoryPage() {
                       <CheckCircle2 className="w-3 h-3" /> Verified
                     </span>
                   </div>
-                  <p className="text-gray-300 italic mb-4">"{review.comment || 'Great service!'}"</p>
+                  <p className="text-gray-300 italic mb-1">
+                    "{review.comment ? (
+                      expandedReviews.has(i) || review.comment.length <= 150 
+                        ? review.comment 
+                        : review.comment.slice(0, 150) + '...'
+                    ) : 'Great service!'}"
+                  </p>
+                  {review.comment && review.comment.length > 150 && (
+                    <button 
+                      onClick={() => toggleReview(i)}
+                      className="text-accent text-xs font-bold hover:underline mb-4 text-left"
+                    >
+                      {expandedReviews.has(i) ? "Show less" : "Show more"}
+                    </button>
+                  )}
+                  {!review.comment || review.comment.length <= 150 ? <div className="mb-4"></div> : null}
                   <div className="flex items-center gap-3 border-t border-white/5 pt-4">
                     {review.profiles?.avatar_url ? (
                       <img src={review.profiles.avatar_url} alt="Avatar" className="w-8 h-8 rounded-full border border-white/10" />

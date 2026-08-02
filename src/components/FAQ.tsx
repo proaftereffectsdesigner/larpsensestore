@@ -24,24 +24,24 @@ export default function FAQ() {
 
   const faqs = [
     {
-      question: "What is an NFA Account?",
-      answer: "Non-Full Access accounts are high-quality, hand-verified profiles perfect for immediate matchmaking. Our token system provides seamless and secure access through isolated environments."
+      question: "What is an Access Token?",
+      answer: "Access Tokens provide high-quality, verified software credentials perfect for immediate deployment. Our system provides seamless and secure access through isolated environments."
     },
     {
-      question: "How do I log into the purchased account?",
+      question: "How do I use the purchased token?",
       answer: "Logging in is entirely automated through our proprietary LarpSense Cloud Token Connector. Simply download the client from your dashboard, drag and drop your token file into it, and it will securely launch the application for you. It simplifies the authentication process and ensures maximum reliability."
     },
     {
       question: "How does the 6-hour warranty work?",
-      answer: "If your token expires or the account is inaccessible within 6 hours of purchase, please contact support for a diagnostic. If we verify that the issue is on our end, we will provide a 1:1 replacement. Please note this covers initial access and delivery, but does not cover bans resulting from user actions."
+      answer: "If your token expires or the environment is inaccessible within 6 hours of purchase, please contact support for a diagnostic. If we verify that the issue is on our end, we will provide a 1:1 replacement. Please note this covers initial access and delivery, but does not cover restrictions resulting from user actions."
     },
     {
-      question: "Is my main Steam account safe?",
-      answer: "Absolutely. Our desktop client uses native Windows DPAPI encryption to secure your session data locally. The environment is heavily isolated from your main HWID and registry traces."
+      question: "Is my primary software environment safe?",
+      answer: "Absolutely. Our client uses native Windows DPAPI encryption to secure your session data locally. The environment is heavily isolated from your primary operating system."
     },
     {
-      question: "Are these accounts Verified & Match-Ready?",
-      answer: "Every account is hand-verified before dispatch. While we employ Encrypted Windows DPAPI Sandbox Environments and test our systems daily, we cannot guarantee absolute immunity from future restrictions once the environment is in your possession. We do not offer refunds if a restriction occurs outside of our control."
+      question: "Are these tokens Verified & Ready for Deployment?",
+      answer: "Every token is hand-verified before dispatch. While we employ Encrypted Windows DPAPI Sandbox Environments and test our systems daily, we cannot guarantee absolute immunity from future restrictions once the environment is in your possession. We do not offer refunds if a restriction occurs outside of our control."
     }
   ];
 
@@ -49,7 +49,7 @@ export default function FAQ() {
     <section ref={containerRef} className="w-full max-w-3xl mx-auto py-24 px-4">
       <div className={`text-center mb-16 transition-all duration-1000 ease-out ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-20'}`}>
         <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Frequently Asked Questions</h2>
-        <p className="text-gray-400 font-medium">Everything you need to know about our NFA system.</p>
+        <p className="text-gray-400 font-medium">Everything you need to know about our Token system.</p>
       </div>
 
       <div className="space-y-4">

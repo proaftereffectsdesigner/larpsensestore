@@ -167,6 +167,23 @@ function DashboardContent() {
     }
   };
 
+  const handleViewTranscript = async (url: string) => {
+    try {
+      const res = await fetch(`/api/tickets/transcript?url=${encodeURIComponent(url)}`, {
+        headers: {
+          'Authorization': `Bearer ${sessionToken}`
+        }
+      });
+      if (!res.ok) throw new Error("Failed to fetch transcript");
+      const html = await res.text();
+      const blob = new Blob([html], { type: 'text/html' });
+      const blobUrl = URL.createObjectURL(blob);
+      window.open(blobUrl, '_blank');
+    } catch (err) {
+      toast.error("Could not load transcript.");
+    }
+  };
+
   const handleAcknowledgeBan = async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -1410,10 +1427,13 @@ function DashboardContent() {
                             </a>
                           )}
                           {ticket.transcript_url && (
-                            <a href={`/api/tickets/transcript?url=${encodeURIComponent(ticket.transcript_url)}&token=${sessionToken}`} target="_blank" rel="noreferrer" className="flex-1 sm:flex-none text-xs bg-white/5 border border-white/10 hover:bg-white/10 text-white font-bold px-4 py-2.5 rounded-xl transition-colors flex items-center justify-center gap-2 text-center">
+                            <button 
+                              onClick={() => handleViewTranscript(ticket.transcript_url)}
+                              className="flex-1 sm:flex-none text-xs bg-white/5 border border-white/10 hover:bg-white/10 text-white font-bold px-4 py-2.5 rounded-xl transition-colors flex items-center justify-center gap-2 text-center cursor-pointer"
+                            >
                               <ExternalLink className="w-3.5 h-3.5" />
                               View Transcript
-                            </a>
+                            </button>
                           )}
                         </div>
                       </div>

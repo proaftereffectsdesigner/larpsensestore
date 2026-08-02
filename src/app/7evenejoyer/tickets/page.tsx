@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase-client";
 import { MessageSquare, ExternalLink, Users } from "lucide-react";
+import { toast } from "sonner";
 
 export default function AdminTickets() {
   const [tickets, setTickets] = useState<any[]>([]);
@@ -13,6 +14,23 @@ export default function AdminTickets() {
   const [loading, setLoading] = useState(true);
   const [sessionToken, setSessionToken] = useState<string | null>(null);
   const router = useRouter();
+
+  const handleViewTranscript = async (url: string) => {
+    try {
+      const res = await fetch(`/api/tickets/transcript?url=${encodeURIComponent(url)}`, {
+        headers: {
+          'Authorization': `Bearer ${sessionToken}`
+        }
+      });
+      if (!res.ok) throw new Error("Failed to fetch transcript");
+      const html = await res.text();
+      const blob = new Blob([html], { type: 'text/html' });
+      const blobUrl = URL.createObjectURL(blob);
+      window.open(blobUrl, '_blank');
+    } catch (err) {
+      toast.error("Could not load transcript.");
+    }
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -211,15 +229,13 @@ export default function AdminTickets() {
                   <td className="p-4 text-sm text-gray-500">{new Date(ticket.created_at).toLocaleString()}</td>
                   <td className="p-4 text-right">
                     {ticket.transcript_url ? (
-                      <a 
-                        href={`/api/tickets/transcript?url=${encodeURIComponent(ticket.transcript_url)}&token=${sessionToken}`} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="bg-accent/10 hover:bg-accent/20 border border-accent/20 text-accent px-4 py-2.5 rounded-xl text-xs font-bold transition-all inline-flex items-center gap-2"
+                      <button 
+                        onClick={() => handleViewTranscript(ticket.transcript_url)}
+                        className="bg-accent/10 hover:bg-accent/20 border border-accent/20 text-accent px-4 py-2.5 rounded-xl text-xs font-bold transition-all inline-flex items-center gap-2 cursor-pointer"
                       >
                         <ExternalLink className="w-3 h-3" />
                         View Transcript
-                      </a>
+                      </button>
                     ) : (
                       <span className="text-gray-500 text-xs italic">No transcript</span>
                     )}

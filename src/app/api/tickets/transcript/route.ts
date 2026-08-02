@@ -10,7 +10,12 @@ export async function GET(req: Request) {
       return new NextResponse("Invalid URL", { status: 400 });
     }
 
-    const token = searchParams.get('token');
+    let token = searchParams.get('token');
+    const authHeader = req.headers.get('authorization');
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      token = authHeader.replace('Bearer ', '');
+    }
+
     if (!token) {
       return new NextResponse("Unauthorized (Missing token)", { status: 401 });
     }

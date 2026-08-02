@@ -57,6 +57,7 @@ export default function TopUpModal() {
     switch (method) {
       case 'card': return 0.015; // 1.5%
       case 'crypto': return 0.005; // 0.5%
+      default: return 0;
     }
   };
 
@@ -64,6 +65,7 @@ export default function TopUpModal() {
     switch (method) {
       case 'card': return 0.25;
       case 'crypto': return 0.00;
+      default: return 0;
     }
   };
 

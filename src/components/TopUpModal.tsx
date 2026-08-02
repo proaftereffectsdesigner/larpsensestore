@@ -13,9 +13,10 @@ export default function TopUpModal() {
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [amount, setAmount] = useState<number>(10);
   const [rawAmount, setRawAmount] = useState<string>('10');
-  const [method, setMethod] = useState<PaymentMethod>('card');
+  const [method, setMethod] = useState<PaymentMethod | null>(null);
   const [selectedCryptoCoin, setSelectedCryptoCoin] = useState<string | null>(null);
   const [loadingText, setLoadingText] = useState("Initializing secure connection...");
+  const [settings, setSettings] = useState({ stripe_enabled: true, crypto_enabled: true });
 
   const CRYPTO_COINS = [
     { id: 'SOL', name: 'Solana', icon: <SiSolana className="w-5 h-5" />, color: 'text-purple-400', bg: 'bg-purple-500/10' },
@@ -25,12 +26,25 @@ export default function TopUpModal() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const res = await fetch("/api/settings");
+        if (res.ok) {
+          const data = await res.json();
+          setSettings({ stripe_enabled: data.stripe_enabled ?? true, crypto_enabled: data.crypto_enabled ?? true });
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    fetchSettings();
+
     const handleOpen = () => {
       setIsOpen(true);
       setStep(1);
       setAmount(10);
       setRawAmount('10');
-      setMethod('card');
+      setMethod(null);
       setErrorMsg(null);
     };
     window.addEventListener('open-topup', handleOpen);
@@ -58,6 +72,10 @@ export default function TopUpModal() {
 
   const startPaymentSimulation = async () => {
     if (amount < 0.5) return;
+    if (!method) {
+      setErrorMsg("Please select a payment method");
+      return;
+    }
     setErrorMsg(null);
     
     // Check auth first

@@ -13,6 +13,7 @@ export default function Navbar() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [announcement, setAnnouncement] = useState<{ text: string, color: string } | null>(null);
 
   const [isBanned, setIsBanned] = useState(false);
   const [profile, setProfile] = useState<any>(null);
@@ -42,6 +43,21 @@ export default function Navbar() {
       setUser(session?.user ?? null);
       if (session?.user) fetchProfileData(session.user.id);
     });
+
+    const fetchAnnouncement = async () => {
+      try {
+        const res = await fetch("/api/settings");
+        if (res.ok) {
+          const data = await res.json();
+          if (data.announcement_text) {
+            setAnnouncement({ text: data.announcement_text, color: data.announcement_color });
+          }
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    fetchAnnouncement();
 
     const handleBalanceUpdate = () => {
       supabase.auth.getSession().then(({ data: { session } }) => {
@@ -96,10 +112,22 @@ export default function Navbar() {
 
   return (
     <div className="sticky top-0 z-50 flex flex-col w-full">
-      <div className="bg-amber-500/10 border-b border-amber-500/20 text-amber-200 py-3 px-4 flex items-center justify-center gap-3 text-sm md:text-base font-bold shadow-lg backdrop-blur-xl">
-        <AlertTriangle className="w-5 h-5 shrink-0 text-amber-400" />
-        <p>Due to technical reasons, Stripe payments are temporarily unavailable. We apologize for the inconvenience.</p>
-      </div>
+      {announcement && announcement.text && (
+        <div className={`border-b py-3 px-4 flex items-center justify-center gap-3 text-sm md:text-base font-bold shadow-lg backdrop-blur-xl ${
+          announcement.color === 'red' ? 'bg-red-500/10 border-red-500/20 text-red-200' :
+          announcement.color === 'green' ? 'bg-green-500/10 border-green-500/20 text-green-200' :
+          announcement.color === 'yellow' ? 'bg-yellow-500/10 border-yellow-500/20 text-yellow-200' :
+          'bg-amber-500/10 border-amber-500/20 text-amber-200'
+        }`}>
+          <AlertTriangle className={`w-5 h-5 shrink-0 ${
+            announcement.color === 'red' ? 'text-red-400' :
+            announcement.color === 'green' ? 'text-green-400' :
+            announcement.color === 'yellow' ? 'text-yellow-400' :
+            'text-amber-400'
+          }`} />
+          <p>{announcement.text}</p>
+        </div>
+      )}
       <nav className="border-b border-white/5 bg-[#0a0a0a]/80 backdrop-blur-2xl w-full">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
         <Link 

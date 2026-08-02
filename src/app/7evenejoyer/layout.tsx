@@ -2,7 +2,7 @@
 
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { Users, BarChart3, LayoutDashboard, MessageSquare } from 'lucide-react';
+import { Users, BarChart3, LayoutDashboard, MessageSquare, Settings } from 'lucide-react';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -43,6 +43,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           >
             <MessageSquare className="w-4 h-4" />
             Tickets
+          </Link>
+          <Link 
+            href="/7evenejoyer/settings" 
+            className={`flex items-center gap-2 px-4 py-3 text-sm font-bold border-b-2 transition-all whitespace-nowrap ${pathname?.startsWith('/7evenejoyer/settings') ? 'border-accent text-accent' : 'border-transparent text-gray-500 hover:text-gray-300 hover:border-white/20'}`}
+          >
+            <Settings className="w-4 h-4" />
+            Settings
           </Link>
         </div>
       </div>

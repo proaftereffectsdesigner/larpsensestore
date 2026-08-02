@@ -16,6 +16,22 @@ export async function GET(req: Request) {
       throw error;
     }
 
+    // Fetch auth users to get correct emails if missing from profiles
+    const { data: authData } = await supabaseAdmin.auth.admin.listUsers();
+    
+    if (authData?.users && tickets) {
+      const emailMap = new Map();
+      for (const u of authData.users) {
+        emailMap.set(u.id, u.email);
+      }
+      for (const t of tickets) {
+        if (!t.profiles) t.profiles = {};
+        if (!t.profiles.email) {
+          t.profiles.email = emailMap.get(t.user_id) || null;
+        }
+      }
+    }
+
     return NextResponse.json(tickets);
   } catch (error: any) {
     console.error("Admin tickets API error:", error);

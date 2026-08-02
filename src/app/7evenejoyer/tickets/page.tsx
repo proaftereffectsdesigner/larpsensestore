@@ -116,7 +116,9 @@ export default function AdminTickets() {
                       </div>
                       <div>
                         <div className="font-bold text-sm text-white flex items-center gap-2">
-                          {ticket.profiles?.display_name || 'Unknown'}
+                          <a href={`/user/${ticket.user_id}`} target="_blank" rel="noopener noreferrer" className="hover:underline text-white">
+                            {ticket.profiles?.display_name || 'Unknown'}
+                          </a>
                         </div>
                         <div className="text-xs text-gray-500">{ticket.profiles?.email || 'No email'}</div>
                       </div>
@@ -194,7 +196,9 @@ export default function AdminTickets() {
                       </div>
                       <div>
                         <div className="font-bold text-sm text-white flex items-center gap-2">
-                          {ticket.profiles?.display_name || 'Unknown'}
+                          <a href={`/user/${ticket.user_id}`} target="_blank" rel="noopener noreferrer" className="hover:underline text-white">
+                            {ticket.profiles?.display_name || 'Unknown'}
+                          </a>
                         </div>
                         <div className="text-xs text-gray-500">{ticket.profiles?.email || 'No email'}</div>
                       </div>

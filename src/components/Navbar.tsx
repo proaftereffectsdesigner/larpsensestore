@@ -145,7 +145,6 @@ export default function Navbar() {
                   title="Top Up Balance"
                 >
                   <Plus className="w-4 h-4 text-emerald-400 group-hover:scale-110 transition-transform" />
-                  <span className="hidden sm:inline-block ml-3 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold tracking-wide">LarpSense NFA Tool (Beta)</span>
                 </button>
                 <div className="flex items-center gap-2 pl-3 pr-4 text-sm text-white font-medium">
                   <span className="font-mono tracking-tight text-gray-200">€{balance.toFixed(2)}</span>

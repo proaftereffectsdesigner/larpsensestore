@@ -251,7 +251,7 @@ export default function CategoryPage() {
           <div className="bg-[#141414]/60 backdrop-blur-xl border border-white/10 rounded-3xl p-6 md:p-8 shadow-2xl text-gray-300">
             <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
               <Info className="w-5 h-5 text-accent" />
-              Account Details
+              Product Details
             </h3>
             <ul className="space-y-3 text-sm leading-relaxed">
               <li className="flex items-start gap-2">
@@ -260,18 +260,24 @@ export default function CategoryPage() {
               </li>
               <li className="flex items-start gap-2">
                 <Lock className="w-4 h-4 text-green-400 mt-0.5 shrink-0" />
-                <span><strong>NFA Format:</strong> Non-Full Access account. Log in seamlessly using the LarpSense NFA Tool. The original email is not provided.</span>
+                <span><strong>Cloud Token Access:</strong> Connect seamlessly using our Cloud Token Connector. This is a pre-configured token session (manual login credentials are not required).</span>
               </li>
+              {id === "prime" && (
+                <li className="flex items-start gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-green-400 mt-0.5 shrink-0" />
+                  <span><strong>Prime Status:</strong> Upgraded for Prime matchmaking right out of the box.</span>
+                </li>
+              )}
+              {id === "premier" && (
+                <li className="flex items-start gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-green-400 mt-0.5 shrink-0" />
+                  <span><strong>Premier Ready:</strong> Level 10 reached and ready to calibrate your Premier Rating. Various medal and inventory tiers available below.</span>
+                </li>
+              )}
               <li className="flex items-start gap-2">
                 <RefreshCcw className="w-4 h-4 text-green-400 mt-0.5 shrink-0" />
                 <span><strong>Automated Warranty:</strong> Covered by our automated 1:1 replacement system if the token expires within the 6-hour window.</span>
               </li>
-              {id === "premier" && (
-                <li className="flex items-start gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-green-400 mt-0.5 shrink-0" />
-                  <span><strong>Premier Ready:</strong> Level 10 reached and ready to calibrate your Premier CS Rating.</span>
-                </li>
-              )}
             </ul>
           </div>
         </div>

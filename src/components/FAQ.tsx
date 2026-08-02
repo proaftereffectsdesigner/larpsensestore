@@ -25,7 +25,7 @@ export default function FAQ() {
   const faqs = [
     {
       question: "What is an Access Token?",
-      answer: "Access Tokens provide high-quality, verified software credentials perfect for immediate deployment. Our system provides seamless and secure access through isolated environments."
+      answer: "Access Tokens provide high-quality, verified software credentials perfect for immediate use. Our system handles the setup for you, providing seamless and secure access through isolated environments."
     },
     {
       question: "How do I use the purchased token?",

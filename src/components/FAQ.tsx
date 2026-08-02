@@ -24,24 +24,36 @@ export default function FAQ() {
 
   const faqs = [
     {
-      question: "What is a Session Pass?",
-      answer: "Session Passes provide high-quality, verified software credentials perfect for immediate use. Our system handles the setup for you, providing seamless and secure access through isolated environments."
+      question: "What do we sell?",
+      answer: "We sell high-quality, hand-verified CS2 NFA accounts perfect for immediate matchmaking. Our automated system provides seamless and secure access through isolated environments."
     },
     {
-      question: "How do I use the purchased pass?",
-      answer: "Logging in is entirely automated through our proprietary LarpSense App. Simply download the client from your dashboard, drag and drop your session file into it, and it will securely launch the application for you. It simplifies the authentication process and ensures maximum reliability."
+      question: "How long does delivery take?",
+      answer: "Delivery is completely automated. Your account will be available in your dashboard instantly after your payment is confirmed."
+    },
+    {
+      question: "Can I change the account details (email/password)?",
+      answer: "No, these are NFA accounts. You cannot change the email, password, or any other account details."
+    },
+    {
+      question: "How do I log into the purchased account?",
+      answer: "Logging in is entirely automated through our proprietary LarpSense NFA Tool. Simply download the client from your dashboard, drag and drop your account file into it, and it will securely launch the game for you. It simplifies the authentication process and ensures maximum reliability."
+    },
+    {
+      question: "Do I need any extra software to use the account?",
+      answer: "Yes, you need a launcher to handle the account file. You can use our lightweight LarpSense NFA Tool (available in your dashboard) or any other trusted alternative available on the internet."
+    },
+    {
+      question: "Are these accounts Verified & Match-Ready?",
+      answer: "Yes, every account is hand-verified and ready for matchmaking before it's delivered. Please note that after delivery, any in-game restrictions or bans caused by your actions are out of our control and non-refundable."
     },
     {
       question: "How does the 6-hour warranty work?",
-      answer: "If your session expires or the environment is inaccessible within 6 hours of purchase, please contact support for a diagnostic. If we verify that the issue is on our end, we will provide a 1:1 replacement. Please note this covers initial access and delivery, but does not cover restrictions resulting from user actions."
+      answer: "If your account expires or the environment is inaccessible within 6 hours of purchase, please contact support for a diagnostic. If we verify that the issue is on our end, we will provide a 1:1 replacement. Please note this covers initial access and delivery, but does not cover restrictions resulting from user actions."
     },
     {
       question: "Is my primary software environment safe?",
       answer: "Absolutely. Our client uses native Windows DPAPI encryption to secure your session data locally. The environment is heavily isolated from your primary operating system."
-    },
-    {
-      question: "Are these passes Verified & Ready for Deployment?",
-      answer: "Every pass is hand-verified before dispatch. While we employ Encrypted Windows DPAPI Sandbox Environments and test our systems daily, we cannot guarantee absolute immunity from future restrictions once the environment is in your possession. We do not offer refunds if a restriction occurs outside of our control."
     }
   ];
 
@@ -49,7 +61,7 @@ export default function FAQ() {
     <section ref={containerRef} className="w-full max-w-3xl mx-auto py-24 px-4">
       <div className={`text-center mb-16 transition-all duration-1000 ease-out ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-20'}`}>
         <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Frequently Asked Questions</h2>
-        <p className="text-gray-400 font-medium">Everything you need to know about our Session system.</p>
+        <p className="text-gray-400 font-medium">Everything you need to know about our NFA system.</p>
       </div>
 
       <div className="space-y-4">

@@ -30,56 +30,12 @@ export default function TermsPage() {
               <Shield className="w-6 h-6 text-accent" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-white mb-4">1. General Conditions</h2>
-              <p className="text-gray-400 leading-relaxed text-lg">
-                By accessing and placing an order with LarpSenseStore, you confirm that you are in agreement with and bound by the terms of service contained in the Terms & Conditions outlined below. These terms apply to the entire website and any email or other type of communication between you and LarpSenseStore.
-              </p>
-            </div>
-          </section>
-
-          <div className="h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-
-          <section className="flex flex-col md:flex-row gap-6 items-start">
-            <div className="flex-shrink-0 p-3 bg-white/5 border border-white/10 rounded-xl">
-              <RefreshCw className="w-6 h-6 text-accent" />
-            </div>
-            <div>
-              <h2 className="text-2xl font-bold text-white mb-4">2. Digital Goods & EU Right of Withdrawal Waiver</h2>
+              <h2 className="text-2xl font-bold text-white mb-4">1. About these terms</h2>
               <p className="text-gray-400 leading-relaxed text-lg mb-4">
-                By placing your order and choosing immediate delivery, you expressly ask and consent us to begin performance right away, and you acknowledge that you lose your EU 14-day cooling-off / withdrawal right for any digital item once its login credentials or access token have been shown or generated for you.
+                LarpSense is an independent marketplace that sells access to game accounts. These terms are the agreement between you and LarpSense for using the site and buying through it.
               </p>
-              <ul className="text-gray-400 leading-relaxed text-lg list-disc pl-6 space-y-2">
-                <li>If the software or account is non-functional within 6 hours, please contact support for a diagnostic.</li>
-                <li>If we verify that the issue is server-side or account-related, we will provide a replacement or store credit.</li>
-                <li>The warranty does not cover restrictions resulting from user actions after the product has been successfully delivered and accessed.</li>
-              </ul>
-            </div>
-          </section>
-
-          <div className="h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-
-          <section className="flex flex-col md:flex-row gap-6 items-start">
-            <div className="flex-shrink-0 p-3 bg-red-500/10 border border-red-500/20 rounded-xl">
-              <Shield className="w-6 h-6 text-red-400" />
-            </div>
-            <div>
-              <h2 className="text-2xl font-bold text-white mb-4">3. Anti-Fraud & Chargeback Policy</h2>
               <p className="text-gray-400 leading-relaxed text-lg">
-                Opening a chargeback or payment dispute after receiving a functional account or valid token is classified as payment fraud. Doing so will result in an immediate and permanent blacklist of your email, IP address, device hardware IDs (HWID), and wallet addresses across our network and partner merchants. All automatic server delivery logs, timestamped webhook activations, and DPAPI usage proofs will be systematically forwarded to our payment processors and your card issuer to vigorously contest and win any fraudulent dispute.
-              </p>
-            </div>
-          </section>
-
-          <div className="h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-
-          <section className="flex flex-col md:flex-row gap-6 items-start">
-            <div className="flex-shrink-0 p-3 bg-white/5 border border-white/10 rounded-xl">
-              <AlertCircle className="w-6 h-6 text-accent" />
-            </div>
-            <div>
-              <h2 className="text-2xl font-bold text-white mb-4">4. Account Security & Liability</h2>
-              <p className="text-gray-400 leading-relaxed text-lg">
-                You are responsible for maintaining the security of your LarpSenseStore account credentials. While we take every measure to secure our platform and provide safe products, LarpSense LTD is not liable for bans, restrictions, or damages incurred on third-party platforms (such as Steam) as a result of using our services. Use at your own discretion.
+                By accessing and placing an order with LarpSenseStore, you confirm that you are in agreement with and bound by these Terms of Service. These terms apply to the entire website and any communication between you and LarpSenseStore.
               </p>
             </div>
           </section>
@@ -91,9 +47,46 @@ export default function TermsPage() {
               <FileText className="w-6 h-6 text-accent" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-white mb-4">5. Modification of Terms</h2>
+              <h2 className="text-2xl font-bold text-white mb-4">2. What you are buying</h2>
+              <p className="text-gray-400 leading-relaxed text-lg mb-4">
+                We sell access to game accounts via secure account files, delivered digitally. The details for each listing are shown on the product page before you pay. Read them carefully, because that is exactly what you are buying.
+              </p>
               <p className="text-gray-400 leading-relaxed text-lg">
-                LarpSenseStore reserves the right to revise or update these Terms of Service. We will notify users of significant changes via our Discord community or email. By continuing to use this website after changes are made, you agree to be bound by the most current version.
+                LarpSense is not affiliated with, endorsed by, or operated by Valve, Steam, or any game publisher. Their trademarks belong to them. The game accounts remain subject to those companies' own terms, which you are responsible for reviewing.
+              </p>
+            </div>
+          </section>
+
+          <div className="h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+
+          <section className="flex flex-col md:flex-row gap-6 items-start">
+            <div className="flex-shrink-0 p-3 bg-white/5 border border-white/10 rounded-xl">
+              <AlertCircle className="w-6 h-6 text-accent" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-bold text-white mb-4">3. Third-party platform risk</h2>
+              <p className="text-gray-400 leading-relaxed text-lg mb-4">
+                Game publishers set their own rules for accounts, and some restrict or prohibit selling, sharing, or transferring them. Any action a publisher takes on an account, such as a lock, ban, or reclaim, is outside our control.
+              </p>
+              <p className="text-gray-400 leading-relaxed text-lg">
+                Beyond the replacement warranty outlined below, you accept this risk when you buy. Use our services at your own discretion.
+              </p>
+            </div>
+          </section>
+
+          <div className="h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+
+          <section className="flex flex-col md:flex-row gap-6 items-start">
+            <div className="flex-shrink-0 p-3 bg-white/5 border border-white/10 rounded-xl">
+              <RefreshCw className="w-6 h-6 text-accent" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-bold text-white mb-4">4. Digital content and your right to cancel</h2>
+              <p className="text-gray-400 leading-relaxed text-lg mb-4">
+                Accounts are digital content delivered instantly, and an account file cannot be returned once it has been generated for you. Where you have a statutory cooling-off right, such as the 14-day right of withdrawal for consumers in the EU, it normally applies to digital purchases.
+              </p>
+              <p className="text-gray-400 leading-relaxed text-lg">
+                By placing your order and choosing immediate delivery, you expressly ask us to begin performance right away and you acknowledge that you lose that cooling-off right for any item once its access file has been shown or delivered to you. Items that were never delivered keep their refund rights in full.
               </p>
             </div>
           </section>
@@ -105,10 +98,50 @@ export default function TermsPage() {
               <Shield className="w-6 h-6 text-accent" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-white mb-4">6. Contact Information</h2>
+              <h2 className="text-2xl font-bold text-white mb-4">5. Replacement warranty</h2>
+              <p className="text-gray-400 leading-relaxed text-lg mb-4">
+                Each order includes a 6-hour replacement warranty (or the window shown on the product page). If an account fails to log in as delivered within that window, you can contact support for a diagnostic. This is the fastest fix, and usually instant.
+              </p>
               <p className="text-gray-400 leading-relaxed text-lg">
-                If you have any questions about these Terms of Service or need support with your order, please contact us at: <br />
-                <a href="mailto:support@larpsensestore.com" className="text-accent hover:underline">support@larpsensestore.com</a>
+                The warranty covers accounts that fail to log in as delivered. It does not cover bans or locks caused by your own activity, game or anti-cheat bans, region locks tied to your use, changes you make after delivery, or claims that break these terms.
+              </p>
+            </div>
+          </section>
+
+          <div className="h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+
+          <section className="flex flex-col md:flex-row gap-6 items-start">
+            <div className="flex-shrink-0 p-3 bg-red-500/10 border border-red-500/20 rounded-xl">
+              <Shield className="w-6 h-6 text-red-400" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-bold text-white mb-4">6. Acceptable use & Anti-Fraud</h2>
+              <p className="text-gray-400 leading-relaxed text-lg mb-4">
+                Do not use the store for anything illegal, and do not attempt to defraud us or the payment providers.
+              </p>
+              <ul className="text-gray-400 leading-relaxed text-lg list-disc pl-6 space-y-2 mb-4">
+                <li>No chargebacks or payment disputes opened in bad faith. Contact support first and we will help. Opening a dispute after receiving a functional account will result in an immediate blacklist of your IP, HWID, and wallet address.</li>
+                <li>No attempts to bypass stock limits, fraud checks, rate limits, or the checkout process.</li>
+                <li>No automated or bulk purchasing, scraping, or abuse outside our official API.</li>
+                <li>No sharing or reselling delivered account files to game the warranty.</li>
+              </ul>
+              <p className="text-gray-400 leading-relaxed text-lg">
+                We may refuse, hold, or cancel an order, and may block an email, address, wallet, or region, if we detect fraud or abuse.
+              </p>
+            </div>
+          </section>
+
+          <div className="h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+
+          <section className="flex flex-col md:flex-row gap-6 items-start">
+            <div className="flex-shrink-0 p-3 bg-white/5 border border-white/10 rounded-xl">
+              <FileText className="w-6 h-6 text-accent" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-bold text-white mb-4">7. Contact Information</h2>
+              <p className="text-gray-400 leading-relaxed text-lg">
+                Questions about these terms? Reach us through the support desk on our Discord, and include your order link so we can help fast. <br />
+                Or contact us at: <a href="mailto:support@larpsensestore.com" className="text-accent hover:underline">support@larpsensestore.com</a>
               </p>
             </div>
           </section>

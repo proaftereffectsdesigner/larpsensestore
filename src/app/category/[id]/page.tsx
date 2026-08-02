@@ -107,7 +107,7 @@ export default function CategoryPage() {
         product_type: selectedProduct.type,
         status: 'started'
       }).then(({ error }) => {
-        if (error) console.error("Failed to track checkout session", error);
+        if (error) console.warn("Analytics (checkout_sessions):", error.message || error);
       });
 
       // Fetch reviews
@@ -256,11 +256,11 @@ export default function CategoryPage() {
             <ul className="space-y-3 text-sm leading-relaxed">
               <li className="flex items-start gap-2">
                 <Zap className="w-4 h-4 text-green-400 mt-0.5 shrink-0" />
-                <span><strong>Instant Delivery:</strong> Secure Session File dispatched to your email immediately after purchase.</span>
+                <span><strong>Instant Delivery:</strong> Secure account file available in your dashboard immediately after purchase.</span>
               </li>
               <li className="flex items-start gap-2">
                 <Lock className="w-4 h-4 text-green-400 mt-0.5 shrink-0" />
-                <span><strong>Cloud Session Access:</strong> Connect seamlessly using our LarpSense App. This is a pre-configured session (manual login credentials are not required).</span>
+                <span><strong>NFA Account:</strong> Connect seamlessly using our LarpSense NFA Tool.</span>
               </li>
               {id === "prime" && (
                 <li className="flex items-start gap-2">
@@ -312,7 +312,7 @@ export default function CategoryPage() {
               )}
               <li className="flex items-start gap-2">
                 <RefreshCcw className="w-4 h-4 text-green-400 mt-0.5 shrink-0" />
-                <span><strong>Automated Warranty:</strong> Covered by our automated 1:1 replacement system if the session expires within the 6-hour window.</span>
+                <span><strong>Automated Warranty:</strong> Covered by our automated 1:1 replacement system if the account expires within the 6-hour window.</span>
               </li>
             </ul>
           </div>

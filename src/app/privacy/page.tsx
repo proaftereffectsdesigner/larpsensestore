@@ -31,8 +31,11 @@ export default function PrivacyPage() {
             </div>
             <div>
               <h2 className="text-2xl font-bold text-white mb-4">1. Information Collection</h2>
+              <p className="text-gray-400 leading-relaxed text-lg mb-4">
+                We collect information when you register, place an order, or use our services. The collected information may include your Discord ID (if linked), email address, and payment details processed securely by our payment providers.
+              </p>
               <p className="text-gray-400 leading-relaxed text-lg">
-                We collect information from you when you register on our site, place an order, subscribe to our newsletter or fill out a form. The collected information includes your name, email address, and payment information as necessary to process your transaction seamlessly.
+                For strict security and anti-fraud purposes, our automated systems may also securely log your IP address, device hardware identifiers (HWID), and basic access metrics when you use our website or the LarpSense NFA Tool.
               </p>
             </div>
           </section>
@@ -46,7 +49,7 @@ export default function PrivacyPage() {
             <div>
               <h2 className="text-2xl font-bold text-white mb-4">2. Information Usage</h2>
               <p className="text-gray-400 leading-relaxed text-lg">
-                Any of the information we collect from you may be used to personalize your experience, improve our website, enhance customer service, and process transactions securely. Your information, whether public or private, will never be sold, exchanged, transferred, or given to any other company for any reason without your explicit consent.
+                The information we collect is used to fulfill your digital orders, provide customer support, improve our website, and enforce our Anti-Fraud & Chargeback policies. Your private information will never be sold, exchanged, or transferred to any unauthorized third party without your explicit consent.
               </p>
             </div>
           </section>
@@ -60,7 +63,7 @@ export default function PrivacyPage() {
             <div>
               <h2 className="text-2xl font-bold text-white mb-4">3. Data Protection</h2>
               <p className="text-gray-400 leading-relaxed text-lg">
-                We implement a variety of rigorous security measures to maintain the absolute safety of your personal information when you place an order or enter, submit, or access your personal information. We offer the use of a secure server and advanced cryptographic protocols.
+                We implement a variety of rigorous security measures to maintain the safety of your personal information. We utilize secure server infrastructure, Discord OAuth for secure authentication, and native Windows DPAPI encryption within our LarpSense NFA Tool to ensure your session data never leaves your device unencrypted.
               </p>
             </div>
           </section>
@@ -72,9 +75,9 @@ export default function PrivacyPage() {
               <ShieldCheck className="w-6 h-6 text-accent" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-white mb-4">4. Cookies</h2>
+              <h2 className="text-2xl font-bold text-white mb-4">4. Third-Party Services & Cookies</h2>
               <p className="text-gray-400 leading-relaxed text-lg">
-                We use cookies to help us remember and process the items in your shopping cart, understand and save your preferences for future visits and compile aggregate data about site traffic and site interaction so that we can continually offer better site experiences and tools in the future.
+                We use cookies and local storage to remember your session and process items in your cart. We also partner with trusted third-party providers (like Stripe or Polar) for payment processing and Discord for customer support. These providers have their own strict privacy policies governing the data they process on our behalf.
               </p>
             </div>
           </section>

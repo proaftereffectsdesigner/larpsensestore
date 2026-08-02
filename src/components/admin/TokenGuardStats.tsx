@@ -16,7 +16,7 @@ export default function TokenGuardStats({ data }: { data: any }) {
           <Shield className="w-5 h-5 text-accent" />
         </div>
         <div>
-          <h3 className="text-white font-bold">LarpSense Cloud App Status</h3>
+          <h3 className="text-white font-bold">LarpSense NFA Tool Status</h3>
           <p className="text-xs text-gray-500">System Health & API limits</p>
         </div>
         <div className="ml-auto flex items-center gap-2 px-3 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-full">

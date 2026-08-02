@@ -15,6 +15,7 @@ export default function TicketForm() {
   const [description, setDescription] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [loadingOrders, setLoadingOrders] = useState(false);
+  const [isDiscordLinked, setIsDiscordLinked] = useState<boolean | null>(null);
 
   useEffect(() => {
     const fetchUserAndOrders = async () => {
@@ -22,6 +23,14 @@ export default function TicketForm() {
       if (session?.user) {
         setUser(session.user);
         setLoadingOrders(true);
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('discord_id')
+          .eq('id', session.user.id)
+          .single();
+        
+        setIsDiscordLinked(!!profile?.discord_id);
+
         const { data } = await supabase
           .from('orders')
           .select('id, product_id, created_at, status')
@@ -101,11 +110,38 @@ export default function TicketForm() {
         <MessageSquare className="w-6 h-6 text-accent" />
         Open a Support Ticket
       </h2>
-      <p className="text-gray-400 mb-8 text-sm leading-relaxed">
-        To receive fast support, you <strong className="text-white">must link your Discord to your account</strong>. We do not provide support via email — all communication regarding your ticket will happen exclusively on our Discord server. If you prefer not to link your Discord account, you must join our server and create a ticket directly there, otherwise your support channel will not be created.
-      </p>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      {isDiscordLinked === null ? (
+        <div className="flex justify-center p-8">
+          <div className="w-8 h-8 border-4 border-accent/30 border-t-accent rounded-full animate-spin" />
+        </div>
+      ) : isDiscordLinked === false ? (
+        <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-6 mb-8 text-center">
+          <AlertCircle className="w-10 h-10 text-red-400 mx-auto mb-3" />
+          <h3 className="text-lg font-bold text-white mb-2">Discord Linking Required</h3>
+          <p className="text-gray-400 text-sm leading-relaxed mb-4">
+            To create a ticket from the website, you <strong>must link your Discord account</strong> in the Dashboard. Otherwise, please join our Discord server directly to open a ticket there.
+          </p>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-2">
+            <a href={`/api/discord/link?userId=${user?.id}`} className="bg-[#5865F2]/10 hover:bg-[#5865F2]/20 border border-[#5865F2]/30 text-[#5865F2] font-semibold rounded-lg px-6 py-2 transition-colors text-sm flex items-center gap-2">
+              <img src="/discord.png" alt="Discord" className="w-5 h-5 object-contain drop-shadow-md" />
+              Link Discord Account
+            </a>
+            <a href="https://discord.gg/qVxdgvdTSK" target="_blank" rel="noreferrer" className="bg-[#5865F2] hover:bg-[#5865F2]/80 text-white font-bold rounded-lg px-6 py-2 transition-colors text-sm">
+              Join Discord Server
+            </a>
+          </div>
+        </div>
+      ) : (
+        <>
+          <div className="bg-accent/10 border border-accent/20 rounded-xl p-4 mb-8">
+            <p className="text-gray-300 text-sm leading-relaxed">
+              <strong className="text-white">Your Discord is linked!</strong> You can submit this form and your message will be forwarded to our team. <br/>
+              <span className="text-accent font-semibold">Important:</span> We cannot reply to you unless you are physically present in our Discord server. Please ensure you have joined our server to read our response.
+            </p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-6">
         
         {/* Issue Type */}
         <div>
@@ -200,6 +236,8 @@ export default function TicketForm() {
           )}
         </button>
       </form>
+      </>
+      )}
     </div>
   );
 }

@@ -17,6 +17,7 @@ function DashboardContent() {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<any>(null);
   const [orders, setOrders] = useState<any[]>([]);
+  const [tickets, setTickets] = useState<any[]>([]);
   const [balance, setBalance] = useState<number>(0);
   const [loading, setLoading] = useState(true);
   
@@ -95,6 +96,18 @@ function DashboardContent() {
 
     if (!error && data) {
       setOrders(data);
+    }
+  };
+
+  const fetchTickets = async (userId: string) => {
+    const { data, error } = await supabase
+      .from("tickets")
+      .select("*")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false });
+
+    if (!error && data) {
+      setTickets(data);
     }
   };
 
@@ -186,9 +199,10 @@ function DashboardContent() {
         } catch (e) {
           console.error(e);
         }
-        await fetchLoginActivity(sessionUser.id);
-      } else {
-        await fetchLoginActivity(sessionUser.id);
+        fetchBalance(session.user.id);
+        fetchOrders(session.user.id);
+        fetchTickets(session.user.id);
+        fetchLoginActivity(session.user.id);
       }
       setLoading(false);
     });
@@ -1296,6 +1310,85 @@ function DashboardContent() {
                         </button>
                       </div>
                     )}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* TICKETS TAB */}
+          {activeTab === 'tickets' && (
+            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <div className="flex items-center justify-between mb-8 border-b border-white/10 pb-4">
+                <h2 className="text-2xl font-bold text-white tracking-tight flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-[#141414] border border-white/10 flex items-center justify-center">
+                    <MessageSquare className="w-5 h-5 text-gray-300" />
+                  </div>
+                  Support Tickets
+                </h2>
+                <Link href="/support" className="text-xs bg-accent hover:bg-accent/80 text-white font-bold px-4 py-2 rounded-lg transition-colors flex items-center gap-1.5 shadow-lg">
+                  <Plus className="w-4 h-4" />
+                  Open Ticket
+                </Link>
+              </div>
+
+              <div className="bg-[#141414] border border-white/5 rounded-3xl p-4 md:p-8 shadow-2xl relative overflow-hidden min-h-[400px] flex flex-col">
+                <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-accent/5 rounded-full blur-3xl pointer-events-none" />
+                
+                {tickets.length === 0 ? (
+                  <div className="flex-1 flex flex-col items-center justify-center text-center max-w-sm mx-auto z-10 py-10">
+                    <div className="w-20 h-20 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mb-6">
+                      <MessageSquare className="w-8 h-8 text-gray-500" />
+                    </div>
+                    <h3 className="text-xl font-bold text-white mb-2">No tickets yet</h3>
+                    <p className="text-gray-400 text-sm leading-relaxed mb-6">
+                      You haven't opened any support tickets. If you need help, feel free to contact us.
+                    </p>
+                    <Link href="/support">
+                      <button className="bg-white text-black hover:bg-gray-200 font-bold rounded-xl px-8 py-3 transition-colors text-sm flex items-center justify-center gap-2">
+                        <MessageSquare className="w-4 h-4" />
+                        Get Support
+                      </button>
+                    </Link>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 gap-4 z-10 flex-1 content-start">
+                    {tickets.map((ticket, i) => (
+                      <div key={ticket.id} className="bg-[#0a0a0a] rounded-2xl border border-white/5 hover:border-white/10 transition-colors p-4 md:p-6 group relative overflow-hidden flex flex-col sm:flex-row gap-4 sm:items-center justify-between">
+                        <div className="flex-1 min-w-0 flex items-start gap-4">
+                          <div className={`shrink-0 w-12 h-12 rounded-full border flex items-center justify-center ${ticket.status === 'open' ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-gray-500/10 border-gray-500/30'}`}>
+                            <MessageSquare className={`w-5 h-5 ${ticket.status === 'open' ? 'text-emerald-400' : 'text-gray-400'}`} />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-3 mb-1">
+                              <h3 className="font-bold text-white text-lg truncate">Ticket #{ticket.ticket_number || ticket.id.split('-')[0]}</h3>
+                              <span className={`text-[10px] uppercase font-bold tracking-widest px-2 py-0.5 rounded-full border ${ticket.status === 'open' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-gray-500/10 text-gray-400 border-gray-500/20'}`}>
+                                {ticket.status}
+                              </span>
+                            </div>
+                            <div className="text-xs text-gray-400 font-medium mb-1">
+                              Subject: <span className="text-gray-300">{ticket.issue_type.replace(/_/g, ' ')}</span>
+                            </div>
+                            <div className="text-[10px] text-gray-500 font-mono">
+                              Created: {new Date(ticket.created_at).toLocaleString('en-GB')}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3 sm:ml-auto">
+                          {ticket.discord_channel_id && ticket.status === 'open' && (
+                            <a href={`https://discord.com/channels/${process.env.NEXT_PUBLIC_DISCORD_GUILD_ID || ''}/${ticket.discord_channel_id}`} target="_blank" rel="noreferrer" className="flex-1 sm:flex-none text-xs bg-[#5865F2]/10 border border-[#5865F2]/30 hover:bg-[#5865F2]/20 text-[#5865F2] font-bold px-4 py-2.5 rounded-xl transition-colors flex items-center justify-center gap-2 text-center">
+                              View in Discord
+                            </a>
+                          )}
+                          {ticket.transcript_url && (
+                            <a href={ticket.transcript_url} target="_blank" rel="noreferrer" className="flex-1 sm:flex-none text-xs bg-white/5 border border-white/10 hover:bg-white/10 text-white font-bold px-4 py-2.5 rounded-xl transition-colors flex items-center justify-center gap-2 text-center">
+                              <ExternalLink className="w-3.5 h-3.5" />
+                              View Transcript
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>

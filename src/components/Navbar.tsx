@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ShoppingCart, LogOut, LayoutGrid, Plus, User as UserIcon, Lock, Shield, AlertTriangle } from "lucide-react";
+import { ShoppingCart, LogOut, LayoutGrid, Plus, User as UserIcon, Lock, Shield, AlertTriangle, MessageSquare } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase-client";
 import { User } from "@supabase/supabase-js";
@@ -145,7 +145,7 @@ export default function Navbar() {
                   title="Top Up Balance"
                 >
                   <Plus className="w-4 h-4 text-emerald-400 group-hover:scale-110 transition-transform" />
-                  <span className="hidden sm:inline-block ml-3 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold tracking-wide">LarpSense Cloud App (Beta)</span>
+                  <span className="hidden sm:inline-block ml-3 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold tracking-wide">LarpSense NFA Tool (Beta)</span>
                 </button>
                 <div className="flex items-center gap-2 pl-3 pr-4 text-sm text-white font-medium">
                   <span className="font-mono tracking-tight text-gray-200">€{balance.toFixed(2)}</span>
@@ -212,6 +212,11 @@ export default function Navbar() {
                     <Link href="/dashboard?tab=orders" onClick={() => setShowDropdown(false)} className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-gray-300 hover:text-white hover:bg-white/5 rounded-xl transition-colors">
                       <LayoutGrid className="w-4 h-4 text-gray-400" />
                       My Orders
+                    </Link>
+
+                    <Link href="/dashboard?tab=tickets" onClick={() => setShowDropdown(false)} className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-gray-300 hover:text-white hover:bg-white/5 rounded-xl transition-colors">
+                      <MessageSquare className="w-4 h-4 text-gray-400" />
+                      Support Tickets
                     </Link>
 
                     <Link href="/dashboard?tab=security" onClick={() => setShowDropdown(false)} className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-gray-300 hover:text-white hover:bg-white/5 rounded-xl transition-colors">

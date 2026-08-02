@@ -58,21 +58,21 @@ export default function ProductCards() {
     {
       id: "prime",
       title: "Prime Ready",
-      desc: "Standard Prime access for verification. Instantly delivered.",
+      desc: "Standard Prime NFA accounts for matchmaking. No bans, instantly delivered.",
       products: primeProducts,
       img: "/prime-bg.png"
     },
     {
       id: "premier",
       title: "Premier Ready",
-      desc: "Standard access ready for Premier integration. Blank slate for your journey.",
+      desc: "Standard NFA accounts ready for Premier mode. Blank slate for your journey.",
       products: premierBaseProducts,
       img: "/premier-bg.jpg"
     },
     {
       id: "premier-4-medals", 
       title: "Premier with Medals",
-      desc: "Premier access loaded with service tier status. Show off your veteran status.",
+      desc: "Premier NFA accounts loaded with service medals. Show off your veteran status.",
       products: premierMedalsProducts,
       img: "/premier-bg.jpg" 
     },
@@ -86,7 +86,7 @@ export default function ProductCards() {
     {
       id: "premier-rare", 
       title: "Premier Rare",
-      desc: "The ultimate flex. Sessions loaded with premium tier assets.",
+      desc: "The ultimate flex. NFA Accounts loaded with a knife or gloves.",
       products: premierRareProducts,
       img: "/premier-bg.jpg" 
     }

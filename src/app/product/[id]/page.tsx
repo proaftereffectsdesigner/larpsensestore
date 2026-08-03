@@ -36,7 +36,8 @@ export default function ProductPage() {
   const paymentDropdownRef = useRef<HTMLDivElement>(null);
   const paymentButtonRef = useRef<HTMLButtonElement>(null);
   const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0, width: 0 });
-  const [settings, setSettings] = useState({ stripe_enabled: true, crypto_enabled: true });
+  const [loadingSettings, setLoadingSettings] = useState(true);
+  const [settings, setSettings] = useState({ stripe_enabled: false, crypto_enabled: false });
 
   // Recalculate dropdown position whenever it opens or window resizes
   const updateDropdownPos = useCallback(() => {
@@ -90,6 +91,8 @@ export default function ProductPage() {
         }
       } catch (err) {
         console.error(err);
+      } finally {
+        setLoadingSettings(false);
       }
     };
     fetchSettings();
@@ -284,9 +287,9 @@ export default function ProductPage() {
               >
                 <div className="p-2 space-y-1">
                 <button 
-                  onClick={() => { if (settings.stripe_enabled) { setPaymentMethod("polar"); setIsDropdownOpen(false); } }}
-                  disabled={!settings.stripe_enabled}
-                  className={`w-full px-4 py-3 text-left transition-colors flex items-center gap-3 ${!settings.stripe_enabled ? 'opacity-50 cursor-not-allowed grayscale' : 'hover:bg-white/5'}`}
+                  onClick={() => { if (settings.stripe_enabled && !loadingSettings) { setPaymentMethod("polar"); setIsDropdownOpen(false); } }}
+                  disabled={!settings.stripe_enabled || loadingSettings}
+                  className={`w-full px-4 py-3 text-left transition-colors flex items-center gap-3 ${(!settings.stripe_enabled || loadingSettings) ? 'opacity-50 cursor-not-allowed grayscale' : 'hover:bg-white/5'}`}
                 >
                   <div className="flex items-center justify-center w-8 h-8 bg-indigo-500/10 rounded-full shrink-0">
                     <CreditCard className="w-4 h-4 text-indigo-400" />
@@ -297,9 +300,9 @@ export default function ProductPage() {
                   </div>
                 </button>
                 <button 
-                  onClick={() => { if (settings.crypto_enabled) { setIsCryptoExpanded(!isCryptoExpanded); if (!isCryptoExpanded) setPaymentMethod("crypto"); } }}
-                  disabled={!settings.crypto_enabled}
-                  className={`w-full px-4 py-3 text-left transition-colors flex items-center justify-between ${!settings.crypto_enabled ? 'opacity-50 cursor-not-allowed grayscale' : 'hover:bg-white/5'}`}
+                  onClick={() => { if (settings.crypto_enabled && !loadingSettings) { setIsCryptoExpanded(!isCryptoExpanded); if (!isCryptoExpanded) setPaymentMethod("crypto"); } }}
+                  disabled={!settings.crypto_enabled || loadingSettings}
+                  className={`w-full px-4 py-3 text-left transition-colors flex items-center justify-between ${(!settings.crypto_enabled || loadingSettings) ? 'opacity-50 cursor-not-allowed grayscale' : 'hover:bg-white/5'}`}
                 >
                   <div className="flex items-center gap-3">
                     <div className="flex items-center justify-center w-8 h-8 bg-amber-500/10 rounded-full shrink-0">

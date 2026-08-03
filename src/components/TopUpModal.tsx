@@ -16,7 +16,8 @@ export default function TopUpModal() {
   const [method, setMethod] = useState<PaymentMethod | null>(null);
   const [selectedCryptoCoin, setSelectedCryptoCoin] = useState<string | null>(null);
   const [loadingText, setLoadingText] = useState("Initializing secure connection...");
-  const [settings, setSettings] = useState({ stripe_enabled: true, crypto_enabled: true });
+  const [loadingSettings, setLoadingSettings] = useState(true);
+  const [settings, setSettings] = useState({ stripe_enabled: false, crypto_enabled: false });
 
   const CRYPTO_COINS = [
     { id: 'SOL', name: 'Solana', icon: <SiSolana className="w-5 h-5" />, color: 'text-purple-400', bg: 'bg-purple-500/10' },
@@ -35,6 +36,8 @@ export default function TopUpModal() {
         }
       } catch (err) {
         console.error(err);
+      } finally {
+        setLoadingSettings(false);
       }
     };
 
@@ -251,10 +254,10 @@ export default function TopUpModal() {
                   
                   {/* Card */}
                   <button 
-                    onClick={() => settings.stripe_enabled && setMethod('card')} 
-                    disabled={!settings.stripe_enabled}
+                    onClick={() => settings.stripe_enabled && !loadingSettings && setMethod('card')} 
+                    disabled={!settings.stripe_enabled || loadingSettings}
                     className={`w-full flex items-center justify-between p-4 border rounded-2xl transition-all ${
-                      !settings.stripe_enabled ? 'opacity-50 cursor-not-allowed bg-[#141414] border-white/5 grayscale' :
+                      (!settings.stripe_enabled || loadingSettings) ? 'opacity-50 cursor-not-allowed bg-[#141414] border-white/5 grayscale' :
                       method === 'card' ? 'bg-white/10 border-white/20' : 'bg-[#141414] border-white/5 hover:bg-white/5'
                     }`}
                   >
@@ -274,12 +277,12 @@ export default function TopUpModal() {
 
                   {/* Crypto */}
                   <div className={`border rounded-2xl transition-all overflow-hidden ${
-                    !settings.crypto_enabled ? 'opacity-50 cursor-not-allowed bg-[#141414] border-white/5 grayscale' :
+                    (!settings.crypto_enabled || loadingSettings) ? 'opacity-50 cursor-not-allowed bg-[#141414] border-white/5 grayscale' :
                     method === 'crypto' ? 'bg-white/5 border-white/20' : 'bg-[#141414] border-white/5 hover:bg-white/5'
                   }`}>
                     <button 
-                      onClick={() => { if (settings.crypto_enabled) { setMethod('crypto'); if (!selectedCryptoCoin) setSelectedCryptoCoin(CRYPTO_COINS[0].id); } }} 
-                      disabled={!settings.crypto_enabled}
+                      onClick={() => { if (settings.crypto_enabled && !loadingSettings) { setMethod('crypto'); if (!selectedCryptoCoin) setSelectedCryptoCoin(CRYPTO_COINS[0].id); } }}
+                      disabled={!settings.crypto_enabled || loadingSettings}
                       className="w-full flex items-center justify-between p-4"
                     >
                       <div className="flex items-center gap-4">

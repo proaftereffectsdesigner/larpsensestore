@@ -101,7 +101,7 @@ export default function TopUpModal() {
           return;
         }
 
-        const res = await fetch("/api/create-plisio-invoice", {
+        const res = await fetch("/api/create-oxapay-invoice", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -162,7 +162,7 @@ export default function TopUpModal() {
     setLoadingText("Initializing Secure Gateway...");
 
     try {
-      const res = await fetch("/api/create-plisio-invoice", {
+      const res = await fetch("/api/create-oxapay-invoice", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

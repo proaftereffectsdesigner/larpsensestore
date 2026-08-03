@@ -174,7 +174,7 @@ export default function AdminSettings() {
                 <Bitcoin className="w-6 h-6" />
               </div>
               <div>
-                <p className={`font-bold ${settings.crypto_enabled ? 'text-white' : 'text-gray-500'}`}>Cryptocurrency (Plisio)</p>
+                <p className={`font-bold ${settings.crypto_enabled ? 'text-white' : 'text-gray-500'}`}>Cryptocurrency (OxaPay)</p>
                 <p className="text-sm text-gray-500">Enable or disable crypto payments globally</p>
               </div>
             </div>

@@ -162,7 +162,7 @@ export default function ProductPage() {
       const token = session?.access_token;
 
       if (paymentMethod === "crypto") {
-        const res = await fetch("/api/create-plisio-invoice", {
+        const res = await fetch("/api/create-oxapay-invoice", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({

@@ -37,7 +37,7 @@ export default function ProductPage() {
   const paymentButtonRef = useRef<HTMLButtonElement>(null);
   const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0, width: 0 });
   const [loadingSettings, setLoadingSettings] = useState(true);
-  const [settings, setSettings] = useState({ stripe_enabled: false, crypto_enabled: false });
+  const [settings, setSettings] = useState({ stripe_enabled: true, crypto_enabled: true });
 
   // Recalculate dropdown position whenever it opens or window resizes
   const updateDropdownPos = useCallback(() => {
@@ -289,20 +289,20 @@ export default function ProductPage() {
                 <button 
                   onClick={() => { if (settings.stripe_enabled && !loadingSettings) { setPaymentMethod("polar"); setIsDropdownOpen(false); } }}
                   disabled={!settings.stripe_enabled || loadingSettings}
-                  className={`w-full px-4 py-3 text-left transition-colors flex items-center gap-3 ${(!settings.stripe_enabled || loadingSettings) ? 'opacity-50 cursor-not-allowed grayscale' : 'hover:bg-white/5'}`}
+                  className={`w-full px-4 py-3 text-left transition-colors flex items-center gap-3 ${(!settings.stripe_enabled && !loadingSettings) ? 'opacity-50 cursor-not-allowed grayscale' : loadingSettings ? 'opacity-80 cursor-not-allowed animate-pulse' : 'hover:bg-white/5'}`}
                 >
                   <div className="flex items-center justify-center w-8 h-8 bg-indigo-500/10 rounded-full shrink-0">
                     <CreditCard className="w-4 h-4 text-indigo-400" />
                   </div>
                   <div>
                     <div className="text-sm text-white">Credit Card / Apple Pay</div>
-                    <div className="text-xs text-gray-500">{!settings.stripe_enabled ? 'Temporarily disabled' : 'Mastercard, Visa etc. (5% + €0.50 fee)'}</div>
+                    <div className="text-xs text-gray-500">{(!settings.stripe_enabled && !loadingSettings) ? 'Temporarily disabled' : loadingSettings ? 'Loading methods...' : 'Mastercard, Visa etc. (5% + €0.50 fee)'}</div>
                   </div>
                 </button>
                 <button 
                   onClick={() => { if (settings.crypto_enabled && !loadingSettings) { setIsCryptoExpanded(!isCryptoExpanded); if (!isCryptoExpanded) setPaymentMethod("crypto"); } }}
                   disabled={!settings.crypto_enabled || loadingSettings}
-                  className={`w-full px-4 py-3 text-left transition-colors flex items-center justify-between ${(!settings.crypto_enabled || loadingSettings) ? 'opacity-50 cursor-not-allowed grayscale' : 'hover:bg-white/5'}`}
+                  className={`w-full px-4 py-3 text-left transition-colors flex items-center justify-between ${(!settings.crypto_enabled && !loadingSettings) ? 'opacity-50 cursor-not-allowed grayscale' : loadingSettings ? 'opacity-80 cursor-not-allowed animate-pulse' : 'hover:bg-white/5'}`}
                 >
                   <div className="flex items-center gap-3">
                     <div className="flex items-center justify-center w-8 h-8 bg-amber-500/10 rounded-full shrink-0">
@@ -310,7 +310,7 @@ export default function ProductPage() {
                     </div>
                     <div>
                       <div className="text-sm text-white">Cryptocurrency</div>
-                      <div className="text-xs text-gray-500">{!settings.crypto_enabled ? 'Temporarily disabled' : 'SOL, LTC, USDT'} <span className="text-amber-400">{!settings.crypto_enabled ? '' : '(0.5% fee)'}</span></div>
+                      <div className="text-xs text-gray-500">{(!settings.crypto_enabled && !loadingSettings) ? 'Temporarily disabled' : loadingSettings ? 'Loading methods...' : 'SOL, LTC, USDT'} <span className="text-amber-400">{!settings.crypto_enabled ? '' : '(0.5% fee)'}</span></div>
                     </div>
                   </div>
                   <ChevronRight className={`w-4 h-4 text-gray-500 transition-transform ${isCryptoExpanded && paymentMethod === 'crypto' ? 'rotate-90' : ''}`} />

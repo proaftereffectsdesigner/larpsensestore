@@ -473,26 +473,33 @@ export default function CategoryPage() {
             <div className="text-[10px] font-bold text-gray-500 tracking-widest uppercase mb-2">Payment method</div>
             <div ref={paymentDropdownRef} className="flex flex-col gap-2">
 
+              {loadingSettings ? (
+                <>
+                  <div className="w-full h-[66px] bg-[#0a0a0a]/50 border border-white/5 rounded-xl animate-pulse"></div>
+                  <div className="w-full h-[66px] bg-[#0a0a0a]/50 border border-white/5 rounded-xl animate-pulse"></div>
+                </>
+              ) : (
+                <>
               {/* Polar */}
               <button 
-                onClick={() => { if (settings.stripe_enabled && !loadingSettings) { setPaymentMethod("polar"); setIsCryptoExpanded(false); } }}
-                disabled={!settings.stripe_enabled || loadingSettings}
-                className={`w-full px-4 py-3 rounded-xl text-left flex items-center gap-3 border transition-all ${(!settings.stripe_enabled && !loadingSettings) ? "opacity-50 cursor-not-allowed grayscale bg-[#0a0a0a]/50 border-white/5" : paymentMethod === "polar" ? "bg-white/5 border-white/20" : "bg-[#0a0a0a]/50 border-white/10 hover:bg-white/5 hover:border-white/20"}`}
+                onClick={() => { if (settings.stripe_enabled) { setPaymentMethod("polar"); setIsCryptoExpanded(false); } }}
+                disabled={!settings.stripe_enabled}
+                className={`w-full px-4 py-3 rounded-xl text-left flex items-center gap-3 border transition-all ${!settings.stripe_enabled ? "opacity-50 cursor-not-allowed grayscale bg-[#0a0a0a]/50 border-white/5" : paymentMethod === "polar" ? "bg-white/5 border-white/20" : "bg-[#0a0a0a]/50 border-white/10 hover:bg-white/5 hover:border-white/20"}`}
               >
                 <div className={`flex items-center justify-center w-10 h-10 rounded-lg shrink-0 ${paymentMethod === "polar" ? "bg-gray-500/10" : "bg-[#141414] border border-white/5"}`}>
                   <CreditCard className="w-5 h-5 text-gray-400" />
                 </div>
                 <div>
                   <div className={`font-bold text-sm ${paymentMethod === "polar" ? "text-white" : "text-gray-400"}`}>Debit / Credit Card</div>
-                  <div className="text-xs text-gray-500">{(!settings.stripe_enabled && !loadingSettings) ? 'Temporarily disabled' : 'Mastercard, Visa, Apple Pay etc.'} <span className="text-indigo-400 font-bold">{settings.stripe_enabled ? '(5% + €0.50 fee)' : ''}</span></div>
+                  <div className="text-xs text-gray-500">{!settings.stripe_enabled ? 'Temporarily disabled' : 'Mastercard, Visa, Apple Pay etc.'} <span className="text-indigo-400 font-bold">{settings.stripe_enabled ? '(5% + €0.50 fee)' : ''}</span></div>
                 </div>
               </button>
 
               {/* Crypto */}
-              <div className={`rounded-xl border transition-all ${(!settings.crypto_enabled && !loadingSettings) ? 'opacity-50 cursor-not-allowed bg-[#0a0a0a]/50 border-white/5 grayscale' : paymentMethod === "crypto" ? "border-white/20" : "border-white/10"}`}>
+              <div className={`rounded-xl border transition-all ${!settings.crypto_enabled ? 'opacity-50 cursor-not-allowed bg-[#0a0a0a]/50 border-white/5 grayscale' : paymentMethod === "crypto" ? "border-white/20" : "border-white/10"}`}>
                 <button
                   onClick={() => {
-                    if (settings.crypto_enabled && !loadingSettings) {
+                    if (settings.crypto_enabled) {
                       if (paymentMethod !== "crypto") {
                         setPaymentMethod("crypto");
                         setIsCryptoExpanded(true);
@@ -502,8 +509,8 @@ export default function CategoryPage() {
                       }
                     }
                   }}
-                  disabled={!settings.crypto_enabled || loadingSettings}
-                  className={`w-full px-4 py-3 rounded-xl text-left flex items-center justify-between ${(!settings.crypto_enabled && !loadingSettings) ? "" : loadingSettings ? "" : paymentMethod === "crypto" ? "bg-white/5" : "bg-[#0a0a0a]/50 hover:bg-white/5"}`}
+                  disabled={!settings.crypto_enabled}
+                  className={`w-full px-4 py-3 rounded-xl text-left flex items-center justify-between ${!settings.crypto_enabled ? "" : paymentMethod === "crypto" ? "bg-white/5" : "bg-[#0a0a0a]/50 hover:bg-white/5"}`}
                 >
                   <div className="flex items-center gap-3">
                     <div className={`flex items-center justify-center w-10 h-10 rounded-lg shrink-0 ${paymentMethod === "crypto" ? "bg-amber-500/10" : "bg-[#141414] border border-white/5"}`}>
@@ -512,7 +519,7 @@ export default function CategoryPage() {
                     <div>
                       <div className={`font-bold text-sm ${paymentMethod === "crypto" ? "text-white" : "text-gray-400"}`}>Cryptocurrency</div>
                       <div className="text-xs text-gray-500">
-                        {(!settings.crypto_enabled && !loadingSettings) ? 'Temporarily disabled' : selectedCryptoCoin ? CRYPTO_COINS.find(c => c.id === selectedCryptoCoin)?.name + ' selected' : 'SOL, LTC, USDT'} <span className="text-amber-400 font-bold">{settings.crypto_enabled ? '(0.5% fee)' : ''}</span>
+                        {!settings.crypto_enabled ? 'Temporarily disabled' : selectedCryptoCoin ? CRYPTO_COINS.find(c => c.id === selectedCryptoCoin)?.name + ' selected' : 'SOL, LTC, USDT'} <span className="text-amber-400 font-bold">{settings.crypto_enabled ? '(0.5% fee)' : ''}</span>
                       </div>
                     </div>
                   </div>
@@ -561,6 +568,8 @@ export default function CategoryPage() {
                 </div>
               </button>
 
+                </>
+              )}
             </div>
           </div>
 

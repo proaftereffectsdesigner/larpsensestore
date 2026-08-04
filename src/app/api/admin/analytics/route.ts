@@ -150,8 +150,8 @@ export async function GET(request: Request) {
     let abandonmentRate = 0;
 
     // Realtime (Active in last 5 mins)
-    const fiveMinsAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
-    const realtimeUsers = new Set(traffic.filter(t => t.created_at >= fiveMinsAgo).map(t => t.session_id)).size;
+    const fiveMinsAgoTime = Date.now() - 5 * 60 * 1000;
+    const realtimeUsers = new Set(traffic.filter(t => new Date(t.created_at).getTime() >= fiveMinsAgoTime).map(t => t.session_id)).size;
 
     // Build Charts (Group by Day or Hour)
     const chartMap: Record<string, { pageviews: number, uniques: Set<string>, orders: number, revenue: number }> = {};

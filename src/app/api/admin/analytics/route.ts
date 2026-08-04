@@ -23,15 +23,11 @@ export async function GET(request: Request) {
       startDate = new Date(fromParam);
       endDate = new Date(toParam);
       endDate.setHours(23, 59, 59, 999);
-      if (fromParam === toParam) {
-        isHourly = true;
-      }
     } else if (daysParam === 'all') {
       startDate = new Date('2026-07-29T00:00:00.000Z');
     } else if (daysParam === 'today') {
       startDate = new Date();
       startDate.setHours(startDate.getHours() - 24);
-      isHourly = true;
     } else if (daysParam) {
       startDate = new Date();
       startDate.setDate(startDate.getDate() - (parseInt(daysParam, 10) || 30));
@@ -184,30 +180,53 @@ export async function GET(request: Request) {
     }).map(t => t.session_id)).size;
 
     // Build Charts (Group by Day or Hour)
+    const diffDays = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+    let chartInterval: 'hour' | '4hour' | '12hour' | 'day' | 'month' = 'day';
+    
+    if (daysParam === 'all') chartInterval = 'month';
+    else if (diffDays <= 1) chartInterval = 'hour';
+    else if (diffDays <= 3) chartInterval = '4hour';
+    else if (diffDays <= 7) chartInterval = '12hour';
+    else chartInterval = 'day';
+
+    function getChartKey(dateStr: string | Date, interval: string) {
+      const d = new Date(dateStr);
+      if (interval === 'hour') {
+        d.setMinutes(0, 0, 0);
+        return d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+      }
+      if (interval === '4hour') {
+        d.setHours(Math.floor(d.getHours() / 4) * 4, 0, 0, 0);
+        return `${d.getDate()}/${d.getMonth()+1} ${d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}`;
+      }
+      if (interval === '12hour') {
+        d.setHours(Math.floor(d.getHours() / 12) * 12, 0, 0, 0);
+        return `${d.getDate()}/${d.getMonth()+1} ${d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}`;
+      }
+      if (interval === 'month') return d.toISOString().substring(0, 7);
+      return d.toISOString().split('T')[0];
+    }
+
     const chartMap: Record<string, { pageviews: number, uniques: Set<string>, orders: number, revenue: number }> = {};
     
     let iterator = new Date(startDate);
-    // Boundary protection for hourly chart
+    if (['hour', '4hour', '12hour'].includes(chartInterval)) iterator.setMinutes(0, 0, 0);
+    
     while (iterator <= endDate) {
-      let key = '';
-      if (isHourly) {
-        key = iterator.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        iterator.setHours(iterator.getHours() + 1);
-      } else if (daysParam === 'all') {
-        key = iterator.toISOString().substring(0, 7); // YYYY-MM
-        iterator.setMonth(iterator.getMonth() + 1);
-      } else {
-        key = iterator.toISOString().split('T')[0];
-        iterator.setDate(iterator.getDate() + 1);
-      }
+      const key = getChartKey(iterator, chartInterval);
       chartMap[key] = { pageviews: 0, uniques: new Set(), orders: 0, revenue: 0 };
+      
+      if (chartInterval === 'hour') iterator.setHours(iterator.getHours() + 1);
+      else if (chartInterval === '4hour') iterator.setHours(iterator.getHours() + 4);
+      else if (chartInterval === '12hour') iterator.setHours(iterator.getHours() + 12);
+      else if (chartInterval === 'month') iterator.setMonth(iterator.getMonth() + 1);
+      else iterator.setDate(iterator.getDate() + 1);
     }
 
     traffic.forEach(t => {
-      const d = new Date(t.created_at);
-      let key = isHourly ? d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) 
-              : daysParam === 'all' ? d.toISOString().substring(0, 7) 
-              : d.toISOString().split('T')[0];
+      let dStr = t.created_at;
+      if (!dStr.includes('Z') && !dStr.includes('+')) dStr += 'Z';
+      const key = getChartKey(dStr, chartInterval);
       if (chartMap[key]) {
         chartMap[key].pageviews++;
         chartMap[key].uniques.add(t.session_id);
@@ -215,10 +234,9 @@ export async function GET(request: Request) {
     });
 
     completedOrders.forEach(o => {
-      const d = new Date(o.created_at);
-      let key = isHourly ? d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) 
-              : daysParam === 'all' ? d.toISOString().substring(0, 7) 
-              : d.toISOString().split('T')[0];
+      let dStr = o.created_at;
+      if (!dStr.includes('Z') && !dStr.includes('+')) dStr += 'Z';
+      const key = getChartKey(dStr, chartInterval);
       if (chartMap[key]) {
         chartMap[key].orders++;
         chartMap[key].revenue += Number(o.total_price);

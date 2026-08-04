@@ -155,7 +155,7 @@ export async function POST(req: Request) {
         .from("orders")
         .insert({
           user_id: userId,
-          product_id: product.id,
+          product_type: product.id,
           quantity: quantity,
           total_price: totalPrice,
           status: "refunded",
@@ -171,7 +171,7 @@ export async function POST(req: Request) {
       .from("orders")
       .insert({
         user_id: userId,
-        product_id: product.id,
+        product_type: product.id,
         quantity: quantity,
         total_price: totalPrice,
         status: "completed",

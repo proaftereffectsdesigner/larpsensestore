@@ -80,7 +80,6 @@ export async function POST(req: Request) {
       : "LarpSense Balance Top-up";
 
     const oxapayPayload: any = {
-      merchant: OXAPAY_MERCHANT_KEY,
       amount: totalAmount,
       currency: "EUR",
       order_id: orderId,
@@ -101,7 +100,8 @@ export async function POST(req: Request) {
     const oxapayRes = await fetch("https://api.oxapay.com/v1/payment/invoice", {
       method: "POST",
       headers: {
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
+        "merchant_api_key": OXAPAY_MERCHANT_KEY
       },
       body: JSON.stringify(oxapayPayload)
     });

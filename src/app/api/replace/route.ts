@@ -88,9 +88,9 @@ export async function POST(req: Request) {
     // 2. Aktualizacja w bazie danych (Supabase)
     // Posiadamy już orderData z początku pliku, wystarczy je zmodyfikować.
 
-    const accounts = orderData.accounts_data.split("\n");
-    accounts[accountIdx] = newAccountStr; // Nadpisujemy wymienione konto
-    const newAccountsData = accounts.join("\n");
+    // Replace the exact account string to avoid index mismatch
+    // caused by UI filtering out empty/metadata lines.
+    const newAccountsData = orderData.accounts_data.replace(accountStr, newAccountStr);
 
     const { error: updateError } = await supabase
       .from("orders")

@@ -109,11 +109,15 @@ export async function POST(req: Request) {
 
     const oxapayData = await oxapayRes.json();
 
-    if (oxapayData.result === 100 && oxapayData.payLink) {
-      return NextResponse.json({ url: oxapayData.payLink });
+    // V1 API returns { data: { payLink: '...' } } on success
+    // Old API returned { result: 100, payLink: '...' }
+    const payLink = oxapayData?.data?.payLink || oxapayData?.data?.payment_url || oxapayData?.payLink;
+
+    if (oxapayRes.ok && payLink) {
+      return NextResponse.json({ url: payLink });
     } else {
       console.error("OxaPay Invoice Error:", oxapayData);
-      let errorMsg = oxapayData?.message || "Failed to create crypto invoice";
+      let errorMsg = oxapayData?.message || oxapayData?.error || "Failed to create crypto invoice";
       if (oxapayData?.errors) {
          errorMsg += " " + JSON.stringify(oxapayData.errors);
       }

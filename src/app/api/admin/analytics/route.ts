@@ -39,10 +39,12 @@ export async function GET(request: Request) {
     const startISO = startDate.toISOString();
 
     // 1. Fetch Orders (Revenue, Top Products, Conversion)
-    const { data: ordersData } = await supabaseAdmin.from('orders').select('created_at, total_price, product_id, status, profiles(email)').gte('created_at', startISO);
+    const { data: ordersData, error: ordersError } = await supabaseAdmin.from('orders').select('created_at, total_price, product_id, status, profiles(email)').gte('created_at', startISO);
+    if (ordersError) return NextResponse.json({ success: false, error: `Orders Error: ${ordersError.message}` });
     
     // 2. Fetch Traffic (Page Views, Unique Users, Devices, Top Pages, Traffic Chart)
-    const { data: trafficData } = await supabaseAdmin.from('page_views').select('created_at, session_id, path, device_type, ip_address, referer').gte('created_at', startISO);
+    const { data: trafficData, error: trafficError } = await supabaseAdmin.from('page_views').select('created_at, session_id, path, device_type, ip_address, referer').gte('created_at', startISO);
+    if (trafficError) return NextResponse.json({ success: false, error: `Traffic Error: ${trafficError.message}` });
 
     // 3. Fetch Checkouts (Abandonment Rate)
     const { data: checkoutData } = await supabaseAdmin.from('checkout_sessions').select('status, created_at').gte('created_at', startISO);
@@ -151,7 +153,19 @@ export async function GET(request: Request) {
 
     // Realtime (Active in last 5 mins)
     const fiveMinsAgoTime = Date.now() - 5 * 60 * 1000;
-    const realtimeUsers = new Set(traffic.filter(t => new Date(t.created_at).getTime() >= fiveMinsAgoTime).map(t => t.session_id)).size;
+    
+    // Calculate how many users from traffic are actually active in last 5 min.
+    // Also include a debug parameter to check their parsed times vs now.
+    const debugTimes = traffic.slice(0, 5).map(t => ({ parsed: new Date(t.created_at).getTime(), raw: t.created_at }));
+    const realtimeUsers = new Set(traffic.filter(t => {
+      // PostgREST string format e.g. "2026-08-04 23:00:00" might be treated as LOCAL TIME in JS on the server
+      // Force it to UTC if it doesn't have Z or +00:00
+      let dStr = t.created_at;
+      if (!dStr.includes('Z') && !dStr.includes('+')) {
+        dStr += 'Z'; // Force UTC parsing explicitly to match Supabase storage
+      }
+      return new Date(dStr).getTime() >= fiveMinsAgoTime;
+    }).map(t => t.session_id)).size;
 
     // Build Charts (Group by Day or Hour)
     const chartMap: Record<string, { pageviews: number, uniques: Set<string>, orders: number, revenue: number }> = {};

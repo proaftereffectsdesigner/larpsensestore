@@ -316,11 +316,11 @@ export default function AnalyticsDashboard() {
                       <AreaChart 
                         data={data.advanced.revenueChart}
                         onClick={(e: any) => {
-                          if (e && e.activePayload && e.activePayload.length > 0) {
-                            const payloadData = e.activePayload[0].payload;
-                            if (payloadData.rawOrders && payloadData.rawOrders.length > 0) {
-                              setSelectedOrders(payloadData.rawOrders);
-                              setSelectedDateLabel(payloadData.date);
+                          if (e?.activePayload?.length > 0) {
+                            const pData = e.activePayload[0].payload;
+                            if (pData.rawOrders?.length > 0) {
+                              setSelectedOrders(pData.rawOrders);
+                              setSelectedDateLabel(pData.date);
                               setTimeout(() => document.getElementById('details-panel')?.scrollIntoView({ behavior: 'smooth' }), 100);
                             } else {
                               setSelectedOrders(null);
@@ -335,11 +335,35 @@ export default function AnalyticsDashboard() {
                             <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
                           </linearGradient>
                         </defs>
-                        <CartesianGrid strokeDasharray="4 4" stroke="rgba(255,255,255,0.04)" vertical={false} />
+                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
                         <XAxis dataKey="date" stroke="#71717a" fontSize={11} tickMargin={15} tickLine={false} axisLine={false} tickFormatter={(val) => { if (typeof val === 'string' && val.includes(' ')) return val; const d = new Date(val); return `${d.getDate()}/${d.getMonth()+1}`; }} />
                         <YAxis stroke="#71717a" fontSize={11} axisLine={false} tickLine={false} tickFormatter={(val) => `€${val}`} />
-                        <RechartsTooltip cursor={{ stroke: 'rgba(255,255,255,0.1)', strokeWidth: 1, strokeDasharray: '3 3' }} content={<RevenueTooltip />} />
-                        <Area type="monotone" dataKey="revenue" name="Przychód" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorRevenue)" activeDot={{ r: 6, fill: '#10b981', stroke: '#fff', strokeWidth: 2, cursor: 'pointer' }} />
+                        <RechartsTooltip wrapperStyle={{ pointerEvents: 'none' }} cursor={{ stroke: 'rgba(255,255,255,0.1)', strokeWidth: 1, strokeDasharray: '3 3' }} content={<RevenueTooltip />} />
+                        <Area 
+                          type="monotone" 
+                          dataKey="revenue" 
+                          name="Przychód" 
+                          stroke="#10b981" 
+                          strokeWidth={3} 
+                          fillOpacity={1} 
+                          fill="url(#colorRevenue)" 
+                          activeDot={{ 
+                            r: 8, 
+                            fill: '#10b981', 
+                            stroke: '#fff', 
+                            strokeWidth: 2, 
+                            cursor: 'pointer',
+                            onClick: (_: any, payload: any) => {
+                              if (payload?.payload?.rawOrders?.length > 0) {
+                                setSelectedOrders(payload.payload.rawOrders);
+                                setSelectedDateLabel(payload.payload.date);
+                                setTimeout(() => document.getElementById('details-panel')?.scrollIntoView({ behavior: 'smooth' }), 100);
+                              } else {
+                                setSelectedOrders(null);
+                              }
+                            }
+                          }} 
+                        />
                       </AreaChart>
                     </ResponsiveContainer>
                   </div>

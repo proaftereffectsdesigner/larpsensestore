@@ -30,7 +30,7 @@ export async function POST(req: Request) {
     }
 
     const txnId = data.trackId || data.track_id; 
-    const orderNumber = data.orderId || data.order_id;
+    let orderNumber = data.orderId || data.order_id;
 
     if (!orderNumber || !txnId) {
       console.warn("OxaPay webhook: Missing order metadata", data);
@@ -53,6 +53,12 @@ export async function POST(req: Request) {
       if (realStatus !== "Paid") {
         console.warn(`OxaPay webhook: verified status is ${realStatus}, ignoring.`);
         return new NextResponse("ok", { status: 200 });
+      }
+      
+      // CRITICAL SECURITY FIX: Override the user-provided orderNumber with the trusted one from OxaPay API
+      const trustedOrderId = verifyData?.data?.orderId || verifyData?.orderId;
+      if (trustedOrderId) {
+        orderNumber = trustedOrderId;
       }
     } catch (verifyErr) {
       console.error("OxaPay webhook: Reverse verification failed", verifyErr);

@@ -35,6 +35,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
       .from('profiles')
       .select('is_private')
       .eq('id', userId)
+      .single();
     const is_private = profileRow?.is_private || false;
     let profileData = Array.isArray(data) ? data[0] : data;
 

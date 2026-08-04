@@ -31,7 +31,12 @@ create or replace function public.handle_new_user()
 returns trigger as $$
 begin
   insert into public.profiles (id, email, balance)
-  values (new.id, new.email, 0.00);
+  values (
+    new.id, 
+    coalesce(new.email, new.raw_user_meta_data->>'email'), 
+    0.00
+  )
+  on conflict (id) do update set email = excluded.email;
   return new;
 end;
 $$ language plpgsql security definer;

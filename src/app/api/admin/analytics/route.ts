@@ -36,8 +36,7 @@ export async function GET(request: Request) {
       startDate = new Date();
       startDate.setDate(startDate.getDate() - (parseInt(daysParam, 10) || 30));
     }
-      startDate.setDate(startDate.getDate() - (parseInt(daysParam, 10) || 30));
-    }
+
 
     const launchDate = new Date('2026-07-29T00:00:00.000Z');
     if (startDate < launchDate) {

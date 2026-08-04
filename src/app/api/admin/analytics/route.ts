@@ -39,7 +39,7 @@ export async function GET(request: Request) {
     const startISO = startDate.toISOString();
 
     // 1. Fetch Orders (Revenue, Top Products, Conversion)
-    const { data: ordersData, error: ordersError } = await supabaseAdmin.from('orders').select('created_at, total_price, product_id, status, profiles(email)').gte('created_at', startISO);
+    const { data: ordersData, error: ordersError } = await supabaseAdmin.from('orders').select('user_id, created_at, total_price, product_id, status').gte('created_at', startISO);
     if (ordersError) return NextResponse.json({ success: false, error: `Orders Error: ${ordersError.message}` });
     
     // 2. Fetch Traffic (Page Views, Unique Users, Devices, Top Pages, Traffic Chart)
@@ -51,15 +51,23 @@ export async function GET(request: Request) {
 
     // 4. Fetch Recent Activity
     const { data: recentLogins } = await supabaseAdmin.from('login_activity').select('action, created_at, profiles(email), ip_address').order('created_at', { ascending: false }).limit(5);
-    const { data: recentOrders } = await supabaseAdmin.from('orders').select('total_price, product_id, status, created_at, profiles(email)').order('created_at', { ascending: false }).limit(5);
+    const { data: recentOrders } = await supabaseAdmin.from('orders').select('user_id, total_price, product_id, status, created_at').order('created_at', { ascending: false }).limit(5);
 
 
     // ==========================================
     // AGGREGATION LOGIC
     // ==========================================
 
-    const { data: adminProfiles } = await supabaseAdmin.from('profiles').select('id').eq('is_admin', true);
-    const adminIds = adminProfiles?.map(p => p.id) || [];
+    const { data: allProfiles } = await supabaseAdmin.from('profiles').select('id, email, is_admin');
+    const adminProfiles = allProfiles?.filter(p => p.is_admin) || [];
+    
+    // Create map for easy lookup
+    const emailMap: Record<string, string> = {};
+    allProfiles?.forEach(p => {
+      if (p.email) emailMap[p.id] = p.email;
+    });
+
+    const adminIds = adminProfiles.map(p => p.id);
     const { data: adminLogins } = await supabaseAdmin.from('login_activity').select('ip_address').in('user_id', adminIds);
     const adminIps = new Set(adminLogins?.map(l => l.ip_address).filter(Boolean) || []);
     
@@ -230,7 +238,7 @@ export async function GET(request: Request) {
     }
     if (recentOrders) {
       recentOrders.forEach(o => {
-        const email = (o.profiles as any)?.email || 'Unknown';
+        const email = emailMap[o.user_id] || 'Unknown';
         activity.push({
           message: o.status === 'completed' 
             ? `User ${email} bought ${o.product_id} for €${o.total_price}`

@@ -30,8 +30,8 @@ create policy "Users can insert own profile." on public.profiles
 create or replace function public.handle_new_user()
 returns trigger as $$
 begin
-  insert into public.profiles (id, balance)
-  values (new.id, 0.00);
+  insert into public.profiles (id, email, balance)
+  values (new.id, new.email, 0.00);
   return new;
 end;
 $$ language plpgsql security definer;

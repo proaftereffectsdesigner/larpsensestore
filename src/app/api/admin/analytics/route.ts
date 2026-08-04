@@ -43,15 +43,15 @@ export async function GET(request: Request) {
     const endISO = endDate.toISOString();
 
     // 1. Fetch Orders (Revenue, Top Products, Conversion)
-    const { data: ordersData, error: ordersError } = await supabaseAdmin.from('orders').select('user_id, created_at, total_price, product_id, status').gte('created_at', startISO).lte('created_at', endISO);
+    const { data: ordersData, error: ordersError } = await supabaseAdmin.from('orders').select('user_id, created_at, total_price, product_id, status').gte('created_at', startISO).lte('created_at', endISO).limit(100000);
     if (ordersError) return NextResponse.json({ success: false, error: `Orders Error: ${ordersError.message}` });
     
     // 2. Fetch Traffic (Page Views, Unique Users, Devices, Top Pages, Traffic Chart)
-    const { data: trafficData, error: trafficError } = await supabaseAdmin.from('page_views').select('created_at, session_id, path, device_type, ip_address, referer').gte('created_at', startISO).lte('created_at', endISO);
+    const { data: trafficData, error: trafficError } = await supabaseAdmin.from('page_views').select('created_at, session_id, path, device_type, ip_address, referer').gte('created_at', startISO).lte('created_at', endISO).limit(100000);
     if (trafficError) return NextResponse.json({ success: false, error: `Traffic Error: ${trafficError.message}` });
 
     // 3. Fetch Checkouts (Abandonment Rate)
-    const { data: checkoutData } = await supabaseAdmin.from('checkout_sessions').select('status, created_at').gte('created_at', startISO).lte('created_at', endISO);
+    const { data: checkoutData } = await supabaseAdmin.from('checkout_sessions').select('status, created_at').gte('created_at', startISO).lte('created_at', endISO).limit(100000);
 
     // 4. Fetch Recent Activity
     const { data: recentLogins } = await supabaseAdmin.from('login_activity').select('action, created_at, profiles(email), ip_address').order('created_at', { ascending: false }).limit(5);

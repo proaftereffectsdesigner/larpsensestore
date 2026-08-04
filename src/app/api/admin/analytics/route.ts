@@ -39,7 +39,7 @@ export async function GET(request: Request) {
     const startISO = startDate.toISOString();
 
     // 1. Fetch Orders (Revenue, Top Products, Conversion)
-    const { data: ordersData } = await supabaseAdmin.from('orders').select('created_at, total_price, product_type, status, profiles(email)').gte('created_at', startISO);
+    const { data: ordersData } = await supabaseAdmin.from('orders').select('created_at, total_price, product_id, status, profiles(email)').gte('created_at', startISO);
     
     // 2. Fetch Traffic (Page Views, Unique Users, Devices, Top Pages, Traffic Chart)
     const { data: trafficData } = await supabaseAdmin.from('page_views').select('created_at, session_id, path, device_type, ip_address, referer').gte('created_at', startISO);
@@ -49,7 +49,7 @@ export async function GET(request: Request) {
 
     // 4. Fetch Recent Activity
     const { data: recentLogins } = await supabaseAdmin.from('login_activity').select('action, created_at, profiles(email), ip_address').order('created_at', { ascending: false }).limit(5);
-    const { data: recentOrders } = await supabaseAdmin.from('orders').select('total_price, product_type, status, created_at, profiles(email)').order('created_at', { ascending: false }).limit(5);
+    const { data: recentOrders } = await supabaseAdmin.from('orders').select('total_price, product_id, status, created_at, profiles(email)').order('created_at', { ascending: false }).limit(5);
 
 
     // ==========================================
@@ -135,9 +135,9 @@ export async function GET(request: Request) {
     // Top Products
     const productCounts: Record<string, { revenue: number, units: number }> = {};
     completedOrders.forEach(o => {
-      if (!productCounts[o.product_type]) productCounts[o.product_type] = { revenue: 0, units: 0 };
-      productCounts[o.product_type].revenue += Number(o.total_price);
-      productCounts[o.product_type].units += 1;
+      if (!productCounts[o.product_id]) productCounts[o.product_id] = { revenue: 0, units: 0 };
+      productCounts[o.product_id].revenue += Number(o.total_price);
+      productCounts[o.product_id].units += 1;
     });
     let topProducts = Object.entries(productCounts)
       .sort((a, b) => b[1].revenue - a[1].revenue)
@@ -219,7 +219,7 @@ export async function GET(request: Request) {
         const email = (o.profiles as any)?.email || 'Unknown';
         activity.push({
           message: o.status === 'completed' 
-            ? `User ${email} bought ${o.product_type} for €${o.total_price}`
+            ? `User ${email} bought ${o.product_id} for €${o.total_price}`
             : `Order ${o.status} for ${email} (€${o.total_price})`,
           timeStr: o.created_at,
           type: o.status === 'completed' ? 'purchase' : 'security'

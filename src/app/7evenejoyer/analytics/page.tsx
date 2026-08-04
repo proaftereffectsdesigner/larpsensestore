@@ -6,7 +6,7 @@ import {
   Euro, CreditCard, TrendingUp, Calendar, AlertCircle, 
   Users, MousePointerClick, Timer, MonitorSmartphone, 
   Activity, Download, ArrowUpRight, ArrowDownRight, Globe,
-  Loader2, CheckCircle2
+  Loader2, CheckCircle2, ChevronDown
 } from "lucide-react";
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer,
@@ -176,7 +176,7 @@ export default function AnalyticsDashboard() {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
-        <div className="bg-[#111] border border-white/10 p-4 rounded-xl shadow-2xl z-50 relative min-w-[200px]">
+        <div className="bg-[#111] border border-white/10 p-4 rounded-xl shadow-2xl z-50 relative min-w-[220px]">
           <p className="text-gray-400 text-xs font-bold uppercase tracking-widest mb-3 pb-2 border-b border-white/5">{label}</p>
           <div className="flex flex-col gap-2">
             <div className="flex justify-between items-center gap-6">
@@ -188,6 +188,27 @@ export default function AnalyticsDashboard() {
               <span className="text-white font-bold text-sm">{data.orders}</span>
             </div>
           </div>
+          
+          {data.rawOrders && data.rawOrders.length > 0 && (
+            <div className="mt-4 pt-3 border-t border-white/5 flex flex-col gap-2">
+              <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mb-2 flex items-center">
+                <ChevronDown className="w-3 h-3 mr-1" /> Szczegóły Zakupów
+              </p>
+              {data.rawOrders.map((ro: any, idx: number) => (
+                <div key={idx} className="flex flex-col bg-white/5 border border-white/5 rounded-lg p-2 gap-1.5">
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs font-bold text-emerald-400">€{ro.price}</span>
+                    <span className="text-[10px] text-gray-400 font-mono">{ro.time}</span>
+                  </div>
+                  <div className="text-[11px] text-white/80 font-medium truncate" title={ro.email}>{ro.email}</div>
+                  <div className="flex justify-between items-center text-[10px] text-gray-500 mt-1">
+                    <span className="uppercase text-white/50 tracking-wider truncate max-w-[110px]" title={ro.product}>{ro.product}</span>
+                    <span className="bg-white/10 px-1.5 py-0.5 rounded text-[9px]">{ro.method}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       );
     }

@@ -207,14 +207,14 @@ export async function GET(request: Request) {
       return d.toISOString().split('T')[0];
     }
 
-    const chartMap: Record<string, { pageviews: number, uniques: Set<string>, orders: number, revenue: number }> = {};
+    const chartMap: Record<string, { pageviews: number, uniques: Set<string>, orders: number, revenue: number, rawOrders: any[] }> = {};
     
     let iterator = new Date(startDate);
     if (['hour', '4hour', '12hour'].includes(chartInterval)) iterator.setMinutes(0, 0, 0);
     
     while (iterator <= endDate) {
       const key = getChartKey(iterator, chartInterval);
-      chartMap[key] = { pageviews: 0, uniques: new Set(), orders: 0, revenue: 0 };
+      chartMap[key] = { pageviews: 0, uniques: new Set(), orders: 0, revenue: 0, rawOrders: [] };
       
       if (chartInterval === 'hour') iterator.setHours(iterator.getHours() + 1);
       else if (chartInterval === '4hour') iterator.setHours(iterator.getHours() + 4);
@@ -240,6 +240,15 @@ export async function GET(request: Request) {
       if (chartMap[key]) {
         chartMap[key].orders++;
         chartMap[key].revenue += Number(o.total_price);
+        
+        const email = emailMap[o.user_id] || 'Nieznany Gość';
+        chartMap[key].rawOrders.push({
+           time: new Date(dStr).toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' }),
+           email,
+           method: 'Polar.sh / NFA',
+           product: o.product_id,
+           price: Number(o.total_price)
+        });
       }
     });
 
@@ -247,7 +256,7 @@ export async function GET(request: Request) {
       date, pageviews: stats.pageviews, uniques: stats.uniques.size
     }));
     const revenueChart = Object.entries(chartMap).map(([date, stats]) => ({
-      date, orders: stats.orders, revenue: parseFloat(stats.revenue.toFixed(2))
+      date, orders: stats.orders, revenue: parseFloat(stats.revenue.toFixed(2)), rawOrders: stats.rawOrders
     }));
 
     // Recent Activity Merge

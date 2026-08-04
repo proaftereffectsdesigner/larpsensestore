@@ -47,9 +47,9 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "You are currently restricted from adding balance." }, { status: 403 });
     }
 
-    // We keep the old Stripe fee formula unless requested otherwise, as it covers standard card processing.
-    const feeMultiplier = 0.05;
-    const fixedFee = 0.50;
+    // Fee: 3.5% + €0.30 (covers Stripe/Polar processing costs)
+    const feeMultiplier = 0.035;
+    const fixedFee = 0.30;
 
     const cardFee = Number((amount * feeMultiplier + fixedFee).toFixed(2));
     const totalAmount = amount + cardFee;
@@ -89,6 +89,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ id: session.id, url: session.url });
   } catch (err: any) {
     console.error("Polar Checkout Error:", err);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    return NextResponse.json({ error: "Payment gateway error" }, { status: 500 });
   }
 }

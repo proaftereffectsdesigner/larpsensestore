@@ -22,7 +22,7 @@ export async function GET() {
 
   // Use the actual API call
   try {
-    const res = await fetch(`${NFA_API_URL}/stock?result=json&key=${NFA_API_KEY || ""}`, {
+    const res = await fetch(`${NFA_API_URL}/stock?result=json`, {
       headers: {
         "X-Api-Key": NFA_API_KEY || "",
       },

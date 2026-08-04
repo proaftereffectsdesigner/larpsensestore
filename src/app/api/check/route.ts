@@ -1,7 +1,18 @@
 import { NextResponse } from "next/server";
+import { rateLimit, getClientIp } from "@/lib/rate-limit";
 
 export async function POST(req: Request) {
   try {
+    // Rate limit: max 10 per minute per IP
+    const ip = getClientIp(req);
+    const rl = rateLimit(`check-account:${ip}`, { maxRequests: 10, windowMs: 60_000 });
+    if (!rl.allowed) {
+      return NextResponse.json(
+        { error: `Too many requests. Try again in ${rl.resetInSeconds}s.` },
+        { status: 429 }
+      );
+    }
+
     const { accountStr } = await req.json();
 
     if (!accountStr) {

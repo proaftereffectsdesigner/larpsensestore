@@ -475,7 +475,7 @@ export default function CategoryPage() {
                 </div>
                 <div>
                   <div className={`font-bold text-sm ${paymentMethod === "polar" ? "text-white" : "text-gray-400"}`}>Debit / Credit Card</div>
-                  <div className="text-xs text-gray-500">{!settings.stripe_enabled ? 'Temporarily disabled' : 'Mastercard, Visa, Apple Pay etc.'} <span className="text-indigo-400 font-bold">{settings.stripe_enabled ? '(5% + €0.50 fee)' : ''}</span></div>
+                  <div className="text-xs text-gray-500">{!settings.stripe_enabled ? 'Temporarily disabled' : 'Mastercard, Visa, Apple Pay etc.'} <span className="text-indigo-400 font-bold">{settings.stripe_enabled ? '(3.5% + €0.30 fee)' : ''}</span></div>
                 </div>
               </button>
 

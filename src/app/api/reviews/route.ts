@@ -2,11 +2,22 @@ import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase-client';
 import { createClient } from '@supabase/supabase-js';
 import { products } from '@/lib/products';
+import { rateLimit, getClientIp } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
   try {
+    // Rate limit: max 10 review submissions per minute per IP
+    const ip = getClientIp(req);
+    const rl = rateLimit(`reviews:${ip}`, { maxRequests: 10, windowMs: 60_000 });
+    if (!rl.allowed) {
+      return NextResponse.json(
+        { error: `Too many requests. Try again in ${rl.resetInSeconds}s.` },
+        { status: 429 }
+      );
+    }
+
     const { orderId, rating, comment } = await req.json();
     const token = req.headers.get("authorization")?.replace("Bearer ", "");
 

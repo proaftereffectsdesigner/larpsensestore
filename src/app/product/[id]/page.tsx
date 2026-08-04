@@ -251,7 +251,7 @@ export default function ProductPage() {
                     {paymentMethod === "polar" ? "Debit / Credit Card" : paymentMethod === "crypto" ? "Cryptocurrency" : "Balance"}
                   </div>
                   <div className="text-[11px] text-gray-500 font-medium">
-                    {paymentMethod === "polar" ? "Mastercard, Visa, Apple Pay etc. (5% + €0.50 fee)" : paymentMethod === "crypto" ? "Pay with any crypto via OxaPay (0.5% fee)" : "Pay with your NFA Store balance"}
+                    {paymentMethod === "polar" ? "Mastercard, Visa, Apple Pay etc. (3.5% + €0.30 fee)" : paymentMethod === "crypto" ? "Pay with any crypto via OxaPay (0.5% fee)" : "Pay with your NFA Store balance"}
                   </div>
                 </div>
               </div>
@@ -288,7 +288,7 @@ export default function ProductPage() {
                   </div>
                   <div>
                     <div className="text-sm text-white">Credit Card / Apple Pay</div>
-                    <div className="text-xs text-gray-500">{!settings.stripe_enabled ? 'Temporarily disabled' : 'Mastercard, Visa etc. (5% + €0.50 fee)'}</div>
+                    <div className="text-xs text-gray-500">{!settings.stripe_enabled ? 'Temporarily disabled' : 'Mastercard, Visa etc. (3.5% + €0.30 fee)'}</div>
                   </div>
                 </button>
                 <button 

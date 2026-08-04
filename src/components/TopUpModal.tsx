@@ -52,7 +52,7 @@ export default function TopUpModal() {
 
   const getFeeMultiplier = () => {
     switch (method) {
-      case 'card': return 0.015; // 1.5%
+      case 'card': return 0.035; // 3.5%
       case 'crypto': return 0.005; // 0.5%
       default: return 0;
     }
@@ -60,7 +60,7 @@ export default function TopUpModal() {
 
   const getFixedFee = () => {
     switch (method) {
-      case 'card': return 0.25;
+      case 'card': return 0.30;
       case 'crypto': return 0.00;
       default: return 0;
     }
@@ -223,7 +223,7 @@ export default function TopUpModal() {
                       </div>
                       <div className="text-left">
                         <div className={`font-bold text-sm ${method === 'card' ? 'text-white' : 'text-gray-300'}`}>Debit / Credit Card</div>
-                        <div className="text-[11px] text-gray-500 font-medium">{!settings.stripe_enabled ? 'Temporarily disabled' : 'Mastercard, Visa, Apple Pay etc.'} <span className="text-indigo-400 font-bold">(5% + €0.50 fee)</span></div>
+                        <div className="text-[11px] text-gray-500 font-medium">{!settings.stripe_enabled ? 'Temporarily disabled' : 'Mastercard, Visa, Apple Pay etc.'} <span className="text-indigo-400 font-bold">(3.5% + €0.30 fee)</span></div>
                       </div>
                     </div>
                     <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${method === 'card' ? 'border-[#635BFF]' : 'border-gray-600'}`}>

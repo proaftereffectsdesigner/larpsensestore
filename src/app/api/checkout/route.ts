@@ -1,10 +1,20 @@
 import { NextResponse } from "next/server";
 import { products } from "@/lib/products";
 import { createClient } from "@supabase/supabase-js";
+import { rateLimit, getClientIp } from "@/lib/rate-limit";
 
-// Symulacja integracji Stripe Checkout
 export async function POST(req: Request) {
   try {
+    // Rate limit: max 10 checkout attempts per minute per IP
+    const ip = getClientIp(req);
+    const rl = rateLimit(`checkout-balance:${ip}`, { maxRequests: 10, windowMs: 60_000 });
+    if (!rl.allowed) {
+      return NextResponse.json(
+        { error: `Too many requests. Try again in ${rl.resetInSeconds}s.` },
+        { status: 429 }
+      );
+    }
+
     const { productId, quantity, userId, token, paymentMethod } = await req.json();
 
     if (!productId || !quantity || quantity < 1 || quantity > 100 || !userId || !token) {
@@ -18,8 +28,13 @@ export async function POST(req: Request) {
 
     const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
     const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+    const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-    // Inicjalizacja Supabase wraz z przekazaniem access_token, aby ominąć błąd RLS
+    if (!SUPABASE_SERVICE_ROLE_KEY) {
+      console.error("Missing SUPABASE_SERVICE_ROLE_KEY");
+      return NextResponse.json({ error: "Server configuration error" }, { status: 500 });
+    }
+
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
       global: {
         headers: {
@@ -33,7 +48,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Unauthorized or invalid session token." }, { status: 401 });
     }
 
-    const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
     const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
     // Check restrictions first
@@ -66,8 +80,9 @@ export async function POST(req: Request) {
     }
 
     if (paymentMethod === "polar") {
-      const feeMultiplier = 0.05;
-      const fixedFee = 0.50;
+      // Fee: 3.5% + €0.30 (covers Stripe/Polar processing costs)
+      const feeMultiplier = 0.035;
+      const fixedFee = 0.30;
       const cardFee = Number((totalPrice * feeMultiplier + fixedFee).toFixed(2));
       const finalAmount = totalPrice + cardFee;
 
@@ -85,7 +100,7 @@ export async function POST(req: Request) {
           },
           body: JSON.stringify({
             payment_processor: "stripe",
-            products: [process.env.POLAR_TOPUP_PRODUCT_ID], // We use the same base product, overriding price
+            products: [process.env.POLAR_TOPUP_PRODUCT_ID],
             amount: Math.round(finalAmount * 100),
             success_url: `${req.headers.get("origin")}/dashboard?order=success`,
             metadata: {
@@ -108,19 +123,15 @@ export async function POST(req: Request) {
         return NextResponse.json({ url: session.url });
       } catch (err: any) {
         console.error("Polar Checkout Error:", err);
-        return NextResponse.json({ error: err.message }, { status: 500 });
+        return NextResponse.json({ error: "Payment gateway error" }, { status: 500 });
       }
     }
 
-    // Jeśli zapłacono przez Balance, kontynuujemy z realizacją natychmiastową
-
+    // Balance payment — proceed to NFA fulfillment
     let accountsStr = "";
-    
-    // TRYB PRAWDZIWY: STRIPE / BALANCE -> NFA API
     let fulfilled = false;
     try {
       const { buyNfaAccounts } = await import("@/lib/nfa");
-      // Use timestamp + userId as idempotency key for balance checkouts
       const nfaResult = await buyNfaAccounts(
         product.type,
         quantity,
@@ -133,14 +144,13 @@ export async function POST(req: Request) {
     }
 
     if (!fulfilled) {
-      // Jeśli NFA zawiodło (brak kont, zły klucz), musimy ZWRÓCIĆ ŚRODKI na saldo
+      // Refund if NFA failed
       const { data: profile } = await supabaseAdmin.from("profiles").select("balance").eq("id", userId).single();
       if (profile) {
         const newBalance = Number(profile.balance) + totalPrice;
         await supabaseAdmin.from("profiles").update({ balance: newBalance }).eq("id", userId);
       }
 
-      // Zapisz zamówienie jako zrefundowane
       const { data: orderData } = await supabase
         .from("orders")
         .insert({
@@ -157,7 +167,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ url: `/order/${orderData?.id || 'error'}` });
     }
 
-    // Zapis do Supabase używając prawdziwego ID użytkownika
     const { data: orderData, error: dbError } = await supabase
       .from("orders")
       .insert({
@@ -173,7 +182,6 @@ export async function POST(req: Request) {
 
     if (dbError) {
       console.error("Supabase error saving order:", dbError);
-      // Mimo błędu zapisu, klient zapłacił i pobraliśmy konto - przekierujemy go z kontami w query dla ratunku
       return NextResponse.json({ 
         url: `/order/error?accounts=${encodeURIComponent(accountsStr)}` 
       });
@@ -189,7 +197,6 @@ export async function POST(req: Request) {
       }
     }).catch(console.error);
 
-    // Przekierowanie na stronę zamówienia po "udanym powrocie ze Stripe"
     return NextResponse.json({ url: `/order/${orderData.id}` });
   } catch (err) {
     return NextResponse.json({ error: "Internal error" }, { status: 500 });

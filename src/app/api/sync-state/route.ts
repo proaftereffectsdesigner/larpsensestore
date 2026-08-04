@@ -1,8 +1,16 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { rateLimit, getClientIp } from "@/lib/rate-limit";
 
 export async function POST(req: Request) {
   try {
+    // Rate limit: max 60 syncs per minute per IP (once per second max)
+    const limitIp = getClientIp(req);
+    const rl = rateLimit(`sync-state:${limitIp}`, { maxRequests: 60, windowMs: 60_000 });
+    if (!rl.allowed) {
+      return NextResponse.json({ ok: true }); // Silent ignore — not a security issue
+    }
+
     const { userId } = await req.json();
     const token = req.headers.get("Authorization")?.replace("Bearer ", "");
 

@@ -73,14 +73,6 @@ export default function CategoryPage() {
     setExpandedReviews(newSet);
   };
 
-
-
-  const CRYPTO_COINS = [
-    { id: 'SOL', name: 'Solana', icon: <SiSolana className="w-5 h-5" />, color: 'text-purple-400', bg: 'bg-purple-500/10' },
-    { id: 'LTC', name: 'Litecoin', icon: <SiLitecoin className="w-5 h-5" />, color: 'text-blue-400', bg: 'bg-blue-500/10' },
-    { id: 'USDT_TON', name: 'Tether USDT', icon: <SiTether className="w-5 h-5" />, color: 'text-emerald-400', bg: 'bg-emerald-500/10', note: 'min €5' },
-  ];
-
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
@@ -182,13 +174,6 @@ export default function CategoryPage() {
 
     const totalPrice = selectedProduct.price * quantity;
 
-    if (paymentMethod === "crypto") {
-      if (!selectedCryptoCoin) {
-        alert("Please select a cryptocurrency");
-        return;
-      }
-    }
-
     setLoadingCheckout(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -202,7 +187,6 @@ export default function CategoryPage() {
             userId: user.id,
             token,
             amount: totalPrice,
-            currency: selectedCryptoCoin,
             type: "product_checkout",
             productId: selectedProduct.id,
             quantity: quantity
@@ -482,7 +466,7 @@ export default function CategoryPage() {
                 <>
               {/* Polar */}
               <button 
-                onClick={() => { if (settings.stripe_enabled) { setPaymentMethod("polar"); setIsCryptoExpanded(false); } }}
+                onClick={() => { if (settings.stripe_enabled) { setPaymentMethod("polar"); } }}
                 disabled={!settings.stripe_enabled}
                 className={`w-full px-4 py-3 rounded-xl text-left flex items-center gap-3 border transition-all ${!settings.stripe_enabled ? "opacity-50 cursor-not-allowed grayscale bg-[#0a0a0a]/50 border-white/5" : paymentMethod === "polar" ? "bg-white/5 border-white/20" : "bg-[#0a0a0a]/50 border-white/10 hover:bg-white/5 hover:border-white/20"}`}
               >
@@ -498,17 +482,7 @@ export default function CategoryPage() {
               {/* Crypto */}
               <div className={`rounded-xl border transition-all ${!settings.crypto_enabled ? 'opacity-50 cursor-not-allowed bg-[#0a0a0a]/50 border-white/5 grayscale' : paymentMethod === "crypto" ? "border-white/20" : "border-white/10"}`}>
                 <button
-                  onClick={() => {
-                    if (settings.crypto_enabled) {
-                      if (paymentMethod !== "crypto") {
-                        setPaymentMethod("crypto");
-                        setIsCryptoExpanded(true);
-                        if (!selectedCryptoCoin) setSelectedCryptoCoin(CRYPTO_COINS[0].id);
-                      } else {
-                        setIsCryptoExpanded(!isCryptoExpanded);
-                      }
-                    }
-                  }}
+                  onClick={() => settings.crypto_enabled && setPaymentMethod("crypto")}
                   disabled={!settings.crypto_enabled}
                   className={`w-full px-4 py-3 rounded-xl text-left flex items-center justify-between ${!settings.crypto_enabled ? "" : paymentMethod === "crypto" ? "bg-white/5" : "bg-[#0a0a0a]/50 hover:bg-white/5"}`}
                 >
@@ -519,44 +493,16 @@ export default function CategoryPage() {
                     <div>
                       <div className={`font-bold text-sm ${paymentMethod === "crypto" ? "text-white" : "text-gray-400"}`}>Cryptocurrency</div>
                       <div className="text-xs text-gray-500">
-                        {!settings.crypto_enabled ? 'Temporarily disabled' : selectedCryptoCoin ? CRYPTO_COINS.find(c => c.id === selectedCryptoCoin)?.name + ' selected' : 'SOL, LTC, USDT'} <span className="text-amber-400 font-bold">{settings.crypto_enabled ? '(0.5% fee)' : ''}</span>
+                        {!settings.crypto_enabled ? 'Temporarily disabled' : 'Pay via OxaPay'} <span className="text-amber-400 font-bold">{settings.crypto_enabled ? '(0.5% fee)' : ''}</span>
                       </div>
                     </div>
                   </div>
-                  <ChevronRight className={`w-4 h-4 text-gray-500 transition-transform shrink-0 ${isCryptoExpanded && paymentMethod === "crypto" ? "rotate-90" : ""}`} />
                 </button>
-
-                {paymentMethod === "crypto" && isCryptoExpanded && (
-                  <div className="px-3 pb-3 animate-in slide-in-from-top-2 duration-200">
-                    <div className="text-[10px] font-bold text-gray-500 uppercase mb-2 pt-1">Select Currency</div>
-                    <div className="flex flex-col gap-1.5">
-                      {CRYPTO_COINS.map(coin => (
-                        <button
-                          key={coin.id}
-                          onClick={() => setSelectedCryptoCoin(coin.id)}
-                          className={`flex items-center gap-3 p-3 rounded-xl transition-all ${selectedCryptoCoin === coin.id ? "bg-white/10 border border-white/20" : "bg-[#111] border border-white/5 hover:bg-white/5"}`}
-                        >
-                          <div className={`w-8 h-8 rounded-md flex items-center justify-center text-sm font-black shrink-0 ${coin.bg} ${coin.color}`}>{coin.icon}</div>
-                          <span className={`text-sm font-bold ${selectedCryptoCoin === coin.id ? "text-white" : "text-gray-400"}`}>
-                            {coin.name}
-                            {coin.note && <span className="text-[10px] ml-2 text-gray-500 font-medium">({coin.note})</span>}
-                          </span>
-                        </button>
-                      ))}
-                    </div>
-                    {selectedCryptoCoin === "USDT_TON" && totalPrice < 5 && (
-                      <div className="mt-3 text-xs font-medium text-emerald-400/90 bg-emerald-400/10 p-3 rounded-xl flex items-center gap-2">
-                        <ShieldAlert className="w-4 h-4 shrink-0" />
-                        Minimum total amount for Tether USDT is €5.00
-                      </div>
-                    )}
-                  </div>
-                )}
               </div>
 
               {/* Balance */}
               <button
-                onClick={() => { setPaymentMethod("balance"); setIsCryptoExpanded(false); }}
+                onClick={() => { setPaymentMethod("balance"); }}
                 className={`w-full px-4 py-3 rounded-xl text-left flex items-center gap-3 border transition-all ${paymentMethod === "balance" ? "bg-white/5 border-white/20" : "bg-[#0a0a0a]/50 border-white/10 hover:bg-white/5 hover:border-white/20"}`}
               >
                 <div className="w-8 h-8 bg-emerald-500/10 rounded-full flex items-center justify-center shrink-0">

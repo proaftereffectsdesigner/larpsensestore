@@ -63,18 +63,11 @@ export default function ProductPage() {
     const handleClickOutside = (e: MouseEvent) => {
       if (paymentDropdownRef.current && !paymentDropdownRef.current.contains(e.target as Node)) {
         setIsDropdownOpen(false);
-        setIsCryptoExpanded(false);
       }
     };
     if (isDropdownOpen) document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isDropdownOpen]);
-
-  const CRYPTO_COINS = [
-    { id: 'SOL', name: 'Solana', icon: <SiSolana className="w-5 h-5" />, color: 'text-purple-400', bg: 'bg-purple-500/10' },
-    { id: 'LTC', name: 'Litecoin', icon: <SiLitecoin className="w-5 h-5" />, color: 'text-blue-400', bg: 'bg-blue-500/10' },
-    { id: 'USDT_TON', name: 'Tether USDT', icon: <SiTether className="w-5 h-5" />, color: 'text-emerald-400', bg: 'bg-emerald-500/10', note: 'min €5' },
-  ];
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -149,13 +142,6 @@ export default function ProductPage() {
 
     const totalPrice = product.price * quantity;
 
-    if (paymentMethod === "crypto") {
-      if (!selectedCryptoCoin) {
-        alert("Please select a cryptocurrency");
-        return;
-      }
-    }
-
     setLoadingCheckout(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -169,7 +155,6 @@ export default function ProductPage() {
             userId: user.id,
             token,
             amount: totalPrice,
-            currency: selectedCryptoCoin,
             type: "product_checkout",
             productId: product.id,
             quantity: quantity
@@ -266,7 +251,7 @@ export default function ProductPage() {
                     {paymentMethod === "polar" ? "Debit / Credit Card" : paymentMethod === "crypto" ? "Cryptocurrency" : "Balance"}
                   </div>
                   <div className="text-[11px] text-gray-500 font-medium">
-                    {paymentMethod === "polar" ? "Mastercard, Visa, Apple Pay etc. (5% + €0.50 fee)" : paymentMethod === "crypto" ? (selectedCryptoCoin ? `${CRYPTO_COINS.find(c => c.id === selectedCryptoCoin)?.name} (0.5% fee)` : "SOL, LTC, USDT (0.5% fee)") : "Pay with your NFA Store balance"}
+                    {paymentMethod === "polar" ? "Mastercard, Visa, Apple Pay etc. (5% + €0.50 fee)" : paymentMethod === "crypto" ? "Pay with any crypto via OxaPay (0.5% fee)" : "Pay with your NFA Store balance"}
                   </div>
                 </div>
               </div>
@@ -307,7 +292,7 @@ export default function ProductPage() {
                   </div>
                 </button>
                 <button 
-                  onClick={() => { if (settings.crypto_enabled) { setIsCryptoExpanded(!isCryptoExpanded); if (!isCryptoExpanded) setPaymentMethod("crypto"); } }}
+                  onClick={() => { if (settings.crypto_enabled) { setPaymentMethod("crypto"); setIsDropdownOpen(false); } }}
                   disabled={!settings.crypto_enabled}
                   className={`w-full px-4 py-3 text-left transition-colors flex items-center justify-between ${!settings.crypto_enabled ? 'opacity-50 cursor-not-allowed grayscale' : 'hover:bg-white/5'}`}
                 >
@@ -317,39 +302,10 @@ export default function ProductPage() {
                     </div>
                     <div>
                       <div className="text-sm text-white">Cryptocurrency</div>
-                      <div className="text-xs text-gray-500">{!settings.crypto_enabled ? 'Temporarily disabled' : 'SOL, LTC, USDT'} <span className="text-amber-400">{!settings.crypto_enabled ? '' : '(0.5% fee)'}</span></div>
+                      <div className="text-xs text-gray-500">{!settings.crypto_enabled ? 'Temporarily disabled' : 'Pay via OxaPay'} <span className="text-amber-400">{!settings.crypto_enabled ? '' : '(0.5% fee)'}</span></div>
                     </div>
                   </div>
-                  <ChevronRight className={`w-4 h-4 text-gray-500 transition-transform ${isCryptoExpanded && paymentMethod === 'crypto' ? 'rotate-90' : ''}`} />
                 </button>
-                  {paymentMethod === 'crypto' && selectedCryptoCoin === 'USDT_TON' && totalPrice < 5 && (
-                    <div className="mt-4 text-xs font-medium text-emerald-400/90 bg-emerald-400/10 p-3 rounded-xl flex items-center gap-2">
-                      <ShieldAlert className="w-4 h-4 shrink-0" />
-                      Minimum total amount for Tether USDT is €5.00
-                    </div>
-                  )}
-                {paymentMethod === 'crypto' && isCryptoExpanded && (
-                  <div className="p-3 bg-[#111] border-b border-white/5 animate-in slide-in-from-top-2 duration-200">
-                    <div className="text-[10px] font-bold text-gray-500 uppercase mb-2">Select Currency</div>
-                    <div className="flex flex-col gap-1.5">
-                      {CRYPTO_COINS.map(coin => (
-                        <button
-                          key={coin.id}
-                          onClick={() => { setSelectedCryptoCoin(coin.id); setIsDropdownOpen(false); setIsCryptoExpanded(false); }}
-                          className={`flex items-center gap-3 p-3 rounded-xl transition-all ${selectedCryptoCoin === coin.id ? 'bg-white/10 border border-white/20' : 'bg-[#1c1c1c] border border-white/5 hover:bg-white/5'}`}
-                        >
-                          <div className={`w-8 h-8 rounded-md flex items-center justify-center text-sm font-black ${coin.bg} ${coin.color}`}>
-                            {coin.icon}
-                          </div>
-                          <span className={`text-sm font-bold ${selectedCryptoCoin === coin.id ? 'text-white' : 'text-gray-400'}`}>
-                            {coin.name}
-                            {coin.note && <span className="text-[10px] ml-2 text-gray-500 font-medium">({coin.note})</span>}
-                          </span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
                 <button 
                   onClick={() => { setPaymentMethod("balance"); setIsDropdownOpen(false); }}
                   className="w-full px-4 py-3 text-left hover:bg-white/5 transition-colors flex items-center gap-3"

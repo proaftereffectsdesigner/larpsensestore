@@ -14,16 +14,10 @@ export default function TopUpModal() {
   const [amount, setAmount] = useState<number>(10);
   const [rawAmount, setRawAmount] = useState<string>('10');
   const [method, setMethod] = useState<PaymentMethod | null>(null);
-  const [selectedCryptoCoin, setSelectedCryptoCoin] = useState<string | null>(null);
   const [loadingText, setLoadingText] = useState("Initializing secure connection...");
   const [loadingSettings, setLoadingSettings] = useState(true);
   const [settings, setSettings] = useState({ stripe_enabled: true, crypto_enabled: true });
 
-  const CRYPTO_COINS = [
-    { id: 'SOL', name: 'Solana', icon: <SiSolana className="w-5 h-5" />, color: 'text-purple-400', bg: 'bg-purple-500/10' },
-    { id: 'LTC', name: 'Litecoin', icon: <SiLitecoin className="w-5 h-5" />, color: 'text-blue-400', bg: 'bg-blue-500/10' },
-    { id: 'USDT_TON', name: 'Tether USDT', icon: <SiTether className="w-5 h-5" />, color: 'text-emerald-400', bg: 'bg-emerald-500/10', note: 'min €5' },
-  ];
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   useEffect(() => {
@@ -95,12 +89,6 @@ export default function TopUpModal() {
 
     try {
       if (method === 'crypto') {
-        if (!selectedCryptoCoin) {
-          setErrorMsg("Please select a cryptocurrency");
-          setStep(1);
-          return;
-        }
-
         const res = await fetch("/api/create-oxapay-invoice", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -108,7 +96,6 @@ export default function TopUpModal() {
             userId: session.user.id,
             token: session.access_token,
             amount: amount,
-            currency: selectedCryptoCoin,
             type: "topup"
           })
         });
@@ -147,45 +134,7 @@ export default function TopUpModal() {
     }
   };
 
-  // Called directly when user clicks a crypto coin — receives coinId fresh, no stale closure
-  const startPaymentWithCoin = async (coinId: string) => {
-    if (amount < 0.5) return;
-    setErrorMsg(null);
 
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      setErrorMsg("You must be logged in to top up!");
-      return;
-    }
-
-    setStep(2);
-    setLoadingText("Initializing Secure Gateway...");
-
-    try {
-      const res = await fetch("/api/create-oxapay-invoice", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          userId: session.user.id,
-          token: session.access_token,
-          amount: amount,
-          currency: coinId,
-          type: "topup"
-        })
-      });
-
-      const data = await res.json();
-      if (data.url) {
-        window.location.href = data.url;
-      } else {
-        setErrorMsg("Failed to initialize crypto payment: " + (data.error || "Unknown error"));
-        setStep(1);
-      }
-    } catch (err) {
-      setErrorMsg("Error contacting payment gateway.");
-      setStep(1);
-    }
-  };
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 overflow-y-auto">
@@ -288,7 +237,7 @@ export default function TopUpModal() {
                     method === 'crypto' ? 'bg-white/5 border-white/20' : 'bg-[#141414] border-white/5 hover:bg-white/5'
                   }`}>
                     <button 
-                      onClick={() => { if (settings.crypto_enabled) { setMethod('crypto'); if (!selectedCryptoCoin) setSelectedCryptoCoin(CRYPTO_COINS[0].id); } }}
+                      onClick={() => settings.crypto_enabled && setMethod('crypto')}
                       disabled={!settings.crypto_enabled}
                       className="w-full flex items-center justify-between p-4"
                     >
@@ -305,35 +254,6 @@ export default function TopUpModal() {
                         {method === 'crypto' && <div className="w-2.5 h-2.5 bg-amber-400 rounded-full"></div>}
                       </div>
                     </button>
-                    
-                    {method === 'crypto' && (
-                      <div className="p-4 pt-0 border-t border-white/5 animate-in slide-in-from-top-2 duration-300">
-                        <div className="text-xs font-bold text-gray-500 uppercase mb-3 mt-3">Select Currency</div>
-                        <div className="grid grid-cols-2 gap-2">
-                          {CRYPTO_COINS.map(coin => (
-                            <button
-                              key={coin.id}
-                              onClick={() => setSelectedCryptoCoin(coin.id)}
-                              className={`flex items-center gap-3 p-3 rounded-xl transition-all ${selectedCryptoCoin === coin.id ? 'bg-white/10 border border-white/20 shadow-inner' : 'bg-[#0a0a0a] border border-white/5 hover:bg-white/5'}`}
-                            >
-                              <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm font-black ${coin.bg} ${coin.color}`}>
-                                {coin.icon}
-                              </div>
-                            <span className={`text-sm font-bold ${selectedCryptoCoin === coin.id ? 'text-white' : 'text-gray-400'}`}>
-                              {coin.name}
-                              {coin.note && <span className="text-[10px] ml-2 text-gray-500 font-medium">({coin.note})</span>}
-                            </span>
-                            </button>
-                          ))}
-                        </div>
-                        {amount < 5 && selectedCryptoCoin === 'USDT_TON' && (
-                          <div className="mt-4 text-xs font-medium text-emerald-400/90 bg-emerald-400/10 p-3 rounded-xl flex items-center gap-2">
-                            <ShieldAlert className="w-4 h-4 shrink-0" />
-                            Minimum amount for Tether USDT is €5.00
-                          </div>
-                        )}
-                      </div>
-                    )}
                   </div>
                   </>
                   )}
@@ -369,7 +289,7 @@ export default function TopUpModal() {
 
                 <button
                   onClick={startPaymentSimulation}
-                  disabled={amount < 0.50 || (method === 'crypto' && selectedCryptoCoin === 'USDT_TON' && amount < 5)}
+                  disabled={amount < 0.50}
                   className="w-full bg-accent hover:bg-accent/90 text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_20px_rgba(255,255,255,0.1)] hover:shadow-[0_0_30px_rgba(255,255,255,0.2)]"
                 >
                   Confirm Payment <ChevronRight className="w-5 h-5" />

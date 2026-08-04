@@ -82,19 +82,20 @@ export async function POST(req: Request) {
     const oxapayPayload: any = {
       amount: totalAmount,
       currency: "EUR",
-      order_id: orderId,
+      orderId: orderId,
       description: description,
-      callback_url: `${baseUrl}/api/webhook/oxapay`,
+      lifeTime: 60,
+      callbackUrl: `${baseUrl}/api/webhook/oxapay`,
     };
 
     if (currency) {
-        oxapayPayload.to_currency = currency; 
+        oxapayPayload.toCurrency = currency; 
     }
 
     if (type === "product_checkout") {
-      oxapayPayload.return_url = `${baseUrl}/dashboard?order=success`;
+      oxapayPayload.returnUrl = `${baseUrl}/dashboard?order=success`;
     } else {
-      oxapayPayload.return_url = `${baseUrl}/dashboard`;
+      oxapayPayload.returnUrl = `${baseUrl}/dashboard`;
     }
 
     const oxapayRes = await fetch("https://api.oxapay.com/v1/payment/invoice", {
@@ -112,7 +113,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ url: oxapayData.payLink });
     } else {
       console.error("OxaPay Invoice Error:", oxapayData);
-      const errorMsg = oxapayData?.message || "Failed to create crypto invoice";
+      let errorMsg = oxapayData?.message || "Failed to create crypto invoice";
+      if (oxapayData?.errors) {
+         errorMsg += " " + JSON.stringify(oxapayData.errors);
+      }
       return NextResponse.json({ error: errorMsg }, { status: 500 });
     }
 

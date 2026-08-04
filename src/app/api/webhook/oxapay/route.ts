@@ -52,7 +52,7 @@ export async function POST(req: Request) {
 
     const status = data.status; // 'Paid', 'Expired', etc.
     const txnId = data.trackId; // OxaPay uses trackId as the transaction ID.
-    const orderNumber = data.order_id;
+    const orderNumber = data.orderId || data.order_id;
     const amountStr = data.amount;
 
     if (!orderNumber || !txnId) {

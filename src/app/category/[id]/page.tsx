@@ -474,7 +474,7 @@ export default function CategoryPage() {
                   <CreditCard className="w-5 h-5 text-gray-400" />
                 </div>
                 <div>
-                  <div className={`font-bold text-sm ${paymentMethod === "polar" ? "text-white" : "text-gray-400"}`}>Debit / Credit Card</div>
+                  <div className={`font-bold text-sm ${paymentMethod === "polar" ? "text-white" : settings.stripe_enabled ? "text-white" : "text-gray-400"}`}>Debit / Credit Card</div>
                   <div className="text-xs text-gray-500">{!settings.stripe_enabled ? 'Temporarily disabled' : 'Mastercard, Visa, Apple Pay etc.'} <span className="text-indigo-400 font-bold">{settings.stripe_enabled ? '(3.5% + €0.30 fee)' : ''}</span></div>
                 </div>
               </button>
@@ -488,10 +488,10 @@ export default function CategoryPage() {
                 >
                   <div className="flex items-center gap-3">
                     <div className={`flex items-center justify-center w-10 h-10 rounded-lg shrink-0 ${paymentMethod === "crypto" ? "bg-amber-500/10" : "bg-[#141414] border border-white/5"}`}>
-                      <SiBitcoin className={`w-5 h-5 ${paymentMethod === "crypto" ? "text-amber-400" : "text-gray-400"}`} />
+                      <SiBitcoin className={`w-5 h-5 ${paymentMethod === "crypto" ? "text-amber-400" : settings.crypto_enabled ? "text-amber-400" : "text-gray-400"}`} />
                     </div>
                     <div>
-                      <div className={`font-bold text-sm ${paymentMethod === "crypto" ? "text-white" : "text-gray-400"}`}>Cryptocurrency</div>
+                      <div className={`font-bold text-sm ${paymentMethod === "crypto" ? "text-white" : settings.crypto_enabled ? "text-white" : "text-gray-400"}`}>Cryptocurrency</div>
                       <div className="text-xs text-gray-500">
                         {!settings.crypto_enabled ? 'Temporarily disabled' : 'Pay via OxaPay'} <span className="text-amber-400 font-bold">{settings.crypto_enabled ? '(0.5% fee)' : ''}</span>
                       </div>

@@ -46,22 +46,25 @@ export async function GET() {
     // Transform the array from NFA API to the nested object format expected by the frontend
     // Note: The real API returns `products` instead of `stock` and uses `stock` instead of `available`.
     const items = data.products || data.stock;
+    const formattedStock: Record<string, Record<string, any>> = {};
     if (items && Array.isArray(items)) {
-      const formattedStock: Record<string, Record<string, any>> = {};
       items.forEach((item: any) => {
         if (!item.endpoint || !item.type) return;
         if (!formattedStock[item.endpoint]) {
           formattedStock[item.endpoint] = {};
         }
+        // ONLY expose the available count to prevent leaking wholesale cost prices
         formattedStock[item.endpoint][item.type] = {
-          available: item.stock !== undefined ? item.stock : item.available,
-          price_eur: item.unit_price_eur !== undefined ? item.unit_price_eur : item.price_eur
+          available: item.stock !== undefined ? item.stock : item.available
         };
       });
-      data.stock = formattedStock;
     }
 
-    return NextResponse.json(data);
+    // Return a clean object without wholesale data
+    return NextResponse.json({
+      ok: true,
+      stock: formattedStock
+    });
   } catch (err) {
     console.error("NFA API fetch failed:", err);
     return NextResponse.json(mockFallback);

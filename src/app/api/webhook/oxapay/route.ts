@@ -67,42 +67,33 @@ export async function POST(req: Request) {
 
     // We already verified via reverse call above that status is Paid.
 
-    let type = "TOPUP";
-    let userId = "";
-    let amountPaid = 0; // We will extract it from orderNumber
-    let productId = "";
-    let quantity = 1;
+    const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE);
 
-    const orderParts = orderNumber.split('_');
-    if (orderParts[0] === "PROD") {
-      type = "PROD";
-      userId = orderParts[1];
-      amountPaid = Number(orderParts[3]);
-      productId = orderParts[4];
-      quantity = Number(orderParts[5] || 1);
-    } else if (orderParts[0] === "TOPUP") {
-      type = "TOPUP";
-      userId = orderParts[1];
-      amountPaid = Number(orderParts[3]);
-    } else {
-      return NextResponse.json({ error: "Invalid order format" }, { status: 400 });
+    // Fetch the pending order using the orderNumber (which is now a 36-char UUID)
+    const { data: pendingOrder } = await supabaseAdmin
+      .from("orders")
+      .select("*")
+      .eq("id", orderNumber)
+      .single();
+
+    if (!pendingOrder) {
+      console.error("OxaPay webhook: Pending order not found", orderNumber);
+      return NextResponse.json({ error: "Order not found" }, { status: 404 });
     }
+
+    // Idempotency check: if order is not pending, it was already processed
+    if (pendingOrder.status !== "pending") {
+      return new NextResponse("ok", { status: 200 });
+    }
+
+    const type = pendingOrder.product_id === "topup" ? "TOPUP" : "PROD";
+    const userId = pendingOrder.user_id;
+    const amountPaid = Number(pendingOrder.total_price);
+    const productId = pendingOrder.product_id;
+    const quantity = Number(pendingOrder.quantity);
 
     if (isNaN(amountPaid) || amountPaid <= 0) {
       return NextResponse.json({ error: "Invalid amount" }, { status: 400 });
-    }
-
-    const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE);
-
-    // Idempotency check via accounts_data containing txnId
-    const { data: existingTx } = await supabaseAdmin
-      .from("orders")
-      .select("id")
-      .like("accounts_data", `%${txnId}%`)
-      .limit(1);
-
-    if (existingTx && existingTx.length > 0) {
-      return new NextResponse("ok", { status: 200 });
     }
 
     if (type === "TOPUP") {
@@ -119,16 +110,14 @@ export async function POST(req: Request) {
           .update({ balance: newBalance })
           .eq("id", userId);
 
+        // Update the existing pending order instead of inserting a new one
         await supabaseAdmin
           .from("orders")
-          .insert({
-            user_id: userId,
-            product_id: "topup",
-            quantity: 1,
-            total_price: amountPaid,
+          .update({
             status: "completed",
             accounts_data: `Balance Top-up (Crypto) [${txnId}]`
-          });
+          })
+          .eq("id", orderNumber);
       }
     } else if (type === "PROD") {
       const { products } = await import("@/lib/products");
@@ -155,16 +144,14 @@ export async function POST(req: Request) {
       }
 
       if (fulfilled) {
+        // Update the pending order to completed and attach account details
         await supabaseAdmin
           .from("orders")
-          .insert({
-            user_id: userId,
-            product_id: productId,
-            quantity: quantity,
-            total_price: amountPaid,
+          .update({
             status: "completed",
             accounts_data: `${accountsStr}\n\n[OxaPay Txn: ${txnId}]`,
-          });
+          })
+          .eq("id", orderNumber);
       } else {
         // Refund
         const { data: profile } = await supabaseAdmin
@@ -180,16 +167,14 @@ export async function POST(req: Request) {
             .update({ balance: newBalance })
             .eq("id", userId);
 
+          // Update the pending order to refunded due to out-of-stock
           await supabaseAdmin
             .from("orders")
-            .insert({
-              user_id: userId,
-              product_id: productId,
-              quantity: quantity,
-              total_price: amountPaid,
+            .update({
               status: "refunded",
               accounts_data: `Refund — out of stock [Txn: ${txnId}]`,
-            });
+            })
+            .eq("id", orderNumber);
         }
       }
     }

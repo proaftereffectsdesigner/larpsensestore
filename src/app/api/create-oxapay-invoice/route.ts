@@ -68,21 +68,37 @@ export async function POST(req: Request) {
     const cryptoFee = Number((amount * feeMultiplier).toFixed(2));
     const totalAmount = amount + cryptoFee;
 
-    const timestamp = Date.now();
-    const orderId = type === "product_checkout" 
-      ? `PROD_${userId}_${timestamp}_${amount}_${productId}_${quantity}`
-      : `TOPUP_${userId}_${timestamp}_${amount}`;
-    
-    const baseUrl = new URL(req.url).origin;
-
     let description = type === "product_checkout" 
       ? `LarpSense Store - Product Purchase (x${quantity})` 
       : "LarpSense Balance Top-up";
 
+    // Create a pending order in Supabase BEFORE calling OxaPay. 
+    // This gives us a 36-character UUID, safely under OxaPay's 50-character limit for orderId,
+    // avoiding string truncation and loss of metadata during the webhook.
+    const { data: pendingOrder, error: insertError } = await supabaseAdmin
+      .from("orders")
+      .insert({
+        user_id: userId,
+        product_id: type === "product_checkout" ? productId : "topup",
+        quantity: quantity,
+        total_price: totalAmount, // Requesting exact crypto checkout value including fee
+        status: "pending",
+        accounts_data: "Pending OxaPay Payment"
+      })
+      .select("id")
+      .single();
+
+    if (insertError || !pendingOrder) {
+      console.error("Failed to create pending order", insertError);
+      return NextResponse.json({ error: "Failed to initialize payment" }, { status: 500 });
+    }
+    
+    const baseUrl = new URL(req.url).origin;
+
     const oxapayPayload: any = {
       amount: totalAmount,
       currency: "EUR",
-      orderId: orderId,
+      orderId: pendingOrder.id,
       description: description,
       lifeTime: 60,
       callbackUrl: `${baseUrl}/api/webhook/oxapay`,

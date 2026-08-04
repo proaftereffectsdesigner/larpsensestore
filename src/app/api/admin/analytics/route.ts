@@ -16,10 +16,16 @@ export async function GET(request: Request) {
     
     let startDate = new Date();
     startDate.setDate(startDate.getDate() - 30);
+    let endDate = new Date();
     let isHourly = false;
     
     if (daysParam === 'custom' && fromParam && toParam) {
       startDate = new Date(fromParam);
+      endDate = new Date(toParam);
+      endDate.setHours(23, 59, 59, 999);
+      if (fromParam === toParam) {
+        isHourly = true;
+      }
     } else if (daysParam === 'all') {
       startDate = new Date('2026-07-29T00:00:00.000Z');
     } else if (daysParam === 'today') {
@@ -30,6 +36,8 @@ export async function GET(request: Request) {
       startDate = new Date();
       startDate.setDate(startDate.getDate() - (parseInt(daysParam, 10) || 30));
     }
+      startDate.setDate(startDate.getDate() - (parseInt(daysParam, 10) || 30));
+    }
 
     const launchDate = new Date('2026-07-29T00:00:00.000Z');
     if (startDate < launchDate) {
@@ -37,17 +45,18 @@ export async function GET(request: Request) {
     }
 
     const startISO = startDate.toISOString();
+    const endISO = endDate.toISOString();
 
     // 1. Fetch Orders (Revenue, Top Products, Conversion)
-    const { data: ordersData, error: ordersError } = await supabaseAdmin.from('orders').select('user_id, created_at, total_price, product_id, status').gte('created_at', startISO);
+    const { data: ordersData, error: ordersError } = await supabaseAdmin.from('orders').select('user_id, created_at, total_price, product_id, status').gte('created_at', startISO).lte('created_at', endISO);
     if (ordersError) return NextResponse.json({ success: false, error: `Orders Error: ${ordersError.message}` });
     
     // 2. Fetch Traffic (Page Views, Unique Users, Devices, Top Pages, Traffic Chart)
-    const { data: trafficData, error: trafficError } = await supabaseAdmin.from('page_views').select('created_at, session_id, path, device_type, ip_address, referer').gte('created_at', startISO);
+    const { data: trafficData, error: trafficError } = await supabaseAdmin.from('page_views').select('created_at, session_id, path, device_type, ip_address, referer').gte('created_at', startISO).lte('created_at', endISO);
     if (trafficError) return NextResponse.json({ success: false, error: `Traffic Error: ${trafficError.message}` });
 
     // 3. Fetch Checkouts (Abandonment Rate)
-    const { data: checkoutData } = await supabaseAdmin.from('checkout_sessions').select('status, created_at').gte('created_at', startISO);
+    const { data: checkoutData } = await supabaseAdmin.from('checkout_sessions').select('status, created_at').gte('created_at', startISO).lte('created_at', endISO);
 
     // 4. Fetch Recent Activity
     const { data: recentLogins } = await supabaseAdmin.from('login_activity').select('action, created_at, profiles(email), ip_address').order('created_at', { ascending: false }).limit(5);
@@ -179,8 +188,8 @@ export async function GET(request: Request) {
     const chartMap: Record<string, { pageviews: number, uniques: Set<string>, orders: number, revenue: number }> = {};
     
     let iterator = new Date(startDate);
-    const end = new Date();
-    while (iterator <= end) {
+    // Boundary protection for hourly chart
+    while (iterator <= endDate) {
       let key = '';
       if (isHourly) {
         key = iterator.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });

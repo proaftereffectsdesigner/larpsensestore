@@ -35,11 +35,29 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
       .from('profiles')
       .select('is_private')
       .eq('id', userId)
-      .single();
+    const is_private = profileRow?.is_private || false;
+    let profileData = Array.isArray(data) ? data[0] : data;
 
-    const profileData = Array.isArray(data) ? data[0] : data;
+    // Mask private profiles from public view
+    if (is_private) {
+      const token = req.headers.get("authorization")?.replace("Bearer ", "");
+      let isOwner = false;
+      if (token) {
+        const supabaseAuth = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+          global: { headers: { Authorization: `Bearer ${token}` } }
+        });
+        const { data: { user } } = await supabaseAuth.auth.getUser();
+        if (user?.id === userId) {
+          isOwner = true;
+        }
+      }
+      if (!isOwner) {
+        // Strip out sensitive details for everyone else
+        profileData = { id: userId };
+      }
+    }
 
-    return NextResponse.json({ ...(profileData || {}), is_private: profileRow?.is_private || false });
+    return NextResponse.json({ ...(profileData || {}), is_private });
   } catch (err) {
     return NextResponse.json({ error: "Internal error" }, { status: 500 });
   }

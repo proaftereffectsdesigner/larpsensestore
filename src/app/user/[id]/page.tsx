@@ -28,22 +28,27 @@ export default function PublicProfile() {
     const fetchProfile = async () => {
       if (!id) return;
       
+      let sessionToken = null;
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        setIsLoggedIn(true);
+        sessionToken = session.access_token;
+        if (session.user?.id === id) {
+          setIsOwner(true);
+        }
+      }
+
       try {
-        const response = await fetch(`/api/users/${id}`, { cache: 'no-store' });
+        const headers: Record<string, string> = {};
+        if (sessionToken) headers['Authorization'] = `Bearer ${sessionToken}`;
+        
+        const response = await fetch(`/api/users/${id}`, { cache: 'no-store', headers });
         if (response.ok) {
           const data = await response.json();
           setProfile(data);
         }
       } catch (err) {
         console.error("Failed to fetch profile API", err);
-      }
-      
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        setIsLoggedIn(true);
-        if (session.user?.id === id) {
-          setIsOwner(true);
-        }
       }
       
       setLoading(false);

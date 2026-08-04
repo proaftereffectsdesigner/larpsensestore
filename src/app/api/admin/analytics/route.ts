@@ -22,7 +22,13 @@ export async function GET(request: Request) {
     if (daysParam === 'custom' && fromParam && toParam) {
       startDate = new Date(fromParam);
       endDate = new Date(toParam);
-      endDate.setHours(23, 59, 59, 999);
+      if (fromParam === toParam) {
+        // Extend to exactly 00:00 of the next day so the 24h chart completes at midnight
+        endDate.setDate(endDate.getDate() + 1);
+        endDate.setHours(0, 0, 0, 0);
+      } else {
+        endDate.setHours(23, 59, 59, 999);
+      }
     } else if (daysParam === 'all') {
       startDate = new Date('2026-07-29T00:00:00.000Z');
     } else if (daysParam === 'today') {
@@ -203,7 +209,10 @@ export async function GET(request: Request) {
         d.setHours(Math.floor(d.getHours() / 12) * 12, 0, 0, 0);
         return `${d.getDate()}/${d.getMonth()+1} ${d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}`;
       }
-      if (interval === 'month') return d.toISOString().substring(0, 7);
+      if (interval === 'month') {
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        return `${months[d.getMonth()]} ${d.getFullYear()}`;
+      }
       return d.toISOString().split('T')[0];
     }
 

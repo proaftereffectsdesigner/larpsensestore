@@ -379,9 +379,12 @@ export default function AnalyticsDashboard() {
                       <button onClick={() => setSelectedOrders(null)} className="text-gray-400 hover:text-white transition-colors text-sm px-3 py-1 bg-white/5 rounded-lg border border-white/10">Zamknij</button>
                     </div>
                     
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
+                    <div 
+                      className="grid grid-rows-2 gap-4 pb-4 overflow-x-auto snap-x snap-mandatory custom-scrollbar" 
+                      style={{ gridAutoFlow: 'column', gridAutoColumns: 'minmax(280px, calc(33.333% - 11px))' }}
+                    >
                       {selectedOrders.map((ro: any, idx: number) => (
-                        <div key={idx} className="bg-black/50 border border-white/5 rounded-xl p-4 flex flex-col gap-3 hover:border-emerald-500/30 transition-colors">
+                        <div key={idx} className="snap-start bg-black/50 border border-white/5 rounded-xl p-4 flex flex-col gap-3 hover:border-emerald-500/30 transition-colors">
                           <div className="flex justify-between items-start">
                             <div>
                               <span className="text-2xl font-black text-emerald-400 block leading-none">€{ro.price}</span>

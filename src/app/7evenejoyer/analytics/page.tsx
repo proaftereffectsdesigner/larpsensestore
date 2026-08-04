@@ -50,6 +50,8 @@ export default function AnalyticsDashboard() {
   const [realtimeUsers, setRealtimeUsers] = useState<number>(0);
   const [isExporting, setIsExporting] = useState(false);
   const [exportSuccess, setExportSuccess] = useState(false);
+  const [selectedOrders, setSelectedOrders] = useState<any[] | null>(null);
+  const [selectedDateLabel, setSelectedDateLabel] = useState<string>("");
 
   useEffect(() => {
     const fetchAnalytics = async () => {
@@ -76,7 +78,8 @@ export default function AnalyticsDashboard() {
         }
 
         const res = await fetch(url, {
-          headers: { Authorization: `Bearer ${session.access_token}` }
+          headers: { Authorization: `Bearer ${session.access_token}` },
+          cache: 'no-store'
         });
 
         const json = await res.json();
@@ -176,7 +179,7 @@ export default function AnalyticsDashboard() {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
-        <div className="bg-[#111] border border-white/10 p-4 rounded-xl shadow-2xl z-50 relative min-w-[220px]">
+        <div className="bg-[#111] border border-white/10 p-4 rounded-xl shadow-2xl z-50 relative min-w-[200px]">
           <p className="text-gray-400 text-xs font-bold uppercase tracking-widest mb-3 pb-2 border-b border-white/5">{label}</p>
           <div className="flex flex-col gap-2">
             <div className="flex justify-between items-center gap-6">
@@ -188,26 +191,8 @@ export default function AnalyticsDashboard() {
               <span className="text-white font-bold text-sm">{data.orders}</span>
             </div>
           </div>
-          
           {data.rawOrders && data.rawOrders.length > 0 && (
-            <div className="mt-4 pt-3 border-t border-white/5 flex flex-col gap-2">
-              <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mb-2 flex items-center">
-                <ChevronDown className="w-3 h-3 mr-1" /> Szczegóły Zakupów
-              </p>
-              {data.rawOrders.map((ro: any, idx: number) => (
-                <div key={idx} className="flex flex-col bg-white/5 border border-white/5 rounded-lg p-2 gap-1.5">
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs font-bold text-emerald-400">€{ro.price}</span>
-                    <span className="text-[10px] text-gray-400 font-mono">{ro.time}</span>
-                  </div>
-                  <div className="text-[11px] text-white/80 font-medium truncate" title={ro.email}>{ro.email}</div>
-                  <div className="flex justify-between items-center text-[10px] text-gray-500 mt-1">
-                    <span className="uppercase text-white/50 tracking-wider truncate max-w-[110px]" title={ro.product}>{ro.product}</span>
-                    <span className="bg-white/10 px-1.5 py-0.5 rounded text-[9px]">{ro.method}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
+            <p className="text-[10px] text-gray-500 font-medium mt-3 text-center opacity-70">Kliknij kropkę na wykresie, aby zobaczyć szczegóły zamówień.</p>
           )}
         </div>
       );
@@ -328,7 +313,22 @@ export default function AnalyticsDashboard() {
                   </h3>
                   <div className="h-[400px] w-full">
                     <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart data={data.advanced.revenueChart} margin={{ top: 20, right: 0, left: -20, bottom: 0 }}>
+                      <AreaChart 
+                        data={data.advanced.revenueChart}
+                        onClick={(e: any) => {
+                          if (e && e.activePayload && e.activePayload.length > 0) {
+                            const payloadData = e.activePayload[0].payload;
+                            if (payloadData.rawOrders && payloadData.rawOrders.length > 0) {
+                              setSelectedOrders(payloadData.rawOrders);
+                              setSelectedDateLabel(payloadData.date);
+                              setTimeout(() => document.getElementById('details-panel')?.scrollIntoView({ behavior: 'smooth' }), 100);
+                            } else {
+                              setSelectedOrders(null);
+                            }
+                          }
+                        }}
+                        margin={{ top: 20, right: 0, left: -20, bottom: 0 }}
+                      >
                         <defs>
                           <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
                             <stop offset="5%" stopColor="#10b981" stopOpacity={0.4}/>
@@ -339,11 +339,52 @@ export default function AnalyticsDashboard() {
                         <XAxis dataKey="date" stroke="#71717a" fontSize={11} tickMargin={15} tickLine={false} axisLine={false} tickFormatter={(val) => { if (typeof val === 'string' && val.includes(' ')) return val; const d = new Date(val); return `${d.getDate()}/${d.getMonth()+1}`; }} />
                         <YAxis stroke="#71717a" fontSize={11} axisLine={false} tickLine={false} tickFormatter={(val) => `€${val}`} />
                         <RechartsTooltip cursor={{ stroke: 'rgba(255,255,255,0.1)', strokeWidth: 1, strokeDasharray: '3 3' }} content={<RevenueTooltip />} />
-                        <Area type="monotone" dataKey="revenue" name="Przychód" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorRevenue)" activeDot={{ r: 6, fill: '#10b981', stroke: '#fff', strokeWidth: 2 }} />
+                        <Area type="monotone" dataKey="revenue" name="Przychód" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorRevenue)" activeDot={{ r: 6, fill: '#10b981', stroke: '#fff', strokeWidth: 2, cursor: 'pointer' }} />
                       </AreaChart>
                     </ResponsiveContainer>
                   </div>
                 </div>
+
+                {/* Click-to-reveal Details Panel */}
+                {selectedOrders && (
+                  <div id="details-panel" className="bg-[#111] border border-white/10 p-6 rounded-2xl animate-in fade-in zoom-in duration-300">
+                    <div className="flex justify-between items-center mb-6">
+                      <h3 className="text-white font-bold text-lg flex items-center">
+                        Szczegóły Zamówień <span className="ml-3 px-3 py-1 bg-emerald-500/20 text-emerald-400 rounded-full text-xs">{selectedDateLabel}</span>
+                      </h3>
+                      <button onClick={() => setSelectedOrders(null)} className="text-gray-400 hover:text-white transition-colors text-sm px-3 py-1 bg-white/5 rounded-lg border border-white/10">Zamknij</button>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
+                      {selectedOrders.map((ro: any, idx: number) => (
+                        <div key={idx} className="bg-black/50 border border-white/5 rounded-xl p-4 flex flex-col gap-3 hover:border-emerald-500/30 transition-colors">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <span className="text-2xl font-black text-emerald-400 block leading-none">€{ro.price}</span>
+                              <span className="text-xs text-gray-500 font-mono mt-1 block">{ro.time}</span>
+                            </div>
+                            <div className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-1 rounded text-[10px] font-bold tracking-widest uppercase">
+                              Sukces
+                            </div>
+                          </div>
+                          
+                          <div className="h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent my-1"></div>
+                          
+                          <div className="flex flex-col gap-2">
+                            <div className="flex items-center gap-2">
+                              <Users className="w-4 h-4 text-gray-500" />
+                              <span className="text-sm font-medium text-white/90 truncate" title={ro.email}>{ro.email}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <CreditCard className="w-4 h-4 text-gray-500" />
+                              <span className="text-sm text-gray-400 truncate uppercase" title={ro.product}>{ro.product}</span>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {/* Countries and Customer Types */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

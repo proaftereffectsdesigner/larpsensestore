@@ -7,21 +7,7 @@ const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const SUPABASE_SERVICE_ROLE = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 const OXAPAY_MERCHANT_KEY = process.env.OXAPAY_MERCHANT_KEY;
 
-function verifyOxaPayWebhook(rawBody: string, receivedHmac: string, apiKey: string): boolean {
-  try {
-    const calculatedHmac = crypto
-      .createHmac("sha512", apiKey)
-      .update(rawBody)
-      .digest("hex");
-      
-    return crypto.timingSafeEqual(
-      Buffer.from(calculatedHmac), 
-      Buffer.from(receivedHmac)
-    );
-  } catch (e) {
-    return false;
-  }
-}
+// removed local verifyOxaPayWebhook function
 
 export async function POST(req: Request) {
   try {
@@ -36,36 +22,48 @@ export async function POST(req: Request) {
     }
 
     const rawBody = await req.text();
-    const receivedHmac = req.headers.get("HMAC") || req.headers.get("hmac");
-
-    if (!receivedHmac) {
-      console.warn("OxaPay webhook: missing HMAC header");
-      return NextResponse.json({ error: "Missing signature" }, { status: 400 });
+    let data: any;
+    try {
+      data = JSON.parse(rawBody);
+    } catch (e) {
+      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
     }
 
-    if (!verifyOxaPayWebhook(rawBody, receivedHmac, OXAPAY_MERCHANT_KEY)) {
-      console.warn("OxaPay webhook: invalid signature from IP", ip);
-      return NextResponse.json({ error: "Invalid signature" }, { status: 403 });
-    }
-
-    const data = JSON.parse(rawBody);
-
-    const status = data.status; // 'Paid', 'Expired', etc.
-    const txnId = data.trackId; // OxaPay uses trackId as the transaction ID.
+    const txnId = data.trackId || data.track_id; 
     const orderNumber = data.orderId || data.order_id;
-    const amountStr = data.amount;
 
     if (!orderNumber || !txnId) {
+      console.warn("OxaPay webhook: Missing order metadata", data);
       return NextResponse.json({ error: "Missing order metadata" }, { status: 400 });
     }
 
-    if (status !== "Paid") {
-      return new NextResponse("ok", { status: 200 });
+    // Reverse Verification: Ask OxaPay API about this trackId to guarantee it's Paid
+    try {
+      const verifyRes = await fetch("https://api.oxapay.com/v1/payment/paymentInfo", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "merchant_api_key": OXAPAY_MERCHANT_KEY
+        },
+        body: JSON.stringify({ trackId: txnId, merchant_api_key: OXAPAY_MERCHANT_KEY })
+      });
+      const verifyData = await verifyRes.json();
+      
+      const realStatus = verifyData?.data?.status || verifyData?.status;
+      if (realStatus !== "Paid") {
+        console.warn(`OxaPay webhook: verified status is ${realStatus}, ignoring.`);
+        return new NextResponse("ok", { status: 200 });
+      }
+    } catch (verifyErr) {
+      console.error("OxaPay webhook: Reverse verification failed", verifyErr);
+      return NextResponse.json({ error: "Verification failed" }, { status: 500 });
     }
+
+    // We already verified via reverse call above that status is Paid.
 
     let type = "TOPUP";
     let userId = "";
-    let amountPaid = Number(amountStr);
+    let amountPaid = 0; // We will extract it from orderNumber
     let productId = "";
     let quantity = 1;
 

@@ -222,7 +222,7 @@ export default function TopUpModal() {
                         <CreditCard className="w-5 h-5 text-gray-400" />
                       </div>
                       <div className="text-left">
-                        <div className={`font-bold text-sm ${method === 'card' ? 'text-white' : 'text-gray-300'}`}>Debit / Credit Card</div>
+                        <div className={`font-bold text-sm ${method === 'card' ? 'text-white' : settings.stripe_enabled ? 'text-white' : 'text-gray-400'}`}>Debit / Credit Card</div>
                         <div className="text-[11px] text-gray-500 font-medium">{!settings.stripe_enabled ? 'Temporarily disabled' : 'Mastercard, Visa, Apple Pay etc.'} <span className="text-indigo-400 font-bold">(3.5% + €0.30 fee)</span></div>
                       </div>
                     </div>
@@ -246,8 +246,8 @@ export default function TopUpModal() {
                           <SiBitcoin className="w-5 h-5 text-amber-400" />
                         </div>
                         <div className="text-left">
-                          <div className={`font-bold text-sm ${method === 'crypto' ? 'text-white' : 'text-gray-300'}`}>Cryptocurrency</div>
-                          <div className="text-[11px] text-gray-500 font-medium">{!settings.crypto_enabled ? 'Temporarily disabled' : 'SOL, LTC, USDT'} <span className="text-amber-400 font-bold">(0.5% fee)</span></div>
+                          <div className={`font-bold text-sm ${method === 'crypto' ? 'text-white' : settings.crypto_enabled ? 'text-white' : 'text-gray-400'}`}>Cryptocurrency</div>
+                          <div className="text-[11px] text-gray-500 font-medium">{!settings.crypto_enabled ? 'Temporarily disabled' : 'Pay via OxaPay'} <span className="text-amber-400 font-bold">{settings.crypto_enabled ? '(0.5% fee)' : ''}</span></div>
                         </div>
                       </div>
                       <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${method === 'crypto' ? 'border-amber-400' : 'border-gray-600'}`}>

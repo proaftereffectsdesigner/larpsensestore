@@ -1230,7 +1230,12 @@ function DashboardContent() {
                       // In the future, you can add an `icon` field to `products` and do: const Icon = pInfo?.icon || Gamepad;
                       const ProductIcon = Gamepad;
                       
-                      const accounts = order.accounts_data ? order.accounts_data.split(/\\n|\n/) : [];
+                      const accounts = order.accounts_data
+                        ? order.accounts_data
+                            .split(/\\n|\n/)
+                            .map((t: string) => t.trim())
+                            .filter((t: string) => t.length > 0 && !t.startsWith('[') && t.includes(':'))
+                        : [];
                       
                       return (
                         <Link href={`/order/${order.id}`} key={order.id} className="block bg-[#0a0a0a] border border-white/5 rounded-2xl p-6 relative group overflow-hidden hover:border-white/10 hover:shadow-xl transition-all cursor-pointer">

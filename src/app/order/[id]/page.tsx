@@ -191,7 +191,12 @@ export default function OrderDetails() {
       }
 
         setOrder(data);
-        const splitAccounts = data.accounts_data ? data.accounts_data.split(/\\n|\n/) : [];
+        const splitAccounts = data.accounts_data
+          ? data.accounts_data
+              .split(/\\n|\n/)
+              .map((t: string) => t.trim())
+              .filter((t: string) => t.length > 0 && !t.startsWith('[') && t.includes(':'))
+          : [];
         setAccounts(splitAccounts.map((token: string, idx: number) => ({
           id: idx + 1,
           token
@@ -373,7 +378,12 @@ export default function OrderDetails() {
                         supabase.from('orders').select('*').eq('id', id as string).single().then(({data}) => {
                           if (data) {
                             setOrder(data);
-                            const splitAccounts = data.accounts_data ? data.accounts_data.split(/\\n|\n/) : [];
+                            const splitAccounts = data.accounts_data
+                              ? data.accounts_data
+                                  .split(/\\n|\n/)
+                                  .map((t: string) => t.trim())
+                                  .filter((t: string) => t.length > 0 && !t.startsWith('[') && t.includes(':'))
+                              : [];
                             setAccounts(splitAccounts.map((token: string, i: number) => ({
                               id: i + 1,
                               token

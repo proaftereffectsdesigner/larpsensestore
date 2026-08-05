@@ -471,7 +471,7 @@ export default function ProductPage() {
         onClose={() => setCryptoPaymentData(null)}
         onSuccess={() => {
           setCryptoPaymentData(null);
-          router.push(`/dashboard/orders/${cryptoPaymentData.orderId}`);
+          router.push(`/order/${cryptoPaymentData.orderId}`);
         }}
       />
     )}

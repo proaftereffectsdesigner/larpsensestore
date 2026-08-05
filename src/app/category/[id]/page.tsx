@@ -765,7 +765,7 @@ export default function CategoryPage() {
         onClose={() => setCryptoPaymentData(null)}
         onSuccess={() => {
           setCryptoPaymentData(null);
-          router.push(`/dashboard/orders/${cryptoPaymentData.orderId}`);
+          router.push(`/order/${cryptoPaymentData.orderId}`);
         }}
       />
     )}

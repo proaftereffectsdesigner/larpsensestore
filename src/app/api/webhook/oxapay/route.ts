@@ -55,13 +55,12 @@ export async function POST(req: Request) {
 
     // [SECURITY DOUBLE-CHECK]: Verify with OxaPay API to prevent spoofing since HMAC is off
     try {
-      const verifyRes = await fetch("https://api.oxapay.com/v1/payment/inquiry", {
+      const verifyRes = await fetch("https://api.oxapay.com/merchants/inquiry", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
-          "merchant_api_key": OXAPAY_MERCHANT_KEY
+          "Content-Type": "application/json"
         },
-        body: JSON.stringify({ trackId: txnId })
+        body: JSON.stringify({ merchant: OXAPAY_MERCHANT_KEY, trackId: txnId })
       });
       const verifyData = await verifyRes.json();
       

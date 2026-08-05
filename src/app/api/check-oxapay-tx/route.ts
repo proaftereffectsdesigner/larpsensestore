@@ -17,7 +17,7 @@ export async function POST(req: Request) {
     }
 
     // Ping OxaPay API to check transaction status
-    const inquiryRes = await fetch("https://api.oxapay.com/v1/payment/inquiry", {
+    const inquiryRes = await fetch("https://api.oxapay.com/merchants/inquiry", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"

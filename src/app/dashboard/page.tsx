@@ -707,8 +707,9 @@ function DashboardContent() {
     );
   }
 
-  const totalSpent = orders.reduce((acc, order) => acc + Number(order.total_price), 0);
-  const totalOrders = orders.length;
+  const completedOrders = orders.filter((o: any) => o.status === 'completed');
+  const totalSpent = completedOrders.reduce((acc: any, order: any) => acc + Number(order.total_price), 0);
+  const totalOrders = completedOrders.length;
   const isGoogleLogin = user?.app_metadata?.provider === 'google' || user?.app_metadata?.providers?.includes('google');
 
   const accountAgeDays = Math.floor((new Date().getTime() - new Date(user.created_at || new Date()).getTime()) / (1000 * 3600 * 24));
@@ -1271,7 +1272,15 @@ function DashboardContent() {
                             <div className="flex items-center gap-4 sm:gap-6 bg-white/5 px-4 py-3 rounded-xl border border-white/5">
                               <div className="hidden sm:block text-right">
                                 <div className="text-[10px] uppercase text-gray-500 font-bold mb-0.5 tracking-widest">Payment</div>
-                                <div className="text-sm font-semibold text-gray-300">Balance</div>
+                                <div className="text-sm font-semibold text-gray-300">
+                                  {order.product_id === 'topup' 
+                                    ? 'Crypto' 
+                                    : order.accounts_data?.toLowerCase().includes('oxapay') || order.accounts_data?.toLowerCase().includes('crypto') 
+                                      ? 'Crypto' 
+                                      : order.accounts_data?.toLowerCase().includes('stripe') 
+                                        ? 'Stripe' 
+                                        : 'Balance'}
+                                </div>
                               </div>
                               <div className="w-px h-8 bg-white/10 hidden sm:block"></div>
                               <div className="text-right">

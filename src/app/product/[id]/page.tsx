@@ -150,6 +150,12 @@ export default function ProductPage() {
       const token = session?.access_token;
 
       if (paymentMethod === "crypto") {
+        if (paymentMethod === 'crypto' && !selectedCryptoCoin) {
+          alert("Please select a cryptocurrency.");
+          setLoadingCheckout(false);
+          return;
+        }
+
         const res = await fetch("/api/create-oxapay-invoice", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -328,6 +334,59 @@ export default function ProductPage() {
               </div>
             )}</div>
         </div>
+        
+        {/* Sekcja Wyboru Krypto */}
+        {paymentMethod === 'crypto' && (
+          <div className="mb-8 animate-in fade-in slide-in-from-top-2">
+            <label className="block text-[14px] font-bold text-white mb-2">Select Cryptocurrency</label>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={() => setSelectedCryptoCoin('LTC')}
+                className={`flex items-center gap-2 p-3 rounded-xl border transition-all ${
+                  selectedCryptoCoin === 'LTC' 
+                    ? 'bg-blue-500/10 border-blue-500/50 text-white' 
+                    : 'bg-white/5 border-white/5 text-gray-400 hover:bg-white/10 hover:text-white'
+                }`}
+              >
+                <SiLitecoin className={`w-4 h-4 ${selectedCryptoCoin === 'LTC' ? 'text-blue-400' : ''}`} />
+                <span className="text-sm font-bold">LTC</span>
+              </button>
+              <button
+                onClick={() => setSelectedCryptoCoin('BTC')}
+                className={`flex items-center gap-2 p-3 rounded-xl border transition-all ${
+                  selectedCryptoCoin === 'BTC' 
+                    ? 'bg-amber-500/10 border-amber-500/50 text-white' 
+                    : 'bg-white/5 border-white/5 text-gray-400 hover:bg-white/10 hover:text-white'
+                }`}
+              >
+                <SiBitcoin className={`w-4 h-4 ${selectedCryptoCoin === 'BTC' ? 'text-amber-400' : ''}`} />
+                <span className="text-sm font-bold">BTC</span>
+              </button>
+              <button
+                onClick={() => setSelectedCryptoCoin('USDT_TRC20')}
+                className={`flex items-center gap-2 p-3 rounded-xl border transition-all ${
+                  selectedCryptoCoin === 'USDT_TRC20' 
+                    ? 'bg-emerald-500/10 border-emerald-500/50 text-white' 
+                    : 'bg-white/5 border-white/5 text-gray-400 hover:bg-white/10 hover:text-white'
+                }`}
+              >
+                <SiTether className={`w-4 h-4 ${selectedCryptoCoin === 'USDT_TRC20' ? 'text-emerald-400' : ''}`} />
+                <span className="text-sm font-bold">USDT <span className="text-[10px] text-gray-500 ml-1 font-mono">TRC20</span></span>
+              </button>
+              <button
+                onClick={() => setSelectedCryptoCoin('SOL')}
+                className={`flex items-center gap-2 p-3 rounded-xl border transition-all ${
+                  selectedCryptoCoin === 'SOL' 
+                    ? 'bg-purple-500/10 border-purple-500/50 text-white' 
+                    : 'bg-white/5 border-white/5 text-gray-400 hover:bg-white/10 hover:text-white'
+                }`}
+              >
+                <SiSolana className={`w-4 h-4 ${selectedCryptoCoin === 'SOL' ? 'text-purple-400' : ''}`} />
+                <span className="text-sm font-bold">SOL</span>
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Sekcja Ilości */}
         <div className="mb-8 flex items-center justify-between">

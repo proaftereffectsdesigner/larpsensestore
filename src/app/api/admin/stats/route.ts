@@ -7,11 +7,11 @@ export async function GET(req: Request) {
     if ('error' in authResult) return authResult.error;
     const { supabaseAdmin } = authResult;
 
-    // Fetch stats
+    // Only count COMPLETED orders for revenue and count
     const { data: orders, error: ordersError } = await supabaseAdmin
       .from("orders")
       .select("*")
-      .in("status", ["completed", "pending"]);
+      .eq("status", "completed");
 
     const { count: usersCount, error: usersError } = await supabaseAdmin
       .from("profiles")

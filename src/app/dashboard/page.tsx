@@ -57,6 +57,7 @@ function DashboardContent() {
   const [ordersPage, setOrdersPage] = useState(1);
   const [ticketsPage, setTicketsPage] = useState(1);
   const [myReviewsPage, setMyReviewsPage] = useState(1);
+  const [orderStatusFilter, setOrderStatusFilter] = useState<'all' | 'completed' | 'pending' | 'cancelled' | 'failed' | 'refunded'>('all');
 
   const [newName, setNewName] = useState("");
   const [newAvatar, setNewAvatar] = useState("");
@@ -1201,11 +1202,34 @@ function DashboardContent() {
               </div>
 
               <div className="mt-8">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 rounded-full bg-[#141414] border border-white/10 flex items-center justify-center">
-                    <Package className="w-5 h-5 text-gray-300" />
+                {/* Purchase History Header + Status Filter */}
+                <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-6">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-[#141414] border border-white/10 flex items-center justify-center">
+                      <Package className="w-5 h-5 text-gray-300" />
+                    </div>
+                    <h2 className="text-2xl font-bold text-white tracking-tight">Purchase History</h2>
                   </div>
-                  <h2 className="text-2xl font-bold text-white tracking-tight">Purchase History</h2>
+                  <div className="flex items-center gap-2 flex-wrap sm:ml-auto">
+                    {(['all', 'completed', 'pending', 'cancelled', 'failed', 'refunded'] as const).map((status) => (
+                      <button
+                        key={status}
+                        onClick={() => { setOrderStatusFilter(status); setOrdersPage(1); }}
+                        className={`px-3 py-1.5 rounded-xl text-[11px] font-bold uppercase tracking-widest border transition-all ${
+                          orderStatusFilter === status
+                            ? status === 'completed' ? 'bg-emerald-500/20 border-emerald-500/30 text-emerald-400'
+                            : status === 'pending' ? 'bg-yellow-500/20 border-yellow-500/30 text-yellow-400'
+                            : status === 'cancelled' ? 'bg-gray-500/20 border-gray-500/30 text-gray-300'
+                            : status === 'failed' ? 'bg-red-500/20 border-red-500/30 text-red-400'
+                            : status === 'refunded' ? 'bg-indigo-500/20 border-indigo-500/30 text-indigo-400'
+                            : 'bg-white/10 border-white/20 text-white'
+                            : 'bg-transparent border-transparent text-gray-500 hover:text-gray-300'
+                        }`}
+                      >
+                        {status === 'all' ? 'All' : status.charAt(0).toUpperCase() + status.slice(1)}
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
                 {orders.length === 0 ? (
@@ -1223,10 +1247,20 @@ function DashboardContent() {
                       </Link>
                     </div>
                   </div>
-                ) : (
+                ) : (() => {
+                  const filteredOrders = orderStatusFilter === 'all' ? orders : orders.filter((o: any) => o.status === orderStatusFilter);
+                  return (
                   <div className="bg-[#141414] border border-white/5 rounded-3xl p-6 md:p-8 flex flex-col h-[820px]">
                     <div className="space-y-6 flex-1">
-                      {orders.slice((ordersPage - 1) * 5, ordersPage * 5).map((order) => {
+                      {filteredOrders.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center h-64 gap-4 text-center">
+                          <div className="w-16 h-16 rounded-full bg-white/5 border border-white/10 flex items-center justify-center">
+                            <Package className="w-6 h-6 text-gray-500" />
+                          </div>
+                          <p className="text-gray-500 font-medium">No {orderStatusFilter} orders found</p>
+                          <button onClick={() => setOrderStatusFilter('all')} className="text-xs text-accent underline">Show all orders</button>
+                        </div>
+                      ) : filteredOrders.slice((ordersPage - 1) * 5, ordersPage * 5).map((order) => {
                       const pInfo = products.find(p => p.id === order.product_id);
                       // In the future, you can add an `icon` field to `products` and do: const Icon = pInfo?.icon || Gamepad;
                       const ProductIcon = Gamepad;
@@ -1335,7 +1369,7 @@ function DashboardContent() {
                     </div>
 
                     {/* Pagination Controls */}
-                    {orders.length > 0 && (
+                    {filteredOrders.length > 0 && (
                       <div className="flex items-center justify-center gap-2 pt-6 border-t border-white/5 mt-auto">
                         <button
                           onClick={() => setOrdersPage(Math.max(1, ordersPage - 1))}
@@ -1346,7 +1380,7 @@ function DashboardContent() {
                         </button>
                         
                         <div className="flex items-center gap-2 px-2">
-                          {Array.from({ length: Math.ceil(orders.length / 5) }).map((_, i) => (
+                          {Array.from({ length: Math.ceil(filteredOrders.length / 5) }).map((_, i) => (
                             <button
                               key={i}
                               onClick={() => setOrdersPage(i + 1)}
@@ -1362,8 +1396,8 @@ function DashboardContent() {
                         </div>
 
                         <button
-                          onClick={() => setOrdersPage(Math.min(Math.ceil(orders.length / 5), ordersPage + 1))}
-                          disabled={ordersPage === Math.ceil(orders.length / 5)}
+                          onClick={() => setOrdersPage(Math.min(Math.ceil(filteredOrders.length / 5), ordersPage + 1))}
+                          disabled={ordersPage === Math.ceil(filteredOrders.length / 5)}
                           className="w-10 h-10 flex items-center justify-center bg-white/5 hover:bg-white/10 disabled:opacity-50 disabled:hover:bg-white/5 rounded-xl transition-all"
                         >
                           <ChevronRight className="w-5 h-5 text-gray-400" />
@@ -1371,7 +1405,8 @@ function DashboardContent() {
                       </div>
                     )}
                   </div>
-                )}
+                  );
+                })()}
               </div>
             </div>
           )}

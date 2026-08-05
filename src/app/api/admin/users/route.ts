@@ -49,10 +49,10 @@ export async function GET(req: Request) {
       });
     }
 
-    // Calculate total spent for each user
+    // Calculate total spent for each user — only completed orders count
     const usersWithStats = profiles?.map((p) => {
       const userOrders = ordersByUser[p.id] || [];
-      const completedOrders = userOrders.filter((o: any) => o.status === 'completed' || o.status === 'pending');
+      const completedOrders = userOrders.filter((o: any) => o.status === 'completed');
       const totalSpent = completedOrders.reduce((sum: number, o: any) => sum + Number(o.total_price || 0), 0);
       
       const authInfo = authMap[p.id] || {};

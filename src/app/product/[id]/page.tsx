@@ -8,6 +8,7 @@ import { User } from "@supabase/supabase-js";
 import { CheckCircle2, CreditCard, Wallet, ChevronDown, ChevronRight, Minus, Plus, ShieldCheck, ShieldAlert, AlertCircle, ShoppingBag, CircleDollarSign } from "lucide-react";
 import { SiStripe, SiSolana, SiLitecoin, SiTether, SiBitcoin, SiEthereum } from "react-icons/si";
 import { CryptoPaymentModal } from "@/components/dashboard/CryptoPaymentModal";
+import { toast } from "sonner";
 
 
 export default function ProductPage() {
@@ -151,7 +152,7 @@ export default function ProductPage() {
 
       if (paymentMethod === "crypto") {
         if (paymentMethod === 'crypto' && !selectedCryptoCoin) {
-          alert("Please select a cryptocurrency.");
+          toast.error("Please select a cryptocurrency.");
           setLoadingCheckout(false);
           return;
         }
@@ -173,7 +174,7 @@ export default function ProductPage() {
         if (data.payAddress) {
           setCryptoPaymentData(data);
         } else {
-          alert("Crypto Checkout failed: " + (data.error || "Unknown error"));
+          toast.error("Crypto Checkout failed: " + (data.error || "Unknown error"));
         }
         setLoadingCheckout(false);
       } else {
@@ -193,12 +194,12 @@ export default function ProductPage() {
           window.dispatchEvent(new Event('balance-updated'));
           router.push(data.url);
         } else {
-          alert("Checkout failed: " + data.error);
+          toast.error("Checkout failed: " + data.error);
           setLoadingCheckout(false);
         }
       }
     } catch (err) {
-      alert("Error initiating checkout");
+      toast.error("Error initiating checkout");
       setLoadingCheckout(false);
     }
   };

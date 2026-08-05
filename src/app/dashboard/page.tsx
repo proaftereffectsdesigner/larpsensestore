@@ -100,7 +100,19 @@ function DashboardContent() {
       .order("created_at", { ascending: false });
 
     if (!error && data) {
-      setOrders(data);
+      const now = new Date();
+      const processedData = data.map(order => {
+        if (order.status === 'pending') {
+          const orderTime = new Date(order.created_at);
+          const diffMinutes = (now.getTime() - orderTime.getTime()) / 1000 / 60;
+          if (diffMinutes >= 60) {
+            supabase.from('orders').update({status: 'cancelled'}).eq('id', order.id).then();
+            return { ...order, status: 'cancelled' };
+          }
+        }
+        return order;
+      });
+      setOrders(processedData);
     }
   };
 

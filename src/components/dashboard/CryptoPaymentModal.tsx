@@ -88,7 +88,16 @@ export function CryptoPaymentModal({ payAddress, payAmount, trackId, orderId, cu
       clearInterval(timerInterval);
       clearInterval(pollInterval);
     };
-  }, [trackId]);
+  }, [trackId, orderId]);
+
+  useEffect(() => {
+    if (isPaid) {
+      const timeout = setTimeout(() => {
+        onSuccess();
+      }, 2000);
+      return () => clearTimeout(timeout);
+    }
+  }, [isPaid, onSuccess]);
 
   const handleClose = async () => {
     if (orderId && !isPaid) {

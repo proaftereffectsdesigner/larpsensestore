@@ -37,24 +37,47 @@ export function CryptoPaymentModal({ payAddress, payAmount, trackId, orderId, cu
     // Automated API polling for transaction status
     const pollInterval = setInterval(async () => {
       try {
-        const res = await fetch('/api/check-oxapay-tx', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ trackId })
-        });
-        const data = await res.json();
+        let oxapayStatusStr = "";
         
-        const statusStr = String(data.status || "").toLowerCase();
-        
-        if (statusStr === 'paid' || statusStr === 'completed' || statusStr === 'finished') {
+        // 1. Check OxaPay network status
+        try {
+          const res = await fetch('/api/check-oxapay-tx', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ trackId })
+          });
+          const data = await res.json();
+          oxapayStatusStr = String(data.status || "").toLowerCase();
+          
+          if (data.status) {
+            setPaymentStatus(data.status);
+          }
+        } catch (e) {
+          console.error("OxaPay polling error:", e);
+        }
+
+        // 2. Check Database status (to ensure webhook actually finished processing)
+        if (orderId) {
+          const { data: orderData } = await supabase
+            .from('orders')
+            .select('status')
+            .eq('id', orderId)
+            .single();
+            
+          if (orderData?.status === 'completed') {
+            setIsPaid(true);
+            clearInterval(pollInterval);
+            return;
+          }
+        } else if (oxapayStatusStr === 'paid' || oxapayStatusStr === 'completed' || oxapayStatusStr === 'finished') {
+          // Fallback if no orderId is passed (e.g. legacy or other usage)
           setIsPaid(true);
           clearInterval(pollInterval);
-        } else if (statusStr === 'expired' || statusStr === 'failed') {
-          // Could handle failure here
+          return;
+        }
+        
+        if (oxapayStatusStr === 'expired' || oxapayStatusStr === 'failed') {
           clearInterval(pollInterval);
-        } else if (data.status) {
-          // Update status text if it's confirming or waiting
-          setPaymentStatus(data.status);
         }
       } catch (err) {
         console.error("Polling error:", err);

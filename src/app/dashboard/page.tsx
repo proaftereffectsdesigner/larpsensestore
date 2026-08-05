@@ -582,6 +582,9 @@ function DashboardContent() {
         
         if (data.user && saveVersionRef.current === currentVersion) {
             setUser(data.user);
+            if (profile) {
+                setProfile({ ...profile, display_name: newName, avatar_url: finalAvatarUrl || null, bio: newBio || null, is_private: isPrivate });
+            }
             setAvatarBlobToUpload(null);
             setProfileMessage({ type: 'success', text: "Profile updated successfully!" });
             window.dispatchEvent(new Event('balance-updated'));
@@ -627,13 +630,6 @@ function DashboardContent() {
   const handleRemoveAvatar = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    
-    if (user?.user_metadata?.avatar_url && user.user_metadata.avatar_url.includes('avatars/')) {
-        const oldFileName = user.user_metadata.avatar_url.split('/').pop()?.split('?')[0];
-        if (oldFileName && oldFileName.startsWith(user.id)) {
-            await supabase.storage.from('avatars').remove([oldFileName]);
-        }
-    }
     
     setNewAvatar("");
     setAvatarBlobToUpload(null);

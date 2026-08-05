@@ -37,35 +37,20 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing order metadata" }, { status: 400 });
     }
 
-    // Reverse Verification: Ask OxaPay API about this trackId to guarantee it's Paid
-    try {
-      const verifyRes = await fetch("https://api.oxapay.com/v1/payment/paymentInfo", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "merchant_api_key": OXAPAY_MERCHANT_KEY
-        },
-        body: JSON.stringify({ trackId: txnId, merchant_api_key: OXAPAY_MERCHANT_KEY })
-      });
-      const verifyData = await verifyRes.json();
-      
-      const realStatus = verifyData?.data?.status || verifyData?.status;
-      if (realStatus !== "Paid") {
-        console.warn(`OxaPay webhook: verified status is ${realStatus}, ignoring.`);
-        return new NextResponse("ok", { status: 200 });
+    const hmacHeader = req.headers.get("hmac");
+    if (hmacHeader) {
+      const calculatedHmac = crypto.createHmac("sha512", OXAPAY_MERCHANT_KEY).update(rawBody).digest("hex");
+      if (hmacHeader !== calculatedHmac) {
+        console.error("OxaPay webhook: Invalid HMAC signature");
+        return NextResponse.json({ error: "Invalid HMAC" }, { status: 403 });
       }
-      
-      // CRITICAL SECURITY FIX: Override the user-provided orderNumber with the trusted one from OxaPay API
-      const trustedOrderId = verifyData?.data?.orderId || verifyData?.orderId;
-      if (trustedOrderId) {
-        orderNumber = trustedOrderId;
-      }
-    } catch (verifyErr) {
-      console.error("OxaPay webhook: Reverse verification failed", verifyErr);
-      return NextResponse.json({ error: "Verification failed" }, { status: 500 });
     }
 
-    // We already verified via reverse call above that status is Paid.
+    const realStatus = data.status;
+    if (realStatus !== "Paid") {
+      console.log(`OxaPay webhook: ignored status ${realStatus} for trackId ${txnId}`);
+      return new NextResponse("ok", { status: 200 });
+    }
 
     const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE);
 

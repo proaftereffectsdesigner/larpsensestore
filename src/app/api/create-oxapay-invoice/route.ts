@@ -121,17 +121,14 @@ export async function POST(req: Request) {
 
     const data = oxapayData?.data || oxapayData;
     const payAddress = data?.payAddress || data?.address;
-    const payAmount = data?.payAmount || data?.amount;
-    const trackId = data?.trackId || data?.track_id;
+    const payAmount = data?.pay_amount || data?.payAmount || data?.amount;
+    const trackId = data?.track_id || data?.trackId;
 
     if (oxapayRes.ok && payAddress) {
       return NextResponse.json({ payAddress, payAmount, trackId });
     } else {
       console.error("OxaPay White-Label Error:", oxapayData);
-      let errorMsg = oxapayData?.message || oxapayData?.error || "Failed to generate white-label address";
-      if (oxapayData?.errors) {
-         errorMsg += " " + JSON.stringify(oxapayData.errors);
-      }
+      let errorMsg = oxapayData?.error?.message || oxapayData?.message || "Failed to generate white-label address";
       return NextResponse.json({ error: errorMsg }, { status: 500 });
     }
 

@@ -128,7 +128,7 @@ export function CryptoPaymentModal({ payAddress, payAmount, trackId, orderId, cu
               </div>
               <div className="text-[10px] uppercase tracking-widest text-accent font-bold mb-8 flex items-center justify-center gap-2">
                 <div className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
-                {paymentStatus.includes("Confirm") ? "Confirming Payment..." : "Awaiting payment"}
+                {String(paymentStatus).includes("Confirm") ? "Confirming Payment..." : "Awaiting payment"}
               </div>
 
               <div className="text-xs text-gray-500 font-bold tracking-widest uppercase mb-2">Send Exactly</div>
@@ -189,7 +189,7 @@ export function CryptoPaymentModal({ payAddress, payAmount, trackId, orderId, cu
 
               <div className="flex items-center justify-center gap-2 text-[10px] font-bold text-accent uppercase tracking-widest">
                 <div className="w-3 h-3 rounded-full border-[1.5px] border-accent border-t-transparent animate-spin" />
-                {paymentStatus.includes("Waiting") ? "Waiting for your payment..." : paymentStatus}
+                {String(paymentStatus).includes("Waiting") ? "Waiting for your payment..." : String(paymentStatus)}
               </div>
             </div>
           </>

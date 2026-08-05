@@ -192,7 +192,8 @@ export default function CategoryPage() {
             amount: totalPrice,
             type: "product_checkout",
             productId: selectedProduct.id,
-            quantity: quantity
+            quantity: quantity,
+            currency: selectedCryptoCoin
           })
         });
         const data = await res.json();

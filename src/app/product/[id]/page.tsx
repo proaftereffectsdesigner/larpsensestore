@@ -159,7 +159,8 @@ export default function ProductPage() {
             amount: totalPrice,
             type: "product_checkout",
             productId: product.id,
-            quantity: quantity
+            quantity: quantity,
+            currency: selectedCryptoCoin
           })
         });
         const data = await res.json();

@@ -130,8 +130,8 @@ export function CryptoPaymentModal({ payAddress, payAmount, trackId, orderId, cu
               </div>
               <div className="text-[10px] uppercase tracking-widest text-accent font-bold mb-8 flex items-center justify-center gap-2">
                 <div className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
-                {String(paymentStatus).toLowerCase().includes("confirm") 
-                  ? paymentStatus 
+                {(String(paymentStatus).toLowerCase().includes("confirm") || String(paymentStatus).toLowerCase() === "paying")
+                  ? "Confirming"
                   : String(paymentStatus).toLowerCase().includes("paid")
                     ? "Payment Verified"
                     : "Awaiting payment"}
@@ -197,7 +197,7 @@ export function CryptoPaymentModal({ payAddress, payAmount, trackId, orderId, cu
                 {(() => {
                   const normalized = String(paymentStatus).toLowerCase();
                   const step = (normalized.includes('paid') || normalized.includes('completed') || normalized.includes('finished')) ? 3 :
-                               normalized.includes('confirm') ? 2 : 1;
+                               (normalized.includes('confirm') || normalized === 'paying') ? 2 : 1;
                   
                   return (
                     <>

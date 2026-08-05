@@ -96,7 +96,7 @@ export async function POST(req: Request) {
     const baseUrl = new URL(req.url).origin;
 
     const oxapayPayload: any = {
-      amount: totalAmount,
+      amount: Number(totalAmount.toFixed(2)),
       currency: "EUR",
       orderId: pendingOrder.id,
       description: description,

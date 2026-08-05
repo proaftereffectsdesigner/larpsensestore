@@ -66,7 +66,7 @@ export function CryptoPaymentModal({ payAddress, payAmount, trackId, onClose, on
   const seconds = timeLeft % 60;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in">
       <div className="bg-neutral-900 border border-neutral-800 p-8 rounded-2xl max-w-md w-full shadow-2xl relative text-center">
         
         {isPaid ? (

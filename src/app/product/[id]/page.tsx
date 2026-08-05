@@ -30,7 +30,7 @@ export default function ProductPage() {
   const [user, setUser] = useState<User | null>(null);
   const [authChecked, setAuthChecked] = useState(false);
   
-  const [paymentMethod, setPaymentMethod] = useState<"stripe" | "crypto" | "balance">("stripe");
+  const [paymentMethod, setPaymentMethod] = useState<"polar" | "crypto" | "balance">("polar");
   const [selectedCryptoCoin, setSelectedCryptoCoin] = useState<string | null>(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isCryptoCoinDropdownOpen, setIsCryptoCoinDropdownOpen] = useState(false);

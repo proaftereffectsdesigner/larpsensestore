@@ -301,7 +301,7 @@ export default function TopUpModal() {
                           </button>
                           
                           {isCryptoExpanded && (
-                            <div className="absolute top-full left-0 right-0 mt-2 bg-[#1c1c1c] border border-white/10 rounded-xl overflow-hidden z-50 shadow-2xl">
+                            <div className="absolute top-full left-0 right-0 mt-2 bg-[#1c1c1c] border border-white/10 rounded-xl overflow-y-auto max-h-[200px] custom-scrollbar z-50 shadow-2xl">
                               {[
                                 { id: 'BTC', label: 'Bitcoin (BTC)', icon: <SiBitcoin className="w-4 h-4 text-amber-500" /> },
                                 { id: 'ETH', label: 'Ethereum (ETH)', icon: <SiEthereum className="w-4 h-4 text-indigo-400" /> },
@@ -430,6 +430,8 @@ export default function TopUpModal() {
         payAddress={cryptoPaymentData.payAddress}
         payAmount={cryptoPaymentData.payAmount}
         trackId={cryptoPaymentData.trackId}
+        currency={selectedCryptoCoin || 'BTC'}
+        fiatAmount={amount}
         onClose={() => {
           setCryptoPaymentData(null);
           setStep(1); // Reset loader in TopUpModal

@@ -388,7 +388,10 @@ export default function ProductPage() {
                       <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center">
                         {coin.icon}
                       </div>
-                      <span className="text-sm font-medium text-white">{coin.label}</span>
+                      <span className="text-sm font-medium text-white">
+                        {coin.label}
+                        {coin.id === 'BTC' && <span className="text-[10px] text-amber-500/80 font-bold ml-2">(Min. €15)</span>}
+                      </span>
                     </button>
                   ))}
                 </div>

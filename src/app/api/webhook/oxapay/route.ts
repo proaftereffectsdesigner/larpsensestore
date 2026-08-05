@@ -32,9 +32,9 @@ export async function POST(req: Request) {
     const txnId = data.trackId || data.track_id; 
     let orderNumber = data.orderId || data.order_id;
 
-    if (!orderNumber || !txnId) {
-      console.warn("OxaPay webhook: Missing order metadata", data);
-      return NextResponse.json({ error: "Missing order metadata" }, { status: 400 });
+    if (!txnId) {
+      console.warn("OxaPay webhook: Missing trackId in payload", data);
+      return NextResponse.json({ error: "Missing trackId" }, { status: 400 });
     }
 
     // HMAC check is currently disabled due to Node.js/Vercel request body parsing stripping whitespaces, 
@@ -71,6 +71,16 @@ export async function POST(req: Request) {
       }
 
       const verifiedOrderId = verifyData?.data?.orderId || verifyData?.orderId;
+      
+      if (!orderNumber) {
+        orderNumber = verifiedOrderId;
+      }
+      
+      if (!orderNumber) {
+        console.warn(`OxaPay webhook: Missing orderId even after inquiry for trackId ${txnId}`);
+        return NextResponse.json({ error: "Missing order metadata" }, { status: 400 });
+      }
+
       if (verifiedOrderId && String(verifiedOrderId) !== String(orderNumber)) {
         console.warn(`OxaPay webhook security failure: Order ID mismatch. API: ${verifiedOrderId}, Webhook: ${orderNumber}`);
         return new NextResponse("ok", { status: 200 });

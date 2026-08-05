@@ -60,7 +60,7 @@ export default function CategoryPage() {
   
   const [loadingSettings, setLoadingSettings] = useState(true);
   const [settings, setSettings] = useState({ stripe_enabled: true, crypto_enabled: true });
-  const [cryptoPaymentData, setCryptoPaymentData] = useState<{ payAddress: string, payAmount: string | number, trackId: string } | null>(null);
+  const [cryptoPaymentData, setCryptoPaymentData] = useState<{ payAddress: string, payAmount: string | number, trackId: string, orderId?: string } | null>(null);
 
   // Reviews state
   const [reviews, setReviews] = useState<any[]>([]);
@@ -751,6 +751,7 @@ export default function CategoryPage() {
         payAddress={cryptoPaymentData.payAddress}
         payAmount={cryptoPaymentData.payAmount}
         trackId={cryptoPaymentData.trackId}
+        orderId={cryptoPaymentData.orderId}
         currency={selectedCryptoCoin || 'BTC'}
         fiatAmount={totalPrice}
         onClose={() => setCryptoPaymentData(null)}

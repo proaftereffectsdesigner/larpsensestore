@@ -104,8 +104,20 @@ export async function POST(req: Request) {
       callbackUrl: `${baseUrl}/api/webhook/oxapay`,
     };
 
-    if (currency) {
-        oxapayPayload.pay_currency = currency; // For white-label V1 API
+    const cryptoMap: Record<string, {currency: string, network: string}> = {
+        'USDT_TRC20': { currency: 'USDT', network: 'tron' },
+        'USDC_ERC20': { currency: 'USDC', network: 'ethereum' },
+        'BTC': { currency: 'BTC', network: 'bitcoin' },
+        'ETH': { currency: 'ETH', network: 'ethereum' },
+        'LTC': { currency: 'LTC', network: 'litecoin' },
+        'SOL': { currency: 'SOL', network: 'solana' },
+    };
+
+    if (currency && cryptoMap[currency]) {
+        oxapayPayload.pay_currency = cryptoMap[currency].currency;
+        oxapayPayload.network = cryptoMap[currency].network;
+    } else if (currency) {
+        oxapayPayload.pay_currency = currency;
     }
 
     const oxapayRes = await fetch("https://api.oxapay.com/v1/payment/white-label", {
@@ -125,7 +137,7 @@ export async function POST(req: Request) {
     const trackId = data?.track_id || data?.trackId;
 
     if (oxapayRes.ok && payAddress) {
-      return NextResponse.json({ payAddress, payAmount, trackId });
+      return NextResponse.json({ payAddress, payAmount, trackId, orderId: pendingOrder.id });
     } else {
       console.error("OxaPay White-Label Error:", oxapayData);
       let errorMsg = oxapayData?.error?.message || oxapayData?.message || "Failed to generate white-label address";

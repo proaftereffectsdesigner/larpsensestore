@@ -40,7 +40,7 @@ export default function ProductPage() {
   const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0, width: 0 });
   const [loadingSettings, setLoadingSettings] = useState(true);
   const [settings, setSettings] = useState({ stripe_enabled: true, crypto_enabled: true });
-  const [cryptoPaymentData, setCryptoPaymentData] = useState<{ payAddress: string, payAmount: string | number, trackId: string } | null>(null);
+  const [cryptoPaymentData, setCryptoPaymentData] = useState<{ payAddress: string, payAmount: string | number, trackId: string, orderId?: string } | null>(null);
 
   // Recalculate dropdown position whenever it opens or window resizes
   const updateDropdownPos = useCallback(() => {
@@ -457,6 +457,7 @@ export default function ProductPage() {
         payAddress={cryptoPaymentData.payAddress}
         payAmount={cryptoPaymentData.payAmount}
         trackId={cryptoPaymentData.trackId}
+        orderId={cryptoPaymentData.orderId}
         currency={selectedCryptoCoin || 'BTC'}
         fiatAmount={totalPrice}
         onClose={() => setCryptoPaymentData(null)}

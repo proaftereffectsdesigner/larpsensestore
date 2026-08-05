@@ -15,13 +15,14 @@ interface CryptoPaymentModalProps {
   payAddress: string;
   payAmount: string | number;
   trackId: string;
+  orderId?: string;
   currency?: string;
   fiatAmount?: number;
   onClose: () => void;
   onSuccess: () => void;
 }
 
-export function CryptoPaymentModal({ payAddress, payAmount, trackId, currency, fiatAmount, onClose, onSuccess }: CryptoPaymentModalProps) {
+export function CryptoPaymentModal({ payAddress, payAmount, trackId, orderId, currency, fiatAmount, onClose, onSuccess }: CryptoPaymentModalProps) {
   const [copied, setCopied] = useState(false);
   const [timeLeft, setTimeLeft] = useState(60 * 60); // 60 minutes
   const [isPaid, setIsPaid] = useState(false);
@@ -59,6 +60,17 @@ export function CryptoPaymentModal({ payAddress, payAmount, trackId, currency, f
       clearInterval(pollInterval);
     };
   }, [trackId]);
+
+  const handleClose = async () => {
+    if (orderId && !isPaid) {
+      try {
+        await supabase.from('orders').update({ status: 'cancelled' }).eq('id', orderId);
+      } catch (e) {
+        console.error("Failed to cancel order", e);
+      }
+    }
+    onClose();
+  };
 
   const handleCopy = () => {
     navigator.clipboard.writeText(payAddress);
@@ -166,7 +178,7 @@ export function CryptoPaymentModal({ payAddress, payAmount, trackId, currency, f
                   </div>
                   Expires in <span className="text-white font-mono">{String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}</span>
                 </div>
-                <button onClick={onClose} className="text-xs font-bold text-gray-400 hover:text-white transition-colors">
+                <button onClick={handleClose} className="text-xs font-bold text-gray-400 hover:text-white transition-colors">
                   Cancel
                 </button>
               </div>

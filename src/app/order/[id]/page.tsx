@@ -347,7 +347,13 @@ export default function OrderDetails() {
                   <Wallet className="w-8 h-8 text-accent" />
                 </div>
                 <h2 className="text-xl font-bold text-white mb-2">Balance Top-up</h2>
-                <p className="text-gray-400 text-sm max-w-[250px]">Your balance has been successfully credited with €{Number(order.total_price).toFixed(2)}.</p>
+                {order.status === 'completed' ? (
+                  <p className="text-gray-400 text-sm max-w-[250px]">Your balance has been successfully credited with €{Number(order.total_price).toFixed(2)}.</p>
+                ) : order.status === 'cancelled' ? (
+                  <p className="text-red-400/80 text-sm max-w-[250px]">This top-up request has been cancelled or expired.</p>
+                ) : (
+                  <p className="text-yellow-500/80 text-sm max-w-[250px]">This top-up request is awaiting payment confirmation.</p>
+                )}
                 <div className="mt-6 inline-flex flex-col gap-1 items-center bg-white/5 px-6 py-4 rounded-xl border border-white/10">
                   <span className="text-[10px] text-gray-500 uppercase font-bold tracking-widest">Transaction Ref</span>
                   <span className="font-mono text-gray-300 text-xs">{order.accounts_data}</span>

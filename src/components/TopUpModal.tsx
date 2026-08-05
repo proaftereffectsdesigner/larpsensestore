@@ -22,7 +22,7 @@ export default function TopUpModal() {
   const [settings, setSettings] = useState({ stripe_enabled: true, crypto_enabled: true });
 
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [cryptoPaymentData, setCryptoPaymentData] = useState<{ payAddress: string, payAmount: string | number, trackId: string } | null>(null);
+  const [cryptoPaymentData, setCryptoPaymentData] = useState<{ payAddress: string, payAmount: string | number, trackId: string, orderId?: string } | null>(null);
 
   useEffect(() => {
     const fetchSettings = async () => {
@@ -246,7 +246,7 @@ export default function TopUpModal() {
                   </button>
 
                   {/* Crypto */}
-                  <div className={`border rounded-2xl transition-all overflow-hidden ${
+                  <div className={`border rounded-2xl transition-all ${
                     !settings.crypto_enabled ? 'opacity-50 cursor-not-allowed bg-[#141414] border-white/5 grayscale' :
                     method === 'crypto' ? 'bg-white/5 border-white/20' : 'bg-[#141414] border-white/5 hover:bg-white/5'
                   }`}>
@@ -430,6 +430,7 @@ export default function TopUpModal() {
         payAddress={cryptoPaymentData.payAddress}
         payAmount={cryptoPaymentData.payAmount}
         trackId={cryptoPaymentData.trackId}
+        orderId={cryptoPaymentData.orderId}
         currency={selectedCryptoCoin || 'BTC'}
         fiatAmount={amount}
         onClose={() => {

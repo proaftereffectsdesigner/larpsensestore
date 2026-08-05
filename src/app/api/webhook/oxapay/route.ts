@@ -45,9 +45,9 @@ export async function POST(req: Request) {
       console.log("OxaPay webhook: HMAC header received but validation is bypassed for stability.");
     }
 
-    const realStatus = data.status;
-    if (realStatus !== "Paid") {
-      console.log(`OxaPay webhook: ignored status ${realStatus} for trackId ${txnId}`);
+    const realStatus = String(data.status || "").toLowerCase();
+    if (realStatus !== "paid" && realStatus !== "completed" && realStatus !== "finished") {
+      console.log(`OxaPay webhook: ignored status ${data.status} for trackId ${txnId}`);
       return new NextResponse("ok", { status: 200 });
     }
 
@@ -64,8 +64,8 @@ export async function POST(req: Request) {
       });
       const verifyData = await verifyRes.json();
       
-      const verifiedStatus = verifyData?.data?.status || verifyData?.status;
-      if (verifiedStatus !== "Paid" && verifiedStatus !== "Completed" && verifiedStatus !== "Finished") {
+      const verifiedStatus = String(verifyData?.data?.status || verifyData?.status || "").toLowerCase();
+      if (verifiedStatus !== "paid" && verifiedStatus !== "completed" && verifiedStatus !== "finished") {
         console.warn(`OxaPay webhook security failure: OxaPay API reports status ${verifiedStatus} for trackId ${txnId}, but webhook claimed Paid.`);
         return new NextResponse("ok", { status: 200 }); // Return OK to stop OxaPay from retrying a spoofed hook
       }

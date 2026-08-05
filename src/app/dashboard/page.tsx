@@ -1262,7 +1262,7 @@ function DashboardContent() {
                 ) : (() => {
                   const filteredOrders = orderStatusFilter === 'all' ? orders : orders.filter((o: any) => o.status === orderStatusFilter);
                   return (
-                  <div className="bg-[#141414] border border-white/5 rounded-3xl p-6 md:p-8 flex flex-col h-[820px]">
+                  <div className="bg-[#141414] border border-white/5 rounded-3xl p-6 md:p-8 flex flex-col min-h-[820px]">
                     <div className="space-y-6 flex-1">
                       {filteredOrders.length === 0 ? (
                         <div className="flex flex-col items-center justify-center h-64 gap-4 text-center">

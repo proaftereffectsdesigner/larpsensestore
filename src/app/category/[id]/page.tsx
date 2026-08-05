@@ -5,8 +5,8 @@ import { useParams, useRouter } from "next/navigation";
 import { products } from "@/lib/products";
 import { supabase } from "@/lib/supabase-client";
 import { User } from "@supabase/supabase-js";
-import { CheckCircle2, CreditCard, Wallet, ChevronDown, ChevronRight, ChevronLeft, Minus, Plus, ShieldCheck, Gamepad2, Info, Zap, Lock, RefreshCcw, ShieldAlert, Star } from "lucide-react";
-import { SiSolana, SiLitecoin, SiTether, SiBitcoin } from "react-icons/si";
+import { CheckCircle2, CreditCard, Wallet, ChevronDown, ChevronRight, ChevronLeft, Minus, Plus, ShieldCheck, Gamepad2, Info, Zap, Lock, RefreshCcw, ShieldAlert, Star, CircleDollarSign } from "lucide-react";
+import { SiSolana, SiLitecoin, SiTether, SiBitcoin, SiEthereum } from "react-icons/si";
 import { CryptoPaymentModal } from "@/components/dashboard/CryptoPaymentModal";
 
 import ParticlesBackground from "@/components/ParticlesBackground";

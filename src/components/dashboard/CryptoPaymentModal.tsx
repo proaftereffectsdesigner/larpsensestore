@@ -134,6 +134,25 @@ export function CryptoPaymentModal({ payAddress, payAmount, trackId, orderId, cu
   const coin = getCoinDetails(currency);
   const displayCurrency = currency === 'USDT_TRC20' ? 'USDT' : currency === 'USDC_ERC20' ? 'USDC' : currency;
 
+  const getPaymentUri = () => {
+    if (!currency || !payAddress || !payAmount) return payAddress;
+    
+    const amountStr = String(payAmount);
+    
+    switch (currency.toUpperCase()) {
+      case 'BTC': return `bitcoin:${payAddress}?amount=${amountStr}`;
+      case 'LTC': return `litecoin:${payAddress}?amount=${amountStr}`;
+      case 'ETH': return `ethereum:${payAddress}?amount=${amountStr}`;
+      case 'SOL': return `solana:${payAddress}?amount=${amountStr}`;
+      default:
+        if (currency.includes('ERC20')) return `ethereum:${payAddress}`;
+        if (currency.includes('TRC20')) return `tron:${payAddress}`;
+        return payAddress;
+    }
+  };
+
+  const qrValue = getPaymentUri();
+
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in overflow-y-auto">
       <div className="bg-[#0a0a0a] border border-white/10 rounded-[2rem] w-full max-w-[400px] shadow-[0_0_50px_rgba(0,0,0,0.5)] relative overflow-hidden flex flex-col my-auto">
@@ -183,7 +202,7 @@ export function CryptoPaymentModal({ payAddress, payAmount, trackId, orderId, cu
             {/* QR Code Section */}
             <div className="p-6 flex flex-col items-center bg-[#0f0f0f] relative z-10 border-b border-white/5">
               <div className="bg-white p-4 rounded-2xl shadow-xl mb-6 ring-4 ring-white/5">
-                <QRCode value={payAddress} size={160} />
+                <QRCode value={qrValue} size={160} />
               </div>
 
               <div className="w-full text-center">

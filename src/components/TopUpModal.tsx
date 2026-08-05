@@ -7,6 +7,326 @@ import { supabase } from "@/lib/supabase-client";
 import { CryptoPaymentModal } from "@/components/dashboard/CryptoPaymentModal";
 
 type PaymentMethod = 'card' | 'crypto';
+const PRESETS = [10, 25, 50, 100];
+
+export default function TopUpModal() {
+  const [isOpen, setIsOpen] = useState(false);
+  const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [amount, setAmount] = useState<number>(10);
+  const [rawAmount, setRawAmount] = useState<string>('10');
+  const [method, setMethod] = useState<PaymentMethod | null>(null);
+  const [selectedCryptoCoin, setSelectedCryptoCoin] = useState<string | null>(null);
+  const [isCryptoExpanded, setIsCryptoExpanded] = useState(false);
+  const [loadingText, setLoadingText] = useState("Initializing secure connection...");
+  const [loadingSettings, setLoadingSettings] = useState(true);
+  const [settings, setSettings] = useState({ stripe_enabled: true, crypto_enabled: true });
+
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [cryptoPaymentData, setCryptoPaymentData] = useState<{ payAddress: string, payAmount: string | number, trackId: string } | null>(null);
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const res = await fetch("/api/settings");
+        if (res.ok) {
+          const data = await res.json();
+          setSettings({ stripe_enabled: data.stripe_enabled ?? true, crypto_enabled: data.crypto_enabled ?? true });
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoadingSettings(false);
+      }
+    };
+
+    const handleOpen = () => {
+      setIsOpen(true);
+      setStep(1);
+      setAmount(10);
+      setRawAmount('10');
+      setMethod(null);
+      setSelectedCryptoCoin(null);
+      setIsCryptoExpanded(false);
+      setErrorMsg(null);
+      fetchSettings();
+    };
+    window.addEventListener('open-topup', handleOpen);
+    return () => window.removeEventListener('open-topup', handleOpen);
+  }, []);
+
+  if (!isOpen) return null;
+
+  const getFeeMultiplier = () => {
+    switch (method) {
+      case 'card': return 0.035; // 3.5%
+      case 'crypto': return 0.005; // 0.5%
+      default: return 0;
+    }
+  };
+
+  const getFixedFee = () => {
+    switch (method) {
+      case 'card': return 0.30;
+      case 'crypto': return 0.00;
+      default: return 0;
+    }
+  };
+
+  const cardFee = amount > 0 ? Number((amount * getFeeMultiplier() + getFixedFee()).toFixed(2)) : 0;
+  const total = (amount + cardFee).toFixed(2);
+
+  const startPaymentSimulation = async () => {
+    if (amount < 0.5) return;
+    if (!method) {
+      setErrorMsg("Please select a payment method");
+      return;
+    }
+    setErrorMsg(null);
+    
+    // Check auth first
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      setErrorMsg("You must be logged in to top up!");
+      return;
+    }
+    
+    if (method === 'crypto' && !selectedCryptoCoin) {
+      setErrorMsg("Please select a cryptocurrency.");
+      return;
+    }
+
+    setStep(2);
+    setLoadingText("Initializing Secure Gateway...");
+
+    try {
+      if (method === 'crypto') {
+        const res = await fetch("/api/create-oxapay-invoice", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userId: session.user.id,
+            token: session.access_token,
+            amount: amount,
+            type: "topup",
+            currency: selectedCryptoCoin
+          })
+        });
+
+        const data = await res.json();
+        if (data.payAddress) {
+          setCryptoPaymentData(data);
+          // Don't close TopUpModal immediately, let the overlay happen
+        } else {
+          setErrorMsg("Failed to initialize crypto payment: " + (data.error || "Unknown error"));
+          setStep(1);
+        }
+      } else {
+        // Card (Polar)
+        const res = await fetch("/api/create-checkout-session", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userId: session.user.id,
+            token: session.access_token,
+            amount: amount,
+            paymentMethod: 'polar',
+          })
+        });
+
+        const data = await res.json();
+        if (data.url) {
+          window.location.href = data.url;
+        } else {
+          setErrorMsg("Failed to initialize payment: " + (data.error || "Unknown error"));
+          setStep(1);
+        }
+      }
+    } catch (err) {
+      setErrorMsg("Error contacting payment gateway.");
+      setStep(1);
+    }
+  };
+
+
+
+  return (
+    <>
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 overflow-y-auto">
+      <div className="absolute inset-0 bg-black/80 backdrop-blur-md" onClick={() => step !== 2 && setIsOpen(false)}></div>
+      
+      <div className={`bg-[#0a0a0a] border border-white/10 rounded-3xl w-full max-w-lg relative z-10 shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-y-auto overflow-x-hidden max-h-[calc(100dvh-2rem)] my-auto transition-all duration-500 [scrollbar-width:thin] [scrollbar-color:#ffffff20_transparent] ${step === 2 ? 'scale-95' : 'scale-100'}`}>
+        
+        {/* Header */}
+        <div className="p-6 md:p-8 pb-0 flex justify-between items-center relative z-20">
+          <h3 className="text-xl font-bold text-white tracking-tight">
+            {step === 1 && "Top Up Balance"}
+            {step === 2 && "Processing Payment"}
+            {step === 3 && "Payment Successful"}
+          </h3>
+          {step !== 2 && (
+            <button onClick={() => setIsOpen(false)} className="w-8 h-8 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition-colors">
+              <X className="w-4 h-4" />
+            </button>
+          )}
+        </div>
+
+        <div className="p-6 md:p-8 relative z-20">
+          {step === 1 && (
+            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              
+              {/* Amount Selection */}
+              <div className="space-y-4">
+                <label className="block text-xs font-bold tracking-widest text-gray-500 uppercase">Select Amount</label>
+                <div className="grid grid-cols-4 gap-2">
+                  {PRESETS.map(preset => (
+                    <button
+                      key={preset}
+                    onClick={() => { setAmount(preset); setRawAmount(String(preset)); }}
+                      className={`py-3 rounded-xl font-bold transition-all ${amount === preset ? 'bg-accent text-white shadow-[0_0_15px_rgba(255,255,255,0.1)]' : 'bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white'}`}
+                    >
+                      €{preset}
+                    </button>
+                  ))}
+                </div>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white font-bold">€</span>
+                  <input 
+                    type="text"
+                    inputMode="decimal"
+                    value={rawAmount}
+                    onChange={(e) => {
+                      const raw = e.target.value;
+                      // Allow digits, one dot, and a leading zero
+                      if (/^\d*\.?\d*$/.test(raw)) {
+                        setRawAmount(raw);
+                        const parsed = parseFloat(raw);
+                        setAmount(isNaN(parsed) ? 0 : parsed);
+                      }
+                    }}
+                    className="w-full bg-[#141414] border border-white/10 rounded-xl py-4 pl-10 pr-4 text-white font-bold focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/50 transition-all text-lg shadow-inner"
+                    placeholder="0.50"
+                  />
+                </div>
+                <p className="text-xs text-gray-600 font-medium pl-1">Minimum deposit: <span className="text-gray-500">€0.50</span>.</p>
+              </div>
+
+              {/* Payment Method */}
+              <div className="space-y-4">
+                <label className="block text-xs font-bold tracking-widest text-gray-500 uppercase">Payment Method</label>
+                <div className="space-y-2">
+                  
+                  {loadingSettings ? (
+                    <>
+                      <div className="w-full h-[74px] bg-[#141414] border border-white/5 rounded-2xl animate-pulse"></div>
+                      <div className="w-full h-[74px] bg-[#141414] border border-white/5 rounded-2xl animate-pulse"></div>
+                    </>
+                  ) : (
+                    <>
+                      {/* Card */}
+                  <button 
+                    onClick={() => settings.stripe_enabled && setMethod('card')} 
+                    disabled={!settings.stripe_enabled}
+                    className={`w-full flex items-center justify-between p-4 border rounded-2xl transition-all ${
+                      !settings.stripe_enabled ? 'opacity-50 cursor-not-allowed bg-[#141414] border-white/5 grayscale' :
+                      method === 'card' ? 'bg-white/10 border-white/20' : 'bg-[#141414] border-white/5 hover:bg-white/5'
+                    }`}
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="flex items-center justify-center w-10 h-10 bg-[#635BFF]/10 rounded-xl">
+                        <CreditCard className="w-5 h-5 text-gray-400" />
+                      </div>
+                      <div className="text-left">
+                        <div className={`font-bold text-sm ${method === 'card' ? 'text-white' : settings.stripe_enabled ? 'text-white' : 'text-gray-400'}`}>Debit / Credit Card</div>
+                        <div className="text-[11px] text-gray-500 font-medium">{!settings.stripe_enabled ? 'Temporarily disabled' : 'Mastercard, Visa, Apple Pay etc.'} <span className="text-indigo-400 font-bold">(3.5% + €0.30 fee)</span></div>
+                      </div>
+                    </div>
+                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${method === 'card' ? 'border-[#635BFF]' : 'border-gray-600'}`}>
+                      {method === 'card' && <div className="w-2.5 h-2.5 bg-[#635BFF] rounded-full"></div>}
+                    </div>
+                  </button>
+
+                  {/* Crypto */}
+                  <div className={`border rounded-2xl transition-all overflow-hidden ${
+                    !settings.crypto_enabled ? 'opacity-50 cursor-not-allowed bg-[#141414] border-white/5 grayscale' :
+                    method === 'crypto' ? 'bg-white/5 border-white/20' : 'bg-[#141414] border-white/5 hover:bg-white/5'
+                  }`}>
+                    <button 
+                      onClick={() => { 
+                        if (!settings.crypto_enabled) return;
+                        setMethod('crypto');
+                        setIsCryptoExpanded(!isCryptoExpanded);
+                      }}
+                      disabled={!settings.crypto_enabled}
+                      className="w-full flex items-center justify-between p-4"
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className="flex items-center justify-center w-10 h-10 bg-amber-500/10 rounded-xl">
+                          <SiBitcoin className="w-5 h-5 text-amber-400" />
+                        </div>
+                        <div className="text-left">
+                          <div className={`font-bold text-sm ${method === 'crypto' ? 'text-white' : settings.crypto_enabled ? 'text-white' : 'text-gray-400'}`}>Cryptocurrency</div>
+                          <div className="text-[11px] text-gray-500 font-medium">{!settings.crypto_enabled ? 'Temporarily disabled' : 'Pay via OxaPay'} <span className="text-amber-400 font-bold">{settings.crypto_enabled ? '(0.5% fee)' : ''}</span></div>
+                        </div>
+                      </div>
+                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${method === 'crypto' ? 'border-amber-400' : 'border-gray-600'}`}>
+                        {method === 'crypto' && <div className="w-2.5 h-2.5 bg-amber-400 rounded-full"></div>}
+                      </div>
+                    </button>
+                    
+                    {method === 'crypto' && isCryptoExpanded && (
+                      <div className="w-full p-4 pt-0 grid grid-cols-2 gap-2 animate-in slide-in-from-top-2">
+                        <button
+                          onClick={() => setSelectedCryptoCoin('LTC')}
+                          className={`flex items-center gap-2 p-3 rounded-xl border transition-all ${
+                            selectedCryptoCoin === 'LTC' 
+                              ? 'bg-blue-500/10 border-blue-500/50 text-white' 
+                              : 'bg-white/5 border-white/5 text-gray-400 hover:bg-white/10 hover:text-white'
+                          }`}
+                        >
+                          <SiLitecoin className={`w-4 h-4 ${selectedCryptoCoin === 'LTC' ? 'text-blue-400' : ''}`} />
+                          <span className="text-sm font-bold">LTC</span>
+                        </button>
+                        <button
+                          onClick={() => setSelectedCryptoCoin('BTC')}
+                          className={`flex items-center gap-2 p-3 rounded-xl border transition-all ${
+                            selectedCryptoCoin === 'BTC' 
+                              ? 'bg-amber-500/10 border-amber-500/50 text-white' 
+                              : 'bg-white/5 border-white/5 text-gray-400 hover:bg-white/10 hover:text-white'
+                          }`}
+                        >
+                          <SiBitcoin className={`w-4 h-4 ${selectedCryptoCoin === 'BTC' ? 'text-amber-400' : ''}`} />
+                          <span className="text-sm font-bold">BTC</span>
+                        </button>
+                        <button
+                          onClick={() => setSelectedCryptoCoin('USDT_TRC20')}
+                          className={`flex items-center gap-2 p-3 rounded-xl border transition-all ${
+                            selectedCryptoCoin === 'USDT_TRC20' 
+                              ? 'bg-emerald-500/10 border-emerald-500/50 text-white' 
+                              : 'bg-white/5 border-white/5 text-gray-400 hover:bg-white/10 hover:text-white'
+                          }`}
+                        >
+                          <SiTether className={`w-4 h-4 ${selectedCryptoCoin === 'USDT_TRC20' ? 'text-emerald-400' : ''}`} />
+                          <span className="text-sm font-bold">USDT <span className="text-[10px] text-gray-500 ml-1 font-mono">TRC20</span></span>
+                        </button>
+                        <button
+                          onClick={() => setSelectedCryptoCoin('SOL')}
+                          className={`flex items-center gap-2 p-3 rounded-xl border transition-all ${
+                            selectedCryptoCoin === 'SOL' 
+                              ? 'bg-purple-500/10 border-purple-500/50 text-white' 
+                              : 'bg-white/5 border-white/5 text-gray-400 hover:bg-white/10 hover:text-white'
+                          }`}
+                        >
+                          <SiSolana className={`w-4 h-4 ${selectedCryptoCoin === 'SOL' ? 'text-purple-400' : ''}`} />
+                          <span className="text-sm font-bold">SOL</span>
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                  </>
+                  )}
+                </div>
+              </div>
+
               {/* Receipt & Action */}
               <div>
                 {errorMsg && (

@@ -104,6 +104,7 @@ export async function POST(req: Request) {
       description: description,
       lifeTime: 60,
       callbackUrl: `${baseUrl}/api/webhook/oxapay`,
+      callback_url: `${baseUrl}/api/webhook/oxapay`,
     };
 
     const cryptoMap: Record<string, {currency: string, network: string}> = {

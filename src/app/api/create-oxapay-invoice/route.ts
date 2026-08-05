@@ -98,7 +98,7 @@ export async function POST(req: Request) {
     const oxapayPayload: any = {
       amount: Number(totalAmount.toFixed(2)),
       currency: "EUR",
-      orderId: pendingOrder.id,
+      order_id: pendingOrder.id,
       description: description,
       lifeTime: 60,
       callbackUrl: `${baseUrl}/api/webhook/oxapay`,

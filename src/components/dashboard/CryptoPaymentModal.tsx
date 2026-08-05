@@ -44,10 +44,12 @@ export function CryptoPaymentModal({ payAddress, payAmount, trackId, orderId, cu
         });
         const data = await res.json();
         
-        if (data.status === 'Paid' || data.status === 'Completed' || data.status === 'Finished') {
+        const statusStr = String(data.status || "").toLowerCase();
+        
+        if (statusStr === 'paid' || statusStr === 'completed' || statusStr === 'finished') {
           setIsPaid(true);
           clearInterval(pollInterval);
-        } else if (data.status === 'Expired' || data.status === 'Failed') {
+        } else if (statusStr === 'expired' || statusStr === 'failed') {
           // Could handle failure here
           clearInterval(pollInterval);
         } else if (data.status) {
@@ -128,7 +130,11 @@ export function CryptoPaymentModal({ payAddress, payAmount, trackId, orderId, cu
               </div>
               <div className="text-[10px] uppercase tracking-widest text-accent font-bold mb-8 flex items-center justify-center gap-2">
                 <div className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
-                {String(paymentStatus).includes("Confirm") ? "Confirming Payment..." : "Awaiting payment"}
+                {String(paymentStatus).toLowerCase().includes("confirm") 
+                  ? paymentStatus 
+                  : String(paymentStatus).toLowerCase().includes("paid")
+                    ? "Payment Verified"
+                    : "Awaiting payment"}
               </div>
 
               <div className="text-xs text-gray-500 font-bold tracking-widest uppercase mb-2">Send Exactly</div>
@@ -187,9 +193,30 @@ export function CryptoPaymentModal({ payAddress, payAmount, trackId, orderId, cu
                 </button>
               </div>
 
-              <div className="flex items-center justify-center gap-2 text-[10px] font-bold text-accent uppercase tracking-widest">
-                <div className="w-3 h-3 rounded-full border-[1.5px] border-accent border-t-transparent animate-spin" />
-                {String(paymentStatus).includes("Waiting") ? "Waiting for your payment..." : String(paymentStatus)}
+              <div className="flex items-center justify-center gap-3 text-[10px] font-bold uppercase tracking-widest">
+                {(() => {
+                  const normalized = String(paymentStatus).toLowerCase();
+                  const step = (normalized.includes('paid') || normalized.includes('completed') || normalized.includes('finished')) ? 3 :
+                               normalized.includes('confirm') ? 2 : 1;
+                  
+                  return (
+                    <>
+                      <div className={`flex items-center gap-1.5 transition-colors ${step === 1 ? 'text-accent' : 'text-neutral-600'}`}>
+                        {step === 1 && <div className="w-3 h-3 rounded-full border-[1.5px] border-accent border-t-transparent animate-spin" />}
+                        Waiting
+                      </div>
+                      <div className="text-neutral-800">-</div>
+                      <div className={`flex items-center gap-1.5 transition-colors ${step === 2 ? 'text-accent' : 'text-neutral-600'}`}>
+                        {step === 2 && <div className="w-3 h-3 rounded-full border-[1.5px] border-accent border-t-transparent animate-spin" />}
+                        {step === 2 && paymentStatus.includes('/') ? paymentStatus : 'Confirming'}
+                      </div>
+                      <div className="text-neutral-800">-</div>
+                      <div className={`flex items-center gap-1.5 transition-colors ${step === 3 ? 'text-accent' : 'text-neutral-600'}`}>
+                        Paid
+                      </div>
+                    </>
+                  );
+                })()}
               </div>
             </div>
           </>

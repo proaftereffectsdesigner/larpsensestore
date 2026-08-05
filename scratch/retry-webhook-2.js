@@ -1,14 +1,13 @@
-async function retryWebhook() {
+async function run() {
   const res = await fetch("https://www.larpsensestore.com/api/webhook/oxapay", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      trackId: "152785793",
-      status: "Paid",
-      orderId: "c84210ff-e165-4743-b7f0-3e81674f9dca"
+      trackId: "123771713",
+      status: "Paid"
     })
   });
   console.log("Status:", res.status);
   console.log("Text:", await res.text());
 }
-retryWebhook();
+run();

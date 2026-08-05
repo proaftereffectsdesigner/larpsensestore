@@ -26,7 +26,14 @@ export async function POST(req: Request) {
     try {
       data = JSON.parse(rawBody);
     } catch (e) {
-      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+      try {
+        const searchParams = new URLSearchParams(rawBody);
+        data = Object.fromEntries(searchParams.entries());
+        if (!Object.keys(data).length) throw new Error("Empty URLSearchParams");
+      } catch (err2) {
+        console.error("Failed to parse OxaPay webhook JSON and URLSearchParams. Raw body:", rawBody);
+        return NextResponse.json({ error: "Invalid body format" }, { status: 400 });
+      }
     }
 
     const txnId = data.trackId || data.track_id; 

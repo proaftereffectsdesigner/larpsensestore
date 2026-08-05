@@ -93,7 +93,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Failed to initialize payment" }, { status: 500 });
     }
     
-    const baseUrl = new URL(req.url).origin;
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || new URL(req.url).origin;
 
     const oxapayPayload: any = {
       amount: Number(totalAmount.toFixed(2)),

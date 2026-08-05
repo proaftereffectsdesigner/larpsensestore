@@ -69,6 +69,13 @@ export async function POST(req: Request) {
         console.warn(`OxaPay webhook security failure: OxaPay API reports status ${verifiedStatus} for trackId ${txnId}, but webhook claimed Paid.`);
         return new NextResponse("ok", { status: 200 }); // Return OK to stop OxaPay from retrying a spoofed hook
       }
+
+      const verifiedOrderId = verifyData?.data?.orderId || verifyData?.orderId;
+      if (verifiedOrderId && String(verifiedOrderId) !== String(orderNumber)) {
+        console.warn(`OxaPay webhook security failure: Order ID mismatch. API: ${verifiedOrderId}, Webhook: ${orderNumber}`);
+        return new NextResponse("ok", { status: 200 });
+      }
+
     } catch(e) {
       console.error("Failed to verify transaction with OxaPay Inquiry API", e);
       return NextResponse.json({ error: "Failed to verify transaction" }, { status: 500 });

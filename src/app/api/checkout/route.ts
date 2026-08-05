@@ -15,7 +15,8 @@ export async function POST(req: Request) {
       );
     }
 
-    const { productId, quantity, userId, token, paymentMethod } = await req.json();
+    const { productId, quantity: clientQuantity, userId, token, paymentMethod } = await req.json();
+    const quantity = Math.max(1, Math.floor(Number(clientQuantity || 1)));
 
     if (!productId || !quantity || quantity < 1 || quantity > 100 || !userId || !token) {
       return NextResponse.json({ error: "Invalid parameters or not logged in" }, { status: 400 });

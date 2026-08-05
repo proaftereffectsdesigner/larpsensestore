@@ -20,7 +20,7 @@ export async function POST(req: Request) {
     const { userId, token, amount: clientAmount, currency, type = "topup", productId, quantity: clientQuantity } = await req.json();
 
     let amount = Number(clientAmount);
-    let quantity = Number(clientQuantity || 1);
+    let quantity = Math.max(1, Math.floor(Number(clientQuantity || 1)));
 
     if (!userId || !token || !amount) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });

@@ -534,6 +534,11 @@ export default function CategoryPage() {
                               <span className="text-sm font-bold">
                                 {selectedCryptoCoin === 'USDT_TRC20' ? 'USDT' : selectedCryptoCoin === 'USDC_ERC20' ? 'USDC' : selectedCryptoCoin}
                               </span>
+                              {selectedCryptoCoin === 'BTC' && (
+                                <span className="text-[10px] text-amber-500/80 font-bold ml-1">
+                                  (Min. €15)
+                                </span>
+                              )}
                             </>
                           )}
                         </div>
@@ -598,7 +603,7 @@ export default function CategoryPage() {
           ) : (
             <button 
               onClick={handleCheckout}
-              disabled={loadingCheckout || loadingStock || stock === 0 || (paymentMethod === 'crypto' && selectedCryptoCoin === 'USDT_TON' && totalPrice < 5)}
+              disabled={loadingCheckout || loadingStock || stock === 0 || (paymentMethod === 'crypto' && selectedCryptoCoin === 'BTC' && totalPrice < 15)}
               className="w-full bg-emerald-500 hover:bg-emerald-400 text-black font-bold rounded-2xl px-4 py-4 flex items-center justify-center gap-2 transition-all shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:shadow-[0_0_30px_rgba(16,185,129,0.5)] disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none hover:-translate-y-0.5 disabled:hover:translate-y-0"
             >
               {loadingCheckout ? (

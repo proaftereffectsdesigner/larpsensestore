@@ -182,7 +182,8 @@ export default function TopUpModal() {
                     <button
                       key={preset}
                     onClick={() => { setAmount(preset); setRawAmount(String(preset)); }}
-                      className={`py-3 rounded-xl font-bold transition-all ${amount === preset ? 'bg-accent text-white shadow-[0_0_15px_rgba(255,255,255,0.1)]' : 'bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white'}`}
+                      disabled={(method === 'crypto' && selectedCryptoCoin === 'BTC' && preset < 15)}
+                      className={`py-3 rounded-xl font-bold transition-all ${amount === preset ? 'bg-accent text-white shadow-[0_0_15px_rgba(255,255,255,0.1)]' : 'bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white'} disabled:opacity-30 disabled:cursor-not-allowed`}
                     >
                       €{preset}
                     </button>
@@ -294,6 +295,11 @@ export default function TopUpModal() {
                                   <span className="text-sm font-bold">
                                     {selectedCryptoCoin === 'USDT_TRC20' ? 'USDT' : selectedCryptoCoin === 'USDC_ERC20' ? 'USDC' : selectedCryptoCoin}
                                   </span>
+                                  {selectedCryptoCoin === 'BTC' && (
+                                    <span className="text-[10px] text-amber-500/80 font-bold ml-1">
+                                      (Min. €15)
+                                    </span>
+                                  )}
                                 </>
                               )}
                             </div>
@@ -361,7 +367,7 @@ export default function TopUpModal() {
 
                 <button
                   onClick={startPaymentSimulation}
-                  disabled={amount < 0.50}
+                  disabled={amount < 0.50 || (method === 'crypto' && selectedCryptoCoin === 'BTC' && amount < 15)}
                   className="w-full bg-accent hover:bg-accent/90 text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_20px_rgba(255,255,255,0.1)] hover:shadow-[0_0_30px_rgba(255,255,255,0.2)]"
                 >
                   Confirm Payment <ChevronRight className="w-5 h-5" />

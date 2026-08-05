@@ -26,6 +26,7 @@ export function CryptoPaymentModal({ payAddress, payAmount, trackId, orderId, cu
   const [copied, setCopied] = useState(false);
   const [timeLeft, setTimeLeft] = useState(60 * 60); // 60 minutes
   const [isPaid, setIsPaid] = useState(false);
+  const [paymentStatus, setPaymentStatus] = useState("Waiting");
 
   useEffect(() => {
     // Basic countdown timer
@@ -43,12 +44,15 @@ export function CryptoPaymentModal({ payAddress, payAmount, trackId, orderId, cu
         });
         const data = await res.json();
         
-        if (data.status === 'Paid' || data.status === 'Completed') {
+        if (data.status === 'Paid' || data.status === 'Completed' || data.status === 'Finished') {
           setIsPaid(true);
           clearInterval(pollInterval);
         } else if (data.status === 'Expired' || data.status === 'Failed') {
           // Could handle failure here
           clearInterval(pollInterval);
+        } else if (data.status) {
+          // Update status text if it's confirming or waiting
+          setPaymentStatus(data.status);
         }
       } catch (err) {
         console.error("Polling error:", err);
@@ -110,7 +114,7 @@ export function CryptoPaymentModal({ payAddress, payAmount, trackId, orderId, cu
               <CheckCircle2 className="w-12 h-12 text-emerald-400 relative z-10" />
             </div>
             <h2 className="text-2xl font-black text-white mb-2">Payment Completed!</h2>
-            <p className="text-neutral-400 mb-8 font-medium">Your balance has been updated successfully.</p>
+            <p className="text-neutral-400 mb-8 font-medium">Your payment has been processed successfully.</p>
             <button onClick={onSuccess} className="w-full bg-accent hover:bg-accent/90 text-white font-bold py-4 rounded-xl transition-all shadow-[0_0_20px_rgba(255,255,255,0.1)] hover:shadow-[0_0_30px_rgba(255,255,255,0.2)]">
               Continue
             </button>
@@ -124,7 +128,7 @@ export function CryptoPaymentModal({ payAddress, payAmount, trackId, orderId, cu
               </div>
               <div className="text-[10px] uppercase tracking-widest text-accent font-bold mb-8 flex items-center justify-center gap-2">
                 <div className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
-                Awaiting payment
+                {paymentStatus.includes("Confirm") ? "Confirming Payment..." : "Awaiting payment"}
               </div>
 
               <div className="text-xs text-gray-500 font-bold tracking-widest uppercase mb-2">Send Exactly</div>
@@ -185,7 +189,7 @@ export function CryptoPaymentModal({ payAddress, payAmount, trackId, orderId, cu
 
               <div className="flex items-center justify-center gap-2 text-[10px] font-bold text-accent uppercase tracking-widest">
                 <div className="w-3 h-3 rounded-full border-[1.5px] border-accent border-t-transparent animate-spin" />
-                Waiting for your payment...
+                {paymentStatus.includes("Waiting") ? "Waiting for your payment..." : paymentStatus}
               </div>
             </div>
           </>

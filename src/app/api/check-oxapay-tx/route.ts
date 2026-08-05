@@ -29,7 +29,7 @@ export async function POST(req: Request) {
     });
 
     const inquiryData = await inquiryRes.json();
-    const status = inquiryData?.status;
+    const status = inquiryData?.data?.status || inquiryData?.status;
 
     // "Paid" means transaction was completed in blockchain and processed by Oxapay
     // We send back the status to frontend modal

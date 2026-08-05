@@ -66,7 +66,7 @@ export async function POST(req: Request) {
       const verifyData = await verifyRes.json();
       
       const verifiedStatus = verifyData?.data?.status || verifyData?.status;
-      if (verifiedStatus !== "Paid") {
+      if (verifiedStatus !== "Paid" && verifiedStatus !== "Completed" && verifiedStatus !== "Finished") {
         console.warn(`OxaPay webhook security failure: OxaPay API reports status ${verifiedStatus} for trackId ${txnId}, but webhook claimed Paid.`);
         return new NextResponse("ok", { status: 200 }); // Return OK to stop OxaPay from retrying a spoofed hook
       }

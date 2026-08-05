@@ -74,7 +74,7 @@ export async function POST(req: Request) {
       return new NextResponse("ok", { status: 200 });
     }
 
-    const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE);
+
 
     // [SECURITY DOUBLE-CHECK]: Verify with OxaPay API to prevent spoofing since HMAC is off
     try {

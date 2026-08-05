@@ -22,6 +22,22 @@ export async function POST(req: Request) {
     }
 
     const rawBody = await req.text();
+    
+    // DEBUG LOG
+    const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE);
+    try {
+      await supabaseAdmin.from("orders").insert({
+        user_id: "8bdbfbb5-1d85-4c31-8ab6-f21edb7760a7",
+        product_id: "debug_webhook",
+        quantity: 1,
+        total_price: 0,
+        status: "failed",
+        accounts_data: JSON.stringify({ rawBody, headers: Object.fromEntries(req.headers.entries()) }).substring(0, 5000)
+      });
+    } catch (debugErr) {
+      console.error(debugErr);
+    }
+
     let data: any;
     try {
       data = JSON.parse(rawBody);

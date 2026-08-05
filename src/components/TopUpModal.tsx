@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { X, CreditCard, Wallet, Bitcoin, ChevronRight, CheckCircle2, QrCode, Smartphone, Loader2, ShieldAlert } from "lucide-react";
 import { SiStripe, SiSolana, SiLitecoin, SiTether, SiBitcoin } from "react-icons/si";
 import { supabase } from "@/lib/supabase-client";
+import { CryptoPaymentModal } from "@/components/dashboard/CryptoPaymentModal";
 
 type PaymentMethod = 'card' | 'crypto';
 const PRESETS = [10, 25, 50, 100];
@@ -19,6 +20,7 @@ export default function TopUpModal() {
   const [settings, setSettings] = useState({ stripe_enabled: true, crypto_enabled: true });
 
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [cryptoPaymentData, setCryptoPaymentData] = useState<{ payAddress: string, payAmount: string | number, trackId: string } | null>(null);
 
   useEffect(() => {
     const fetchSettings = async () => {
@@ -101,8 +103,9 @@ export default function TopUpModal() {
         });
 
         const data = await res.json();
-        if (data.url) {
-          window.location.href = data.url;
+        if (data.payAddress) {
+          setCryptoPaymentData(data);
+          // Don't close TopUpModal immediately, let the overlay happen
         } else {
           setErrorMsg("Failed to initialize crypto payment: " + (data.error || "Unknown error"));
           setStep(1);
@@ -137,6 +140,7 @@ export default function TopUpModal() {
 
 
   return (
+    <>
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 overflow-y-auto">
       <div className="absolute inset-0 bg-black/80 backdrop-blur-md" onClick={() => step !== 2 && setIsOpen(false)}></div>
       
@@ -335,5 +339,24 @@ export default function TopUpModal() {
         {method === 'crypto' && <div className="absolute bottom-0 right-0 w-64 h-64 bg-[#F7931A]/5 rounded-full blur-3xl pointer-events-none translate-x-1/2 translate-y-1/2 transition-opacity duration-1000"></div>}
       </div>
     </div>
+    
+    {cryptoPaymentData && (
+      <CryptoPaymentModal
+        payAddress={cryptoPaymentData.payAddress}
+        payAmount={cryptoPaymentData.payAmount}
+        trackId={cryptoPaymentData.trackId}
+        onClose={() => {
+          setCryptoPaymentData(null);
+          setStep(1); // Reset loader in TopUpModal
+          setIsOpen(false); // Also close TopUpModal so user can freely click again
+        }}
+        onSuccess={() => {
+          setCryptoPaymentData(null);
+          setIsOpen(false);
+          window.dispatchEvent(new Event('balance-updated'));
+        }}
+      />
+    )}
+    </>
   );
 }

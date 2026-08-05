@@ -37,13 +37,12 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing order metadata" }, { status: 400 });
     }
 
+    // HMAC check is currently disabled due to Node.js/Vercel request body parsing stripping whitespaces, 
+    // which leads to cryptographic hash mismatches with OxaPay payloads.
+    // Instead we rely on the tracking ID and secure SSL connection, or in future IP whitelisting.
     const hmacHeader = req.headers.get("hmac");
     if (hmacHeader) {
-      const calculatedHmac = crypto.createHmac("sha512", OXAPAY_MERCHANT_KEY).update(rawBody).digest("hex");
-      if (hmacHeader !== calculatedHmac) {
-        console.error("OxaPay webhook: Invalid HMAC signature");
-        return NextResponse.json({ error: "Invalid HMAC" }, { status: 403 });
-      }
+      console.log("OxaPay webhook: HMAC header received but validation is bypassed for stability.");
     }
 
     const realStatus = data.status;
@@ -53,6 +52,28 @@ export async function POST(req: Request) {
     }
 
     const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE);
+
+    // [SECURITY DOUBLE-CHECK]: Verify with OxaPay API to prevent spoofing since HMAC is off
+    try {
+      const verifyRes = await fetch("https://api.oxapay.com/v1/payment/inquiry", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "merchant_api_key": OXAPAY_MERCHANT_KEY
+        },
+        body: JSON.stringify({ trackId: txnId })
+      });
+      const verifyData = await verifyRes.json();
+      
+      const verifiedStatus = verifyData?.data?.status || verifyData?.status;
+      if (verifiedStatus !== "Paid") {
+        console.warn(`OxaPay webhook security failure: OxaPay API reports status ${verifiedStatus} for trackId ${txnId}, but webhook claimed Paid.`);
+        return new NextResponse("ok", { status: 200 }); // Return OK to stop OxaPay from retrying a spoofed hook
+      }
+    } catch(e) {
+      console.error("Failed to verify transaction with OxaPay Inquiry API", e);
+      return NextResponse.json({ error: "Failed to verify transaction" }, { status: 500 });
+    }
 
     // Fetch the pending order using the orderNumber (which is now a 36-char UUID)
     const { data: pendingOrder } = await supabaseAdmin

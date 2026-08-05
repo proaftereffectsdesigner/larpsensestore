@@ -105,16 +105,10 @@ export async function POST(req: Request) {
     };
 
     if (currency) {
-        oxapayPayload.toCurrency = currency; 
+        oxapayPayload.pay_currency = currency; // For white-label V1 API
     }
 
-    if (type === "product_checkout") {
-      oxapayPayload.returnUrl = `${baseUrl}/dashboard?order=success`;
-    } else {
-      oxapayPayload.returnUrl = `${baseUrl}/dashboard`;
-    }
-
-    const oxapayRes = await fetch("https://api.oxapay.com/v1/payment/invoice", {
+    const oxapayRes = await fetch("https://api.oxapay.com/v1/payment/white-label", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -125,15 +119,16 @@ export async function POST(req: Request) {
 
     const oxapayData = await oxapayRes.json();
 
-    // V1 API returns { data: { payLink: '...' } } on success
-    // Old API returned { result: 100, payLink: '...' }
-    const payLink = oxapayData?.data?.payLink || oxapayData?.data?.payment_url || oxapayData?.payLink;
+    const data = oxapayData?.data || oxapayData;
+    const payAddress = data?.payAddress || data?.address;
+    const payAmount = data?.payAmount || data?.amount;
+    const trackId = data?.trackId || data?.track_id;
 
-    if (oxapayRes.ok && payLink) {
-      return NextResponse.json({ url: payLink });
+    if (oxapayRes.ok && payAddress) {
+      return NextResponse.json({ payAddress, payAmount, trackId });
     } else {
-      console.error("OxaPay Invoice Error:", oxapayData);
-      let errorMsg = oxapayData?.message || oxapayData?.error || "Failed to create crypto invoice";
+      console.error("OxaPay White-Label Error:", oxapayData);
+      let errorMsg = oxapayData?.message || oxapayData?.error || "Failed to generate white-label address";
       if (oxapayData?.errors) {
          errorMsg += " " + JSON.stringify(oxapayData.errors);
       }

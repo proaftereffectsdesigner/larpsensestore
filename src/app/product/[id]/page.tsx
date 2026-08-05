@@ -7,6 +7,7 @@ import { supabase } from "@/lib/supabase-client";
 import { User } from "@supabase/supabase-js";
 import { CheckCircle2, CreditCard, Wallet, ChevronDown, ChevronRight, Minus, Plus, ShieldCheck, ShieldAlert } from "lucide-react";
 import { SiSolana, SiLitecoin, SiTether, SiBitcoin } from "react-icons/si";
+import { CryptoPaymentModal } from "@/components/dashboard/CryptoPaymentModal";
 
 
 export default function ProductPage() {
@@ -38,6 +39,7 @@ export default function ProductPage() {
   const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0, width: 0 });
   const [loadingSettings, setLoadingSettings] = useState(true);
   const [settings, setSettings] = useState({ stripe_enabled: true, crypto_enabled: true });
+  const [cryptoPaymentData, setCryptoPaymentData] = useState<{ payAddress: string, payAmount: string | number, trackId: string } | null>(null);
 
   // Recalculate dropdown position whenever it opens or window resizes
   const updateDropdownPos = useCallback(() => {
@@ -161,12 +163,12 @@ export default function ProductPage() {
           })
         });
         const data = await res.json();
-        if (data.url) {
-          window.location.href = data.url;
+        if (data.payAddress) {
+          setCryptoPaymentData(data);
         } else {
           alert("Crypto Checkout failed: " + (data.error || "Unknown error"));
-          setLoadingCheckout(false);
         }
+        setLoadingCheckout(false);
       } else {
         const res = await fetch("/api/checkout", {
           method: "POST",
@@ -197,6 +199,7 @@ export default function ProductPage() {
   const totalPrice = product.price * quantity;
 
   return (
+    <>
     <div className="flex justify-center items-center py-12 px-4 relative z-10 min-h-[calc(100vh-80px)]">
       <div className="bg-[#111111] border border-white/5 rounded-3xl p-6 md:p-8 w-full max-w-[min(420px,90vw)] shadow-2xl relative">
         
@@ -384,5 +387,19 @@ export default function ProductPage() {
         
       </div>
     </div>
+    
+    {cryptoPaymentData && (
+      <CryptoPaymentModal
+        payAddress={cryptoPaymentData.payAddress}
+        payAmount={cryptoPaymentData.payAmount}
+        trackId={cryptoPaymentData.trackId}
+        onClose={() => setCryptoPaymentData(null)}
+        onSuccess={() => {
+          setCryptoPaymentData(null);
+          router.push("/dashboard?order=success");
+        }}
+      />
+    )}
+    </>
   );
 }

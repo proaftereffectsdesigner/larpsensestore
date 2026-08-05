@@ -7,6 +7,7 @@ import { supabase } from "@/lib/supabase-client";
 import { User } from "@supabase/supabase-js";
 import { CheckCircle2, CreditCard, Wallet, ChevronDown, ChevronRight, ChevronLeft, Minus, Plus, ShieldCheck, Gamepad2, Info, Zap, Lock, RefreshCcw, ShieldAlert, Star } from "lucide-react";
 import { SiSolana, SiLitecoin, SiTether, SiBitcoin } from "react-icons/si";
+import { CryptoPaymentModal } from "@/components/dashboard/CryptoPaymentModal";
 
 import ParticlesBackground from "@/components/ParticlesBackground";
 import Image from "next/image";
@@ -53,10 +54,12 @@ export default function CategoryPage() {
   const [selectedCryptoCoin, setSelectedCryptoCoin] = useState<string | null>(null);
   const [isCryptoExpanded, setIsCryptoExpanded] = useState(false);
   const [isVariantDropdownOpen, setIsVariantDropdownOpen] = useState(false);
+  const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0, width: 0 });
   const paymentDropdownRef = useRef<HTMLDivElement>(null);
   
   const [loadingSettings, setLoadingSettings] = useState(true);
   const [settings, setSettings] = useState({ stripe_enabled: true, crypto_enabled: true });
+  const [cryptoPaymentData, setCryptoPaymentData] = useState<{ payAddress: string, payAmount: string | number, trackId: string } | null>(null);
 
   // Reviews state
   const [reviews, setReviews] = useState<any[]>([]);
@@ -193,12 +196,12 @@ export default function CategoryPage() {
           })
         });
         const data = await res.json();
-        if (data.url) {
-          window.location.href = data.url;
+        if (data.payAddress) {
+          setCryptoPaymentData(data);
         } else {
           alert("Crypto Checkout failed: " + (data.error || "Unknown error"));
-          setLoadingCheckout(false);
         }
+        setLoadingCheckout(false);
       } else {
         const res = await fetch("/api/checkout", {
           method: "POST",
@@ -241,6 +244,7 @@ export default function CategoryPage() {
   });
 
   return (
+    <>
     <div className="flex flex-col items-center py-12 px-4 relative z-10 min-h-[calc(100vh-80px)] mt-8">
       <div className="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
         
@@ -676,7 +680,20 @@ export default function CategoryPage() {
           </div>
         )}
       </div>
-
     </div>
+    
+    {cryptoPaymentData && (
+      <CryptoPaymentModal
+        payAddress={cryptoPaymentData.payAddress}
+        payAmount={cryptoPaymentData.payAmount}
+        trackId={cryptoPaymentData.trackId}
+        onClose={() => setCryptoPaymentData(null)}
+        onSuccess={() => {
+          setCryptoPaymentData(null);
+          router.push("/dashboard?order=success");
+        }}
+      />
+    )}
+    </>
   );
 }

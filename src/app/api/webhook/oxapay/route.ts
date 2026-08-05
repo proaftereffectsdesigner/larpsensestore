@@ -23,7 +23,7 @@ export async function POST(req: Request) {
 
     const rawBody = await req.text();
     
-
+    const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE);
 
     let data: any;
     try {

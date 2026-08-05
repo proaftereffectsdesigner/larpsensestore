@@ -5,8 +5,8 @@ import { useParams, useRouter } from "next/navigation";
 import { products } from "@/lib/products";
 import { supabase } from "@/lib/supabase-client";
 import { User } from "@supabase/supabase-js";
-import { CheckCircle2, CreditCard, Wallet, ChevronDown, ChevronRight, Minus, Plus, ShieldCheck, ShieldAlert } from "lucide-react";
-import { SiSolana, SiLitecoin, SiTether, SiBitcoin } from "react-icons/si";
+import { CheckCircle2, CreditCard, Wallet, ChevronDown, ChevronRight, Minus, Plus, ShieldCheck, ShieldAlert, AlertCircle, ShoppingBag, CircleDollarSign } from "lucide-react";
+import { SiStripe, SiSolana, SiLitecoin, SiTether, SiBitcoin, SiEthereum } from "react-icons/si";
 import { CryptoPaymentModal } from "@/components/dashboard/CryptoPaymentModal";
 
 
@@ -30,10 +30,10 @@ export default function ProductPage() {
   const [user, setUser] = useState<User | null>(null);
   const [authChecked, setAuthChecked] = useState(false);
   
-  const [paymentMethod, setPaymentMethod] = useState<"polar" | "crypto" | "balance">("polar");
+  const [paymentMethod, setPaymentMethod] = useState<"stripe" | "crypto" | "balance">("stripe");
   const [selectedCryptoCoin, setSelectedCryptoCoin] = useState<string | null>(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [isCryptoExpanded, setIsCryptoExpanded] = useState(false);
+  const [isCryptoCoinDropdownOpen, setIsCryptoCoinDropdownOpen] = useState(false);
   const paymentDropdownRef = useRef<HTMLDivElement>(null);
   const paymentButtonRef = useRef<HTMLButtonElement>(null);
   const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0, width: 0 });
@@ -339,51 +339,54 @@ export default function ProductPage() {
         {paymentMethod === 'crypto' && (
           <div className="mb-8 animate-in fade-in slide-in-from-top-2">
             <label className="block text-[14px] font-bold text-white mb-2">Select Cryptocurrency</label>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="relative">
               <button
-                onClick={() => setSelectedCryptoCoin('LTC')}
-                className={`flex items-center gap-2 p-3 rounded-xl border transition-all ${
-                  selectedCryptoCoin === 'LTC' 
-                    ? 'bg-blue-500/10 border-blue-500/50 text-white' 
-                    : 'bg-white/5 border-white/5 text-gray-400 hover:bg-white/10 hover:text-white'
-                }`}
+                onClick={() => setIsCryptoCoinDropdownOpen(!isCryptoCoinDropdownOpen)}
+                className="w-full flex items-center justify-between p-3 rounded-xl border bg-white/5 border-white/5 text-white hover:bg-white/10 transition-colors"
               >
-                <SiLitecoin className={`w-4 h-4 ${selectedCryptoCoin === 'LTC' ? 'text-blue-400' : ''}`} />
-                <span className="text-sm font-bold">LTC</span>
+                <div className="flex items-center gap-3">
+                  {!selectedCryptoCoin ? (
+                    <span className="text-gray-400 text-sm">Select cryptocurrency...</span>
+                  ) : (
+                    <>
+                      {selectedCryptoCoin === 'BTC' && <SiBitcoin className="w-4 h-4 text-amber-500" />}
+                      {selectedCryptoCoin === 'ETH' && <SiEthereum className="w-4 h-4 text-indigo-400" />}
+                      {selectedCryptoCoin === 'USDT_TRC20' && <SiTether className="w-4 h-4 text-emerald-500" />}
+                      {selectedCryptoCoin === 'USDC_ERC20' && <CircleDollarSign className="w-4 h-4 text-blue-400" />}
+                      {selectedCryptoCoin === 'LTC' && <SiLitecoin className="w-4 h-4 text-blue-400" />}
+                      {selectedCryptoCoin === 'SOL' && <SiSolana className="w-4 h-4 text-purple-500" />}
+                      <span className="text-sm font-bold">
+                        {selectedCryptoCoin === 'USDT_TRC20' ? 'USDT' : selectedCryptoCoin === 'USDC_ERC20' ? 'USDC' : selectedCryptoCoin}
+                      </span>
+                    </>
+                  )}
+                </div>
+                <ChevronDown className={`w-4 h-4 text-gray-500 transition-transform ${isCryptoCoinDropdownOpen ? 'rotate-180' : ''}`} />
               </button>
-              <button
-                onClick={() => setSelectedCryptoCoin('BTC')}
-                className={`flex items-center gap-2 p-3 rounded-xl border transition-all ${
-                  selectedCryptoCoin === 'BTC' 
-                    ? 'bg-amber-500/10 border-amber-500/50 text-white' 
-                    : 'bg-white/5 border-white/5 text-gray-400 hover:bg-white/10 hover:text-white'
-                }`}
-              >
-                <SiBitcoin className={`w-4 h-4 ${selectedCryptoCoin === 'BTC' ? 'text-amber-400' : ''}`} />
-                <span className="text-sm font-bold">BTC</span>
-              </button>
-              <button
-                onClick={() => setSelectedCryptoCoin('USDT_TRC20')}
-                className={`flex items-center gap-2 p-3 rounded-xl border transition-all ${
-                  selectedCryptoCoin === 'USDT_TRC20' 
-                    ? 'bg-emerald-500/10 border-emerald-500/50 text-white' 
-                    : 'bg-white/5 border-white/5 text-gray-400 hover:bg-white/10 hover:text-white'
-                }`}
-              >
-                <SiTether className={`w-4 h-4 ${selectedCryptoCoin === 'USDT_TRC20' ? 'text-emerald-400' : ''}`} />
-                <span className="text-sm font-bold">USDT <span className="text-[10px] text-gray-500 ml-1 font-mono">TRC20</span></span>
-              </button>
-              <button
-                onClick={() => setSelectedCryptoCoin('SOL')}
-                className={`flex items-center gap-2 p-3 rounded-xl border transition-all ${
-                  selectedCryptoCoin === 'SOL' 
-                    ? 'bg-purple-500/10 border-purple-500/50 text-white' 
-                    : 'bg-white/5 border-white/5 text-gray-400 hover:bg-white/10 hover:text-white'
-                }`}
-              >
-                <SiSolana className={`w-4 h-4 ${selectedCryptoCoin === 'SOL' ? 'text-purple-400' : ''}`} />
-                <span className="text-sm font-bold">SOL</span>
-              </button>
+              
+              {isCryptoCoinDropdownOpen && (
+                <div className="absolute top-full left-0 right-0 mt-2 bg-[#1c1c1c] border border-white/10 rounded-xl overflow-hidden z-50 shadow-2xl">
+                  {[
+                    { id: 'BTC', label: 'Bitcoin (BTC)', icon: <SiBitcoin className="w-4 h-4 text-amber-500" /> },
+                    { id: 'ETH', label: 'Ethereum (ETH)', icon: <SiEthereum className="w-4 h-4 text-indigo-400" /> },
+                    { id: 'USDT_TRC20', label: 'Tether (USDT)', icon: <SiTether className="w-4 h-4 text-emerald-500" /> },
+                    { id: 'USDC_ERC20', label: 'USD Coin (USDC)', icon: <CircleDollarSign className="w-4 h-4 text-blue-400" /> },
+                    { id: 'LTC', label: 'Litecoin (LTC)', icon: <SiLitecoin className="w-4 h-4 text-blue-400" /> },
+                    { id: 'SOL', label: 'Solana (SOL)', icon: <SiSolana className="w-4 h-4 text-purple-500" /> },
+                  ].map((coin) => (
+                    <button
+                      key={coin.id}
+                      onClick={() => { setSelectedCryptoCoin(coin.id); setIsCryptoCoinDropdownOpen(false); }}
+                      className="w-full flex items-center gap-3 p-3 text-left hover:bg-white/5 transition-colors border-b border-white/5 last:border-0"
+                    >
+                      <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center">
+                        {coin.icon}
+                      </div>
+                      <span className="text-sm font-medium text-white">{coin.label}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         )}

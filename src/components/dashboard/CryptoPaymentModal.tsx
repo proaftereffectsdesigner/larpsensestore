@@ -24,18 +24,37 @@ export function CryptoPaymentModal({ payAddress, payAmount, trackId, onClose, on
 
   useEffect(() => {
     // Basic countdown timer
-    const interval = setInterval(() => {
+    const timerInterval = setInterval(() => {
       setTimeLeft(prev => prev > 0 ? prev - 1 : 0);
     }, 1000);
-    return () => clearInterval(interval);
-  }, []);
 
-  // Poll Supabase for changes to this order via trackId
-  // Wait, trackId is not stored in our orders database! Order ID is stored!
-  // To avoid changing too many files, we can just poll the order status. But we don't have order ID passed here.
-  // Actually, we can pass orderId from the parent component. 
-  // For now, let's just make it look cool and rely on a 'Check Status' button or just close button.
-  // We will assume the parent component polls or the user just refreshes.
+    // Automated API polling for transaction status
+    const pollInterval = setInterval(async () => {
+      try {
+        const res = await fetch('/api/check-oxapay-tx', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ trackId })
+        });
+        const data = await res.json();
+        
+        if (data.status === 'Paid' || data.status === 'Completed') {
+          setIsPaid(true);
+          clearInterval(pollInterval);
+        } else if (data.status === 'Expired' || data.status === 'Failed') {
+          // Could handle failure here
+          clearInterval(pollInterval);
+        }
+      } catch (err) {
+        console.error("Polling error:", err);
+      }
+    }, 5000); // Check every 5 seconds
+
+    return () => {
+      clearInterval(timerInterval);
+      clearInterval(pollInterval);
+    };
+  }, [trackId]);
 
   const handleCopy = () => {
     navigator.clipboard.writeText(payAddress);
@@ -90,16 +109,18 @@ export function CryptoPaymentModal({ payAddress, payAmount, trackId, onClose, on
               </div>
             </div>
 
-            <div className="flex justify-between items-center text-sm">
+            <div className="flex items-center justify-between text-sm mb-8">
               <span className="text-neutral-400">Time remaining</span>
-              <span className="text-amber-500 font-mono font-medium">
-                {minutes.toString().padStart(2, '0')}:{seconds.toString().padStart(2, '0')}
-              </span>
+              <span className="font-mono text-amber-500 font-bold">{String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}</span>
             </div>
-            
-            <button onClick={onSuccess} className="w-full mt-6 bg-neutral-800 hover:bg-neutral-700 text-white font-medium py-3 rounded-xl transition-colors border border-neutral-700">
-              I have paid
-            </button>
+
+            <div className="w-full bg-white/5 border border-white/10 text-white font-medium py-4 rounded-xl flex flex-col items-center justify-center gap-3">
+              <svg className="w-6 h-6 animate-spin text-amber-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              <span className="text-sm text-gray-400">Waiting for network confirmation...</span>
+            </div>
           </>
         )}
       </div>

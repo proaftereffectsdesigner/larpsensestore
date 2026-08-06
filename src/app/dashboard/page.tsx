@@ -263,6 +263,9 @@ function DashboardContent() {
         setSessionToken(session.access_token);
         setUser(session.user);
         loadDashboardData(session.user);
+        if (typeof window !== 'undefined' && window.location.hash.includes('access_token=')) {
+          window.history.replaceState(null, '', window.location.pathname + window.location.search);
+        }
       }
     });
 

@@ -54,10 +54,8 @@ export default function DesktopAuth() {
     if (!session) return;
     setIsRedirecting(true);
     const { access_token, refresh_token } = session;
-    // Small delay for UI smoothness
-    setTimeout(() => {
-      window.location.href = `http://127.0.0.1:54321/callback?access_token=${access_token}&refresh_token=${refresh_token}`;
-    }, 500);
+    // Direct redirect without setTimeout to preserve user gesture context (fixes browser blocks)
+    window.location.assign(`http://127.0.0.1:54321/callback?access_token=${access_token}&refresh_token=${refresh_token}`);
   };
 
   const handleChangeAccount = () => {
@@ -85,9 +83,12 @@ export default function DesktopAuth() {
         <div className="bg-[#0f0f0f] border border-accent/20 rounded-3xl p-8 max-w-md w-full text-center shadow-[0_0_50px_rgba(34,197,94,0.1)]">
           <Loader2 className="w-12 h-12 text-accent animate-spin mx-auto mb-6" />
           <h1 className="text-2xl font-black text-white mb-2 tracking-tight">Authorizing...</h1>
-          <p className="text-gray-400 text-sm">
+          <p className="text-gray-400 text-sm mb-4">
             Redirecting to LarpSense NFA Tool.<br/>
             You can close this window once the app opens.
+          </p>
+          <p className="text-gray-500 text-xs">
+            If nothing happens, <a href={`http://127.0.0.1:54321/callback?access_token=${session?.access_token}&refresh_token=${session?.refresh_token}`} className="text-accent underline">click here to continue manually</a>.
           </p>
         </div>
       </div>

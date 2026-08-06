@@ -41,9 +41,6 @@ export default function Navbar() {
       setUser(session?.user ?? null);
       if (session?.user) {
         fetchProfileData(session.user.id);
-        if (typeof window !== 'undefined' && window.location.hash.includes('access_token=')) {
-          router.replace(window.location.pathname + window.location.search, { scroll: false });
-        }
       }
     });
 
@@ -51,9 +48,6 @@ export default function Navbar() {
       setUser(session?.user ?? null);
       if (session?.user) {
         fetchProfileData(session.user.id);
-        if (typeof window !== 'undefined' && window.location.hash.includes('access_token=')) {
-          router.replace(window.location.pathname + window.location.search, { scroll: false });
-        }
       }
     });
 
@@ -84,6 +78,13 @@ export default function Navbar() {
       window.removeEventListener('balance-updated', handleBalanceUpdate);
     };
   }, []);
+
+  // Wymuszone czyszczenie hasha (Next.js lubi przywracać hash z cache routera po powrocie np. z podstrony /support do /)
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.location.hash.includes('access_token=')) {
+      window.history.replaceState(null, '', window.location.pathname + window.location.search);
+    }
+  }, [pathname]);
 
   // Close dropdown when clicking outside
   useEffect(() => {

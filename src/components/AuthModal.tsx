@@ -95,10 +95,11 @@ export default function AuthModal() {
     setSuccessMsg("");
 
     try {
+      const sanitizedCode = verificationCode.replace(/\s+/g, '');
       const res = await fetch('/api/auth/verify-code', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token: verificationJwt, code: verificationCode, password }),
+        body: JSON.stringify({ token: verificationJwt, code: sanitizedCode, password }),
       });
       const data = await res.json();
 
@@ -154,7 +155,7 @@ export default function AuthModal() {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/`,
+          redirectTo: window.location.href,
         },
       });
       if (error) throw error;

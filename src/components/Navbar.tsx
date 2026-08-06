@@ -161,7 +161,18 @@ export default function Navbar() {
         </Link>
         
         <div className="hidden md:flex items-center gap-6 ml-6 mr-auto">
-          <Link href="/" className="text-sm font-medium text-gray-400 hover:text-white transition-colors">Home</Link>
+          <Link 
+            href="/" 
+            onClick={(e) => {
+              if (window.location.pathname === '/') {
+                e.preventDefault();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }
+            }}
+            className="text-sm font-medium text-gray-400 hover:text-white transition-colors"
+          >
+            Home
+          </Link>
           <Link href="/support" className="text-sm font-medium text-gray-400 hover:text-white transition-colors">Support</Link>
           <Link href="/faq" className="text-sm font-medium text-gray-400 hover:text-white transition-colors">FAQ</Link>
 

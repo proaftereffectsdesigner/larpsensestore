@@ -81,8 +81,14 @@ export default function Navbar() {
 
   // Wymuszone czyszczenie hasha (Next.js lubi przywracać hash z cache routera po powrocie np. z podstrony /support do /)
   useEffect(() => {
-    if (typeof window !== 'undefined' && window.location.hash.includes('access_token=')) {
-      window.history.replaceState(null, '', window.location.pathname + window.location.search);
+    if (typeof window !== 'undefined') {
+      const hash = window.location.hash;
+      if (hash.includes('access_token=') || hash === '#' || hash === '') {
+        // Only strip if there's actually a trailing '#' in the raw URL
+        if (window.location.href.endsWith('#') || hash.includes('access_token=')) {
+          window.history.replaceState(null, '', window.location.pathname + window.location.search);
+        }
+      }
     }
   }, [pathname]);
 

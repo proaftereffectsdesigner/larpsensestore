@@ -21,6 +21,14 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+/* Zmniejszamy bazowy rozmiar czcionki (domyślnie 16px), 
+   dzięki temu WSZYSTKIE elementy korzystające z jednostek 'rem' 
+   (czyli 99% klas Tailwind, jak p-4, text-lg, w-10 itd.) 
+   pomniejszą się proporcjonalnie w całej aplikacji. */
+html {
+  font-size: 14px;
+}
+
 /* Custom Scrollbar na styl Apple */
 .custom-scrollbar::-webkit-scrollbar {
   width: 6px;

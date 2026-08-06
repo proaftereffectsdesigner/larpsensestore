@@ -338,7 +338,8 @@ export default function OrderDetails() {
             </button>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+          {order?.status !== 'cancelled' && order?.status !== 'refunded' && order?.status !== 'failed' && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
             
             {/* Left Column - Accounts */}
             {order?.product_id === 'topup' ? (
@@ -502,8 +503,8 @@ export default function OrderDetails() {
 
               </div>
             )}
-
           </div>
+          )}
         </div>
       </div>
     </>

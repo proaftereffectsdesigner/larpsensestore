@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter, usePathname } from "next/navigation";
 import { ShoppingCart, LogOut, LayoutGrid, Plus, User as UserIcon, Lock, Shield, AlertTriangle, MessageSquare, Star } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase-client";
@@ -8,6 +9,8 @@ import { User } from "@supabase/supabase-js";
 import ToolDownloadButton from "./ToolDownloadButton";
 
 export default function Navbar() {
+  const router = useRouter();
+  const pathname = usePathname();
   const [user, setUser] = useState<User | null>(null);
   const [balance, setBalance] = useState<number>(0);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -39,7 +42,7 @@ export default function Navbar() {
       if (session?.user) {
         fetchProfileData(session.user.id);
         if (typeof window !== 'undefined' && window.location.hash.includes('access_token=')) {
-          window.history.replaceState(null, '', window.location.pathname + window.location.search);
+          router.replace(window.location.pathname + window.location.search, { scroll: false });
         }
       }
     });
@@ -49,7 +52,7 @@ export default function Navbar() {
       if (session?.user) {
         fetchProfileData(session.user.id);
         if (typeof window !== 'undefined' && window.location.hash.includes('access_token=')) {
-          window.history.replaceState(null, '', window.location.pathname + window.location.search);
+          router.replace(window.location.pathname + window.location.search, { scroll: false });
         }
       }
     });

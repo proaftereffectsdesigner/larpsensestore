@@ -1648,45 +1648,46 @@ function DashboardContent() {
                 Security Settings
               </h2>
               
-              {isGoogleLogin ? (
-                <div className="bg-[#141414] border border-white/5 rounded-3xl p-8 shadow-2xl relative overflow-hidden group">
-                  <div className="absolute -right-4 -top-4 w-32 h-32 bg-red-500/10 rounded-full blur-3xl pointer-events-none" />
-                  <h3 className="font-bold text-xl text-white flex items-center gap-3 mb-3 relative z-10">
-                    <div className="w-8 h-8 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center shadow-inner">
-                      <Lock className="w-4 h-4 text-red-400" />
-                    </div>
-                    Security Restriction
-                  </h3>
-                  <p className="text-gray-400 max-w-lg leading-relaxed relative z-10">
-                    Password or email change is not possible - you are logged in via Google. Please manage your security settings directly through your Google account.
-                  </p>
+              <div className="space-y-6 animate-in fade-in duration-500">
+                <div className="flex flex-wrap gap-2 md:gap-4 mb-8 border-b border-white/10 pb-4">
+                  <button 
+                    onClick={() => setSecurityTab('overview')} 
+                    className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${securityTab === 'overview' ? 'bg-white/10 text-white' : 'text-gray-500 hover:text-gray-300 hover:bg-white/5'}`}
+                  >
+                    Overview
+                  </button>
+                  <button 
+                    onClick={() => setSecurityTab('sessions')} 
+                    className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${securityTab === 'sessions' ? 'bg-white/10 text-white' : 'text-gray-500 hover:text-gray-300 hover:bg-white/5'}`}
+                  >
+                    Active Sessions
+                  </button>
+                  <button 
+                    onClick={() => setSecurityTab('history')} 
+                    className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${securityTab === 'history' ? 'bg-white/10 text-white' : 'text-gray-500 hover:text-gray-300 hover:bg-white/5'}`}
+                  >
+                    Login History
+                  </button>
                 </div>
-              ) : (
-                <div className="space-y-6 animate-in fade-in duration-500">
-                  <div className="flex flex-wrap gap-2 md:gap-4 mb-8 border-b border-white/10 pb-4">
-                    <button 
-                      onClick={() => setSecurityTab('overview')} 
-                      className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${securityTab === 'overview' ? 'bg-white/10 text-white' : 'text-gray-500 hover:text-gray-300 hover:bg-white/5'}`}
-                    >
-                      Overview
-                    </button>
-                    <button 
-                      onClick={() => setSecurityTab('sessions')} 
-                      className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${securityTab === 'sessions' ? 'bg-white/10 text-white' : 'text-gray-500 hover:text-gray-300 hover:bg-white/5'}`}
-                    >
-                      Active Sessions
-                    </button>
-                    <button 
-                      onClick={() => setSecurityTab('history')} 
-                      className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${securityTab === 'history' ? 'bg-white/10 text-white' : 'text-gray-500 hover:text-gray-300 hover:bg-white/5'}`}
-                    >
-                      Login History
-                    </button>
-                  </div>
 
-                  {securityTab === 'overview' && (
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    {/* Change Password */}
+                {securityTab === 'overview' && (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {isGoogleLogin ? (
+                    <div className="lg:col-span-2 bg-[#141414] border border-white/5 rounded-3xl p-8 shadow-2xl relative overflow-hidden group">
+                      <div className="absolute -right-4 -top-4 w-32 h-32 bg-red-500/10 rounded-full blur-3xl pointer-events-none" />
+                      <h3 className="font-bold text-xl text-white flex items-center gap-3 mb-3 relative z-10">
+                        <div className="w-8 h-8 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center shadow-inner">
+                          <Lock className="w-4 h-4 text-red-400" />
+                        </div>
+                        Security Restriction
+                      </h3>
+                      <p className="text-gray-400 max-w-lg leading-relaxed relative z-10">
+                        Password or email change is not possible - you are logged in via Google. Please manage your security settings directly through your Google account.
+                      </p>
+                    </div>
+                  ) : (
+                    <>
+                      {/* Change Password */}
                     <div className="bg-[#141414] border border-white/5 rounded-3xl p-8 shadow-2xl relative overflow-hidden group">
                       <div className="absolute -right-4 -top-4 w-32 h-32 bg-white/5 rounded-full blur-3xl group-hover:bg-accent/10 transition-colors duration-500 pointer-events-none" />
                       
@@ -1774,7 +1775,8 @@ function DashboardContent() {
                         </button>
                       </div>
                     </div>
-
+                    </>
+                  )}
                   </div>
                   )}
 
@@ -1951,8 +1953,7 @@ function DashboardContent() {
                     </div>
                     </div>
                   )}
-                </div>
-              )}
+              </div>
             </div>
           )}
 

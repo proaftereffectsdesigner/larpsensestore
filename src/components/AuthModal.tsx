@@ -76,6 +76,7 @@ export default function AuthModal() {
         setSuccessMsg("Verification code sent to your email!");
         setMode("verify");
       } else if (mode === "login") {
+        await supabase.auth.signOut(); // Ensure no conflicting sessions
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
         setIsOpen(false);
@@ -106,8 +107,9 @@ export default function AuthModal() {
       if (!res.ok) throw new Error(data.error || 'Verification failed');
 
       // If successfully verified and created by API, log them in
+      await supabase.auth.signOut(); // Ensure no conflicting sessions
       const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
-      if (signInError) throw signInError;
+      if (signInError) throw new Error("Account created, but auto-login failed: " + signInError.message);
       
       setIsOpen(false);
       router.refresh();

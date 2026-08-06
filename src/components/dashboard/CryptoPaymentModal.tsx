@@ -26,6 +26,7 @@ export function CryptoPaymentModal({ payAddress, payAmount, trackId, orderId, cu
   const [copied, setCopied] = useState(false);
   const [timeLeft, setTimeLeft] = useState(60 * 60); // 60 minutes
   const [isPaid, setIsPaid] = useState(false);
+  const [isRefunded, setIsRefunded] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState("Waiting");
 
   useEffect(() => {
@@ -66,6 +67,11 @@ export function CryptoPaymentModal({ payAddress, payAmount, trackId, orderId, cu
             
           if (orderData?.status === 'completed') {
             setIsPaid(true);
+            clearInterval(pollInterval);
+            return;
+          }
+          if (orderData?.status === 'refunded') {
+            setIsRefunded(true);
             clearInterval(pollInterval);
             return;
           }
@@ -160,7 +166,22 @@ export function CryptoPaymentModal({ payAddress, payAmount, trackId, orderId, cu
         {/* Glow effect at top */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[200px] h-[100px] bg-accent/20 blur-[60px] pointer-events-none rounded-full" />
 
-        {isPaid ? (
+        {isRefunded ? (
+          <div className="p-8 py-16 text-center animate-in zoom-in-95 duration-500">
+            <div className="w-24 h-24 bg-amber-500/10 rounded-full flex items-center justify-center mx-auto mb-6 relative">
+              <div className="absolute inset-0 bg-amber-500/20 rounded-full animate-ping"></div>
+              <AlertTriangle className="w-12 h-12 text-amber-500 relative z-10" />
+            </div>
+            <h2 className="text-2xl font-black text-white mb-2">Supplier Issue</h2>
+            <p className="text-neutral-400 mb-8 font-medium text-sm leading-relaxed">
+              Your payment was successful, but we ran out of stock during fulfillment. <br/><br/>
+              <span className="text-white font-bold text-base">The funds have been automatically added to your store balance!</span>
+            </p>
+            <button onClick={() => window.location.href = '/dashboard'} className="w-full bg-amber-600 hover:bg-amber-500 text-white font-bold py-4 rounded-xl transition-all shadow-[0_0_20px_rgba(245,158,11,0.1)] hover:shadow-[0_0_30px_rgba(245,158,11,0.2)]">
+              View Balance in Dashboard
+            </button>
+          </div>
+        ) : isPaid ? (
           <div className="p-8 py-16 text-center animate-in zoom-in-95 duration-500">
             <div className="w-24 h-24 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto mb-6 relative">
               <div className="absolute inset-0 bg-emerald-500/20 rounded-full animate-ping"></div>

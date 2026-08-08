@@ -6,7 +6,7 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const targetUrl = searchParams.get('url');
 
-    if (!targetUrl || !targetUrl.startsWith('https://')) {
+    if (!targetUrl || (!targetUrl.startsWith('https://') && !targetUrl.startsWith('http://'))) {
       return new NextResponse("Invalid URL", { status: 400 });
     }
 
@@ -23,11 +23,10 @@ export async function GET(req: Request) {
     // Authenticate user
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      { global: { headers: { Authorization: `Bearer ${token}` } } }
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     );
 
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
     if (authError || !user) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
@@ -60,7 +59,17 @@ export async function GET(req: Request) {
       }
     }
 
-    const fileName = targetUrl.split('/').pop();
+    let fileName: string | null = null;
+    try {
+      const parsedTarget = new URL(targetUrl);
+      fileName = parsedTarget.searchParams.get('file');
+      if (!fileName) {
+        fileName = parsedTarget.pathname.split('/').pop() || null;
+      }
+    } catch {
+      fileName = targetUrl.split('/').pop() || null;
+    }
+
     if (!fileName) {
       return new NextResponse("Invalid file name", { status: 400 });
     }

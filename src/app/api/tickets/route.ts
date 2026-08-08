@@ -27,6 +27,11 @@ export async function POST(req: Request) {
       }
     );
 
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+
     const { data: { user }, error: userError } = await authenticatedSupabase.auth.getUser();
     if (userError || !user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -73,9 +78,9 @@ export async function POST(req: Request) {
     }
 
     // Integrate with Discord if credentials are set
-    const botToken = process.env.DISCORD_BOT_TOKEN;
-    const guildId = process.env.DISCORD_GUILD_ID;
-    const categoryId = process.env.DISCORD_TICKETS_CATEGORY_ID;
+    const botToken = process.env.DISCORD_BOT_TOKEN?.trim();
+    const guildId = process.env.DISCORD_GUILD_ID?.trim();
+    const categoryId = process.env.DISCORD_TICKETS_CATEGORY_ID?.trim();
 
     if (botToken && guildId && categoryId) {
       try {
@@ -104,6 +109,14 @@ export async function POST(req: Request) {
           });
         }
 
+        const payload = {
+          name: ticketName,
+          type: 0,
+          parent_id: categoryId,
+          permission_overwrites: permissionOverwrites
+        };
+        console.log("Sending Discord API Request. guildId:", guildId, "categoryId:", categoryId, "payload:", JSON.stringify(payload));
+
         // Create channel
         const channelRes = await fetch(`https://discord.com/api/v10/guilds/${guildId}/channels`, {
           method: 'POST',
@@ -111,44 +124,16 @@ export async function POST(req: Request) {
             'Authorization': `Bot ${botToken}`,
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify({
-            name: ticketName,
-            type: 0,
-            parent_id: categoryId,
-            permission_overwrites: permissionOverwrites
-          })
+          body: JSON.stringify(payload)
         });
 
         if (channelRes.ok) {
           const channel = await channelRes.json();
           
-          // Update supabase with discord channel id
-          await authenticatedSupabase.from('tickets').update({ discord_channel_id: channel.id }).eq('id', ticketData.id);
+          // Update supabase with discord channel id using Admin (RLS bypass)
+          await supabaseAdmin.from('tickets').update({ discord_channel_id: channel.id }).eq('id', ticketData.id);
 
-          // Post initial message
-          await fetch(`https://discord.com/api/v10/channels/${channel.id}/messages`, {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bot ${botToken}`,
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              content: profile?.discord_id ? `<@${profile.discord_id}>` : "",
-              embeds: [{
-                title: `New Ticket: ${formattedIssueType}`,
-                color: 0x3498db,
-                fields: [
-                  { name: 'User Email', value: profile?.email || user.email || 'Unknown', inline: true },
-                  { name: 'Discord Account', value: profile?.discord_id ? `<@${profile.discord_id}> (Linked)` : 'Not Linked', inline: true },
-                  { name: 'Order ID', value: orderId || 'N/A', inline: true },
-                  ...(transactionId ? [{ name: 'Transaction ID', value: transactionId, inline: false }] : []),
-                  ...(paymentMethod ? [{ name: 'Payment Method', value: paymentMethod, inline: true }] : []),
-                  { name: 'Description', value: description, inline: false }
-                ],
-                footer: { text: `Ticket #${ticketData.ticket_number} • Delete this channel to close` }
-              }]
-            })
-          });
+
         } else {
           console.error("Discord Channel Creation Failed:", await channelRes.text());
         }

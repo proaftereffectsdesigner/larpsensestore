@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase-client";
 import { MessageSquare, AlertCircle, ShoppingBag, Send } from "lucide-react";
 import { toast } from "sonner";
+import TicketChat from "./TicketChat";
 
 export default function TicketForm() {
   const [user, setUser] = useState<any>(null);
@@ -15,21 +16,42 @@ export default function TicketForm() {
   const [description, setDescription] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [loadingOrders, setLoadingOrders] = useState(false);
-  const [isDiscordLinked, setIsDiscordLinked] = useState<boolean | null>(null);
+  
+  // Chat state
+  const [activeSession, setActiveSession] = useState<string | null>(null);
+  const [initialMessage, setInitialMessage] = useState<string>("");
+  const [isMounted, setIsMounted] = useState(false);
+  const [isTicketClosed, setIsTicketClosed] = useState(false);
 
   useEffect(() => {
+    setIsMounted(true);
+    const checkSession = async () => {
+      const savedSession = localStorage.getItem('larpsense_ticket_session');
+      if (savedSession) {
+        // Verify if it's still open in db
+        const { data: ticket } = await supabase
+          .from('tickets')
+          .select('status')
+          .eq('ticket_number', parseInt(savedSession))
+          .single();
+          
+        if (ticket && ticket.status !== 'closed') {
+          setActiveSession(savedSession);
+          setIsTicketClosed(false);
+        } else {
+          localStorage.removeItem('larpsense_ticket_session');
+          // If the session was in localStorage but is closed, we still show the form 
+          // (not the locked chat), because they just opened the page.
+        }
+      }
+    };
+    checkSession();
+
     const fetchUserAndOrders = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
         setUser(session.user);
         setLoadingOrders(true);
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('discord_id')
-          .eq('id', session.user.id)
-          .single();
-        
-        setIsDiscordLinked(!!profile?.discord_id);
 
         const { data } = await supabase
           .from('orders')
@@ -43,6 +65,36 @@ export default function TicketForm() {
     };
     
     fetchUserAndOrders();
+
+    const savedSession = localStorage.getItem('larpsense_ticket_session');
+    let channel: any;
+    if (savedSession) {
+      channel = supabase
+        .channel('ticket-status-changes')
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'tickets',
+            filter: `ticket_number=eq.${savedSession}`,
+          },
+          (payload: any) => {
+            if (payload.new.status === 'closed') {
+              localStorage.removeItem('larpsense_ticket_session');
+              setIsTicketClosed(true);
+              toast.info("Ticket has been closed by staff.");
+            }
+          }
+        )
+        .subscribe();
+    }
+
+    return () => {
+      if (channel) {
+        supabase.removeChannel(channel);
+      }
+    };
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -54,7 +106,6 @@ export default function TicketForm() {
 
     setSubmitting(true);
     
-    // Append extra info to description
     try {
       const { data: { session } } = await supabase.auth.getSession();
       const res = await fetch("/api/tickets", {
@@ -75,16 +126,65 @@ export default function TicketForm() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to submit ticket.");
 
-      toast.success(`Ticket #${data.ticket_number} created successfully! We will contact you soon.`);
-      setIssueType("");
-      setOrderId("");
-      setTransactionId("");
-      setPaymentMethod("");
-      setDescription("");
+      const sid = data.ticket_number.toString();
+      localStorage.setItem('larpsense_ticket_session', sid);
+      
+      const formattedMessage = `🟢 **New Ticket from Website!**
+**Client Email:** ${user?.email || 'None'}
+**Issue Type:** ${issueType}
+**Related Order:** ${orderId || 'None'}
+**Payment Method:** ${paymentMethod || 'None'}
+**Transaction ID:** ${transactionId || 'None'}
+
+**Issue Description:**
+${description}`;
+
+      setInitialMessage(formattedMessage);
+      setActiveSession(sid);
+      toast.success("Ticket #" + sid + " created successfully!");
+      
+      // Scroll to the top of the page so the newly mounted chat is fully visible
+      setTimeout(() => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }, 50);
     } catch (err: any) {
       toast.error(err.message);
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleCloseTicket = async () => {
+    if (!activeSession) return;
+    
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      const toastId = toast.loading("Closing ticket...");
+      
+      const res = await fetch("/api/tickets/close", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${session?.access_token}`
+        },
+        body: JSON.stringify({ ticketId: activeSession })
+      });
+      
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || "Failed to close ticket.");
+      }
+      
+      toast.success("Ticket closed successfully!", { id: toastId });
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.message || "Something went wrong closing the ticket.");
+    } finally {
+      localStorage.removeItem('larpsense_ticket_session');
+      setIsTicketClosed(true);
+      // Wait a moment for them to see it's closed, or we can leave it up to them to refresh/click away
+      // We don't unmount immediately.
     }
   };
 
@@ -104,44 +204,83 @@ export default function TicketForm() {
     );
   }
 
+  if (!isMounted) {
+    return (
+      <div className="w-full flex justify-center items-center h-[600px]">
+        <div className="w-12 h-12 border-4 border-accent/20 border-t-accent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  // Jeśli jest aktywna sesja, pokaż ekran czatu zamiast formularza
+  if (activeSession) {
+    return (
+      <div className="w-full">
+        {isTicketClosed && (
+          <div className="mb-4 text-center">
+            <button 
+              onClick={() => {
+                setActiveSession(null);
+                setIssueType("");
+                setOrderId("");
+                setTransactionId("");
+                setPaymentMethod("");
+                setDescription("");
+                setInitialMessage("");
+                setIsTicketClosed(false);
+              }}
+              className="px-6 py-3 bg-white/5 border border-white/10 hover:bg-white/10 rounded-xl text-white font-medium transition-colors"
+            >
+              &larr; Start New Ticket
+            </button>
+          </div>
+        )}
+        <TicketChat 
+          sessionId={activeSession} 
+          initialMessage={initialMessage} 
+          onCloseTicket={handleCloseTicket} 
+          userAvatar={user?.user_metadata?.avatar_url}
+          userName={user?.user_metadata?.username || user?.user_metadata?.name || user?.email?.split('@')?.[0] || 'User'}
+          isTicketClosed={isTicketClosed}
+          onTicketClosedRemotely={() => {
+             localStorage.removeItem('larpsense_ticket_session');
+             setIsTicketClosed(true);
+             toast.info("Ticket has been closed by staff.");
+          }}
+        />
+      </div>
+    );
+  }
+
   return (
-    <div className="bg-[#111]/80 backdrop-blur-xl border border-white/10 rounded-3xl p-6 md:p-8">
-      <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
-        <MessageSquare className="w-6 h-6 text-accent" />
-        Open a Support Ticket
-      </h2>
-
-      {isDiscordLinked === null ? (
-        <div className="flex justify-center p-8">
-          <div className="w-8 h-8 border-4 border-accent/30 border-t-accent rounded-full animate-spin" />
+    <div className="w-full">
+      <div className="text-center mb-16">
+        <div className="inline-flex items-center justify-center p-4 bg-accent/10 border border-accent/20 rounded-2xl mb-6 shadow-2xl shadow-accent/20">
+          <MessageSquare className="w-8 h-8 text-accent" />
         </div>
-      ) : isDiscordLinked === false ? (
-        <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-6 mb-8 text-center">
-          <AlertCircle className="w-10 h-10 text-red-400 mx-auto mb-3" />
-          <h3 className="text-lg font-bold text-white mb-2">Discord Linking Required</h3>
-          <p className="text-gray-400 text-sm leading-relaxed mb-4">
-            To create a ticket from the website, you <strong>must link your Discord account</strong> in the Dashboard. Otherwise, please join our Discord server directly to open a ticket there.
-          </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-2">
-            <a href={`/api/discord/link?userId=${user?.id}`} className="bg-[#5865F2]/10 hover:bg-[#5865F2]/20 border border-[#5865F2]/30 text-[#5865F2] font-semibold rounded-lg px-6 py-2 transition-colors text-sm flex items-center gap-2">
-              <img src="/discord.png" alt="Discord" className="w-5 h-5 object-contain drop-shadow-md" />
-              Link Discord Account
-            </a>
-            <a href="https://discord.gg/qVxdgvdTSK" target="_blank" rel="noreferrer" className="bg-[#5865F2] hover:bg-[#5865F2]/80 text-white font-bold rounded-lg px-6 py-2 transition-colors text-sm">
-              Join Discord Server
-            </a>
-          </div>
-        </div>
-      ) : (
-        <>
-          <div className="bg-accent/10 border border-accent/20 rounded-xl p-4 mb-8">
-            <p className="text-gray-300 text-sm leading-relaxed">
-              <strong className="text-white">Your Discord is linked!</strong> You can submit this form and your message will be forwarded to our team. <br/>
-              <span className="text-accent font-semibold">Important:</span> We cannot reply to you unless you are physically present in our Discord server. Please ensure you have joined our server to read our response.
-            </p>
-          </div>
+        <h1 className="text-4xl md:text-6xl font-black text-white mb-6 tracking-tight">
+          Support Center
+        </h1>
+        <p className="text-gray-400 text-lg max-w-2xl mx-auto leading-relaxed">
+          Need help with your purchase? Check our FAQ page or reach out to our team directly. We're here to help.
+        </p>
+      </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+
+
+      <div className="max-w-2xl mx-auto bg-[#111]/80 backdrop-blur-xl border border-white/10 rounded-3xl p-6 md:p-8 shadow-2xl">
+        <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
+          <MessageSquare className="w-6 h-6 text-accent" />
+          Open a Support Ticket
+        </h2>
+
+        <div className="bg-accent/10 border border-accent/20 rounded-xl p-4 mb-8">
+        <p className="text-gray-300 text-sm leading-relaxed">
+          <strong className="text-white">Live Support is active!</strong> Fill out this form and you will be immediately connected to our support staff via live chat.
+        </p>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-6">
         
         {/* Issue Type */}
         <div>
@@ -232,12 +371,24 @@ export default function TicketForm() {
           {submitting ? (
             <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
           ) : (
-            <><Send className="w-5 h-5" /> Submit Ticket</>
+            <><Send className="w-5 h-5" /> Start Live Chat</>
           )}
         </button>
       </form>
-      </>
-      )}
+      </div>
+
+      <div className="flex justify-center mt-16 pb-16">
+        <a href="https://discord.gg/qVxdgvdTSK" target="_blank" rel="noopener noreferrer" className="w-full max-w-md flex flex-col items-center justify-center p-8 bg-[#111]/80 backdrop-blur-xl border border-white/10 hover:border-[#5865F2]/30 rounded-3xl transition-all group">
+          <div className="w-16 h-16 bg-[#5865F2]/10 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+            <img src="/discord.png" alt="Discord" className="w-8 h-8 object-contain" />
+          </div>
+          <h2 className="text-xl font-bold text-white mb-2">Discord Community</h2>
+          <p className="text-gray-400 text-center text-sm leading-relaxed mb-4">
+            If you encounter any problems with the website or support tickets, please join our Discord and report it there.
+          </p>
+          <span className="text-[#5865F2] font-medium">Join Server</span>
+        </a>
+      </div>
     </div>
   );
 }

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
-import { ShoppingCart, LogOut, LayoutGrid, Plus, User as UserIcon, Lock, Shield, AlertTriangle, MessageSquare, Star } from "lucide-react";
+import { ShoppingCart, LogOut, LayoutGrid, Plus, User as UserIcon, Lock, Shield, AlertTriangle, MessageSquare, Star, Bell, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase-client";
 import { User } from "@supabase/supabase-js";
@@ -20,7 +20,10 @@ export default function Navbar() {
 
   const [isBanned, setIsBanned] = useState(false);
   const [profile, setProfile] = useState<any>(null);
+  const [unreadTickets, setUnreadTickets] = useState<any[]>([]);
+  const [showNotifications, setShowNotifications] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const notificationsRef = useRef<HTMLDivElement>(null);
 
   const fetchProfileData = async (userId: string) => {
     const { data } = await supabase
@@ -73,9 +76,45 @@ export default function Navbar() {
     };
     window.addEventListener('balance-updated', handleBalanceUpdate);
 
+    // Initial unread check
+    const checkUnread = async (userId: string) => {
+      try {
+        const { data } = await supabase
+          .from('tickets')
+          .select('id, ticket_number, issue_type')
+          .eq('user_id', userId)
+          .eq('status', 'open')
+          .eq('has_unread', true);
+        setUnreadTickets(data || []);
+      } catch (err) {
+        // column might not exist yet, ignore silently
+      }
+    };
+
+    let channel: any = null;
+    let pollInterval: NodeJS.Timeout;
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        checkUnread(session.user.id);
+        
+        // Polling fallback w razie braku włączonego Supabase Realtime na tabeli tickets
+        pollInterval = setInterval(() => {
+          checkUnread(session.user.id);
+        }, 3000);
+
+        channel = supabase.channel('realtime:tickets_unread')
+          .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'tickets', filter: `user_id=eq.${session.user.id}` }, () => {
+            checkUnread(session.user.id);
+          })
+          .subscribe();
+      }
+    });
+
     return () => {
       subscription.unsubscribe();
       window.removeEventListener('balance-updated', handleBalanceUpdate);
+      if (channel) supabase.removeChannel(channel);
+      if (pollInterval) clearInterval(pollInterval);
     };
   }, []);
 
@@ -92,18 +131,43 @@ export default function Navbar() {
     }
   }, [pathname]);
 
-  // Close dropdown when clicking outside
+  // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
         setShowDropdown(false);
       }
+      if (notificationsRef.current && !notificationsRef.current.contains(e.target as Node)) {
+        setShowNotifications(false);
+      }
     };
-    if (showDropdown) {
+    if (showDropdown || showNotifications) {
       document.addEventListener('mousedown', handleClickOutside);
     }
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [showDropdown]);
+  }, [showDropdown, showNotifications]);
+
+  const clearNotification = async (ticketId: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      await supabase.from('tickets').update({ has_unread: false }).eq('id', ticketId);
+      setUnreadTickets(prev => prev.filter(t => t.id !== ticketId));
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const clearAllNotifications = async () => {
+    try {
+      const ids = unreadTickets.map(t => t.id);
+      if (ids.length === 0) return;
+      await supabase.from('tickets').update({ has_unread: false }).in('id', ids);
+      setUnreadTickets([]);
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   const handleSignOutClick = () => {
     setShowLogoutConfirm(true);
@@ -187,6 +251,8 @@ export default function Navbar() {
 
         <div className="flex items-center gap-3 sm:gap-4">
           
+          {/* Notifications Bell used to be here */}
+
           {/* GitHub Download Tool Button */}
           <ToolDownloadButton />
 
@@ -340,6 +406,78 @@ export default function Navbar() {
             >
               Sign In
             </button>
+          )}
+
+          {/* Notifications Bell moved to the right of User Pill */}
+          {user && (
+            <div ref={notificationsRef} className="relative">
+              <button 
+                onClick={() => setShowNotifications(!showNotifications)}
+                className="relative flex items-center justify-center w-10 h-10 rounded-full bg-[#141414]/80 hover:bg-[#1f1f1f]/80 border border-white/10 transition-colors shadow-lg group"
+              >
+                <Bell className={`w-5 h-5 ${unreadTickets.length > 0 ? 'text-white' : 'text-gray-400 group-hover:text-white'} transition-colors`} />
+                {unreadTickets.length > 0 && (
+                  <>
+                    <span className="absolute top-0 right-0 w-4 h-4 bg-red-500 border-2 border-[#0a0a0a] rounded-full flex items-center justify-center text-[9px] font-bold text-white leading-none z-10">
+                      {unreadTickets.length}
+                    </span>
+                    <span className="absolute top-0 right-0 w-4 h-4 bg-red-500 rounded-full animate-ping opacity-75"></span>
+                  </>
+                )}
+              </button>
+
+              {/* Notifications Dropdown */}
+              {showNotifications && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setShowNotifications(false)}></div>
+                  <div className="absolute top-full right-0 mt-3 w-72 bg-[#141414] border border-white/10 rounded-2xl p-2 shadow-2xl animate-in fade-in zoom-in-95 origin-top-right z-50">
+                    <div className="flex items-center justify-between px-3 py-2 border-b border-white/5 mb-2">
+                      <span className="text-sm font-bold text-white">Notifications</span>
+                      {unreadTickets.length > 0 && (
+                        <button onClick={clearAllNotifications} className="text-xs font-medium text-gray-400 hover:text-white transition-colors">
+                          Clear all
+                        </button>
+                      )}
+                    </div>
+                    
+                    <div className="max-h-64 overflow-y-auto space-y-1 pr-1 custom-scrollbar">
+                      {unreadTickets.length === 0 ? (
+                        <div className="py-6 text-center">
+                          <Bell className="w-8 h-8 text-white/10 mx-auto mb-2" />
+                          <p className="text-sm text-gray-500 font-medium">No new notifications</p>
+                        </div>
+                      ) : (
+                        unreadTickets.map(ticket => (
+                          <div key={ticket.id} className="relative group">
+                            <Link
+                              href="/support"
+                              onClick={() => {
+                                setShowNotifications(false);
+                                clearNotification(ticket.id, { preventDefault: () => {}, stopPropagation: () => {} } as any);
+                              }}
+                              className="block p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 transition-colors pr-10"
+                            >
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="w-2 h-2 rounded-full bg-red-500"></span>
+                                <span className="text-xs font-bold text-gray-300">New Reply in Ticket</span>
+                              </div>
+                              <p className="text-sm text-white font-medium truncate">Ticket #{ticket.ticket_number}</p>
+                            </Link>
+                            <button
+                              onClick={(e) => clearNotification(ticket.id, e)}
+                              className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:text-white hover:bg-white/10 transition-all opacity-0 group-hover:opacity-100"
+                              title="Dismiss"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
           )}
         </div>
       </div>

@@ -183,16 +183,16 @@ export default function AnalyticsDashboard() {
           <p className="text-gray-400 text-xs font-bold uppercase tracking-widest mb-3 pb-2 border-b border-white/5">{label}</p>
           <div className="flex flex-col gap-2">
             <div className="flex justify-between items-center gap-6">
-              <span className="text-gray-400 text-sm">Przychód:</span>
+              <span className="text-gray-400 text-sm">Revenue:</span>
               <span className="text-emerald-400 font-bold text-sm">€{data.revenue}</span>
             </div>
             <div className="flex justify-between items-center gap-6">
-              <span className="text-gray-400 text-sm">Zamówienia:</span>
+              <span className="text-gray-400 text-sm">Orders:</span>
               <span className="text-white font-bold text-sm">{data.orders}</span>
             </div>
           </div>
           {data.rawOrders && data.rawOrders.length > 0 && (
-            <p className="text-[10px] text-gray-500 font-medium mt-3 text-center opacity-70">Kliknij kropkę na wykresie, aby zobaczyć szczegóły zamówień.</p>
+            <p className="text-[10px] text-gray-500 font-medium mt-3 text-center opacity-70">Click a dot on the chart to see order details.</p>
           )}
         </div>
       );
@@ -342,7 +342,7 @@ export default function AnalyticsDashboard() {
                         <Area 
                           type="monotone" 
                           dataKey="revenue" 
-                          name="Przychód" 
+                          name="Revenue" 
                           stroke="#10b981" 
                           strokeWidth={3} 
                           fillOpacity={1} 
@@ -374,9 +374,9 @@ export default function AnalyticsDashboard() {
                   <div id="details-panel" className="bg-[#111] border border-white/10 p-6 rounded-2xl animate-in fade-in zoom-in duration-300">
                     <div className="flex justify-between items-center mb-6">
                       <h3 className="text-white font-bold text-lg flex items-center">
-                        Szczegóły Zamówień <span className="ml-3 px-3 py-1 bg-emerald-500/20 text-emerald-400 rounded-full text-xs">{selectedDateLabel}</span>
+                        Order Details <span className="ml-3 px-3 py-1 bg-emerald-500/20 text-emerald-400 rounded-full text-xs">{selectedDateLabel}</span>
                       </h3>
-                      <button onClick={() => setSelectedOrders(null)} className="text-gray-400 hover:text-white transition-colors text-sm px-3 py-1 bg-white/5 rounded-lg border border-white/10">Zamknij</button>
+                      <button onClick={() => setSelectedOrders(null)} className="text-gray-400 hover:text-white transition-colors text-sm px-3 py-1 bg-white/5 rounded-lg border border-white/10">Close</button>
                     </div>
                     
                     <div 

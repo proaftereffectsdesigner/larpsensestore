@@ -1481,10 +1481,17 @@ function DashboardContent() {
                           </div>
                         </div>
                         <div className="flex items-center gap-3 sm:ml-auto">
-                          {ticket.discord_channel_id && ticket.status === 'open' && (
-                            <a href={`https://discord.com/channels/1531836463585558608/${ticket.discord_channel_id}`} target="_blank" rel="noreferrer" className="flex-1 sm:flex-none text-xs bg-[#5865F2]/10 border border-[#5865F2]/30 hover:bg-[#5865F2]/20 text-[#5865F2] font-bold px-4 py-2.5 rounded-xl transition-colors flex items-center justify-center gap-2 text-center">
-                              View in Discord
-                            </a>
+                          {ticket.status === 'open' && (
+                            <button 
+                              onClick={() => {
+                                localStorage.setItem('larpsense_ticket_session', ticket.ticket_number.toString());
+                                window.location.href = '/support';
+                              }}
+                              className="flex-1 sm:flex-none text-xs bg-emerald-500/10 border border-emerald-500/30 hover:bg-emerald-500/20 text-emerald-400 font-bold px-4 py-2.5 rounded-xl transition-colors flex items-center justify-center gap-2 text-center cursor-pointer"
+                            >
+                              <MessageSquare className="w-3.5 h-3.5" />
+                              Resume Chat
+                            </button>
                           )}
                           {ticket.transcript_url && (
                             <button 

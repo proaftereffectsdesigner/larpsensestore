@@ -354,7 +354,9 @@ export default function TicketChat({ sessionId, initialMessage, onCloseTicket, u
                   }`}
                   style={{ wordBreak: 'break-word' }}
                 >
-                  {msg.content}
+                  {!(msg.content.trim().startsWith('http') && !msg.content.trim().includes(' ') && msg.attachments && msg.attachments.length > 0) && (
+                    <span>{msg.content}</span>
+                  )}
                   
                   {msg.attachments && msg.attachments.length > 0 && (
                     <div className="flex flex-col gap-2 mt-2">

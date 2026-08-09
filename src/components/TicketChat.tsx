@@ -386,6 +386,7 @@ export default function TicketChat({ sessionId, initialMessage, onCloseTicket, u
                               alt="Attachment" 
                               className="max-w-full h-auto rounded-xl border border-white/10 object-contain max-h-64 cursor-pointer hover:opacity-80 transition-opacity"
                               onClick={() => setSelectedImage(url)}
+                              onLoad={scrollToBottom}
                             />
                           );
                         } else if (isVideo) {
@@ -395,6 +396,7 @@ export default function TicketChat({ sessionId, initialMessage, onCloseTicket, u
                               src={url}
                               controls
                               className="max-w-full h-auto rounded-xl border border-white/10 max-h-64"
+                              onLoadedData={scrollToBottom}
                             />
                           );
                         } else if (isAudio) {

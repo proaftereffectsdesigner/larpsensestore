@@ -60,6 +60,11 @@ export async function GET() {
       });
     }
 
+    // Inject +10 premier accounts for testing
+    if (!formattedStock["cs2"]) formattedStock["cs2"] = {};
+    const currentPremier = formattedStock["cs2"]["premier"]?.available || 0;
+    formattedStock["cs2"]["premier"] = { available: currentPremier + 10 };
+
     // Return a clean object without wholesale data
     return NextResponse.json({
       ok: true,

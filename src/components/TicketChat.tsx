@@ -109,7 +109,20 @@ export default function TicketChat({ sessionId, initialMessage, onCloseTicket, u
             return;
           }
           
-          setMessages(prev => [...prev, data]);
+          setMessages(prev => {
+            // Merge late-loading embeds from Discord (on_message_edit)
+            if (data.sender === 'admin' && data.content === '' && data.attachments && data.attachments.length > 0) {
+              const lastMsg = prev[prev.length - 1];
+              if (lastMsg && lastMsg.sender === 'admin' && lastMsg.author === data.author) {
+                const updatedLast = {
+                  ...lastMsg,
+                  attachments: [...(lastMsg.attachments || []), ...data.attachments]
+                };
+                return [...prev.slice(0, -1), updatedLast];
+              }
+            }
+            return [...prev, data];
+          });
           // Clear unread flag if receiving message while chat is open
           supabase.from('tickets').update({ has_unread: false }).eq('id', sessionId).then();
         } catch (e) {

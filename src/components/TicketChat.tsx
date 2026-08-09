@@ -82,53 +82,59 @@ export default function TicketChat({ sessionId, initialMessage, onCloseTicket, u
   useEffect(() => {
     if (!sessionId || ws.current || isTicketClosed) return;
 
-    const wsUrl = process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:8000';
-    const socket = new WebSocket(`${wsUrl}/ws/chat/${sessionId}`);
-    
-    socket.onopen = () => {
-      setIsConnected(true);
-      console.log('Connected to Ticket Chat');
+    const connectWs = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token || '';
+      const wsUrl = process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:8000';
+      const socket = new WebSocket(`${wsUrl}/ws/chat/${sessionId}?token=${token}`);
       
-      // If we have an initial message from the form, send it immediately
-      if (initialMessage) {
-        socket.send(JSON.stringify({ content: initialMessage }));
-      }
-    };
-    
-    socket.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
+      socket.onopen = () => {
+        setIsConnected(true);
+        console.log('Connected to Ticket Chat');
         
-        if (data.sender === 'system' && data.content === 'TICKET_CLOSED') {
-          if (onTicketClosedRemotely) {
-            onTicketClosedRemotely();
-          }
-          return;
+        // If we have an initial message from the form, send it immediately
+        if (initialMessage) {
+          socket.send(JSON.stringify({ content: initialMessage }));
         }
-        
-        setMessages(prev => [...prev, data]);
-        // Clear unread flag if receiving message while chat is open
-        supabase.from('tickets').update({ has_unread: false }).eq('id', sessionId).then();
-      } catch (e) {
-        console.error("Error parsing message", e);
-      }
+      };
+      
+      socket.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          
+          if (data.sender === 'system' && data.content === 'TICKET_CLOSED') {
+            if (onTicketClosedRemotely) {
+              onTicketClosedRemotely();
+            }
+            return;
+          }
+          
+          setMessages(prev => [...prev, data]);
+          // Clear unread flag if receiving message while chat is open
+          supabase.from('tickets').update({ has_unread: false }).eq('id', sessionId).then();
+        } catch (e) {
+          console.error("Error parsing message", e);
+        }
+      };
+      
+      socket.onclose = () => {
+        if (ws.current === socket) {
+          setIsConnected(false);
+          ws.current = null;
+        }
+      };
+      
+      ws.current = socket;
+      
+      // Clear unread flag on open
+      supabase.from('tickets').update({ has_unread: false }).eq('id', sessionId).then();
     };
-    
-    socket.onclose = () => {
-      if (ws.current === socket) {
-        setIsConnected(false);
-        ws.current = null;
-      }
-    };
-    
-    ws.current = socket;
-    
-    // Clear unread flag on open
-    supabase.from('tickets').update({ has_unread: false }).eq('id', sessionId).then();
+
+    connectWs();
 
     return () => {
-      if (ws.current === socket) {
-        socket.close();
+      if (ws.current) {
+        ws.current.close();
         ws.current = null;
       }
     };

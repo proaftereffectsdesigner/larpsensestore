@@ -58,7 +58,7 @@ export default function TopUpModal() {
 
   const getFeeMultiplier = () => {
     switch (method) {
-      case 'card': return 0.035; // 3.5%
+      case 'card': return 0.015; // 1.5%
       case 'crypto': return 0.005; // 0.5%
       default: return 0;
     }
@@ -66,7 +66,7 @@ export default function TopUpModal() {
 
   const getFixedFee = () => {
     switch (method) {
-      case 'card': return 0.30;
+      case 'card': return 0.25;
       case 'crypto': return 0.00;
       default: return 0;
     }
@@ -232,15 +232,15 @@ export default function TopUpModal() {
                       method === 'card' ? 'bg-white/10 border-white/20' : 'bg-[#141414] border-white/5 hover:bg-white/5'
                     }`}
                   >
-                    <div className="flex items-center gap-4">
-                      <div className="flex items-center justify-center w-10 h-10 bg-[#635BFF]/10 rounded-xl">
-                        <CreditCard className="w-5 h-5 text-gray-400" />
+                      <div className="flex items-center gap-4">
+                        <div className="flex items-center justify-center w-10 h-10 bg-[#635BFF]/10 rounded-xl">
+                          <SiStripe className="w-6 h-6 text-[#635BFF]" />
+                        </div>
+                        <div className="text-left">
+                          <div className={`font-bold text-sm ${method === 'card' ? 'text-white' : settings.stripe_enabled ? 'text-white' : 'text-gray-400'}`}>Debit / Credit Card</div>
+                          <div className="text-[11px] text-gray-500 font-medium">{!settings.stripe_enabled ? 'Temporarily disabled' : 'Mastercard, Visa, Apple Pay etc.'} <span className="text-indigo-400 font-bold">(1.5% + €0.25 fee)</span></div>
+                        </div>
                       </div>
-                      <div className="text-left">
-                        <div className={`font-bold text-sm ${method === 'card' ? 'text-white' : settings.stripe_enabled ? 'text-white' : 'text-gray-400'}`}>Debit / Credit Card</div>
-                        <div className="text-[11px] text-gray-500 font-medium">{!settings.stripe_enabled ? 'Temporarily disabled' : 'Mastercard, Visa, Apple Pay etc.'} <span className="text-indigo-400 font-bold">(3.5% + €0.30 fee)</span></div>
-                      </div>
-                    </div>
                     <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${method === 'card' ? 'border-[#635BFF]' : 'border-gray-600'}`}>
                       {method === 'card' && <div className="w-2.5 h-2.5 bg-[#635BFF] rounded-full"></div>}
                     </div>
@@ -383,10 +383,10 @@ export default function TopUpModal() {
             <div className="flex flex-col items-center justify-center py-12 space-y-8 animate-in zoom-in-95 duration-300">
               <div className="relative">
                 <div className="w-24 h-24 border-4 border-white/5 border-t-accent rounded-full animate-spin"></div>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  {method === 'card' && <CreditCard className="w-8 h-8 text-accent animate-pulse" />}
-                  {method === 'crypto' && <QrCode className="w-8 h-8 text-accent animate-pulse" />}
-                </div>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    {method === 'card' && <SiStripe className="w-10 h-10 text-accent animate-pulse" />}
+                    {method === 'crypto' && <QrCode className="w-8 h-8 text-accent animate-pulse" />}
+                  </div>
               </div>
               
               <div className="text-center space-y-2">

@@ -6,7 +6,7 @@ import { products } from "@/lib/products";
 import { supabase } from "@/lib/supabase-client";
 import { User } from "@supabase/supabase-js";
 import { CheckCircle2, CreditCard, Wallet, ChevronDown, ChevronRight, ChevronLeft, Minus, Plus, ShieldCheck, Gamepad2, Info, Zap, Lock, RefreshCcw, ShieldAlert, Star, CircleDollarSign } from "lucide-react";
-import { SiSolana, SiLitecoin, SiTether, SiBitcoin, SiEthereum } from "react-icons/si";
+import { SiStripe, SiSolana, SiLitecoin, SiTether, SiBitcoin, SiEthereum } from "react-icons/si";
 import { CryptoPaymentModal } from "@/components/dashboard/CryptoPaymentModal";
 import { toast } from "sonner";
 
@@ -484,12 +484,12 @@ export default function CategoryPage() {
                 disabled={!settings.stripe_enabled}
                 className={`w-full px-4 py-3 rounded-xl text-left flex items-center gap-3 border transition-all ${!settings.stripe_enabled ? "opacity-50 cursor-not-allowed grayscale bg-[#0a0a0a]/50 border-white/5" : paymentMethod === "stripe" ? "bg-white/5 border-white/20" : "bg-[#0a0a0a]/50 border-white/10 hover:bg-white/5 hover:border-white/20"}`}
               >
-                <div className={`flex items-center justify-center w-10 h-10 rounded-lg shrink-0 ${paymentMethod === "stripe" ? "bg-gray-500/10" : "bg-[#141414] border border-white/5"}`}>
-                  <CreditCard className="w-5 h-5 text-gray-400" />
+                <div className={`flex items-center justify-center w-10 h-10 rounded-lg shrink-0 ${paymentMethod === "stripe" ? "bg-[#635BFF]/10" : "bg-[#141414] border border-white/5"}`}>
+                  <SiStripe className={`w-5 h-5 ${paymentMethod === "stripe" ? "text-[#635BFF]" : "text-gray-400"}`} />
                 </div>
                 <div>
                   <div className={`font-bold text-sm ${paymentMethod === "stripe" ? "text-white" : settings.stripe_enabled ? "text-white" : "text-gray-400"}`}>Debit / Credit Card</div>
-                  <div className="text-xs text-gray-500">{!settings.stripe_enabled ? 'Temporarily disabled' : 'Mastercard, Visa, Apple Pay etc.'} <span className="text-indigo-400 font-bold">{settings.stripe_enabled ? '(3.5% + €0.30 fee)' : ''}</span></div>
+                  <div className="text-xs text-gray-500">{!settings.stripe_enabled ? 'Temporarily disabled' : 'Mastercard, Visa, Apple Pay etc.'} <span className="text-indigo-400 font-bold">{settings.stripe_enabled ? '(1.5% + €0.25 fee)' : ''}</span></div>
                 </div>
               </button>
 

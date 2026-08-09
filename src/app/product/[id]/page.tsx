@@ -244,11 +244,11 @@ export default function ProductPage() {
               className="w-full bg-[#1c1c1c] border border-white/5 rounded-xl px-4 py-3 text-white flex items-center justify-between hover:bg-[#222] transition-colors"
             >
               <div className="flex items-center gap-3">
-                {paymentMethod === "stripe" ? (
-                  <div className="w-8 h-8 bg-gray-500/10 rounded-full flex items-center justify-center shrink-0">
-                    <CreditCard className="w-5 h-5 text-gray-400" />
-                  </div>
-                ) : paymentMethod === "crypto" ? (
+                  {paymentMethod === "stripe" ? (
+                    <div className="w-8 h-8 bg-[#635BFF]/10 rounded-full flex items-center justify-center shrink-0">
+                      <SiStripe className="w-5 h-5 text-[#635BFF]" />
+                    </div>
+                  ) : paymentMethod === "crypto" ? (
                   <div className="w-8 h-8 bg-amber-500/10 rounded-full flex items-center justify-center">
                     <SiBitcoin className="w-4 h-4 text-amber-400" />
                   </div>
@@ -261,9 +261,9 @@ export default function ProductPage() {
                   <div className="font-bold text-sm text-white">
                     {paymentMethod === "stripe" ? "Debit / Credit Card" : paymentMethod === "crypto" ? "Cryptocurrency" : "Balance"}
                   </div>
-                  <div className="text-[11px] text-gray-500 font-medium">
-                    {paymentMethod === "stripe" ? "Mastercard, Visa, Apple Pay etc. (3.5% + €0.30 fee)" : paymentMethod === "crypto" ? "Pay with any crypto via OxaPay (0.5% fee)" : "Pay with your NFA Store balance"}
-                  </div>
+                    <div className="text-[11px] text-gray-500 font-medium">
+                      {paymentMethod === "stripe" ? "Mastercard, Visa, Apple Pay etc. (1.5% + €0.25 fee)" : paymentMethod === "crypto" ? "Pay with any crypto via OxaPay (0.5% fee)" : "Pay with your NFA Store balance"}
+                    </div>
                 </div>
               </div>
               <ChevronDown className={`w-4 h-4 text-gray-500 transition-transform ${isDropdownOpen ? "rotate-180" : ""}`} />
@@ -293,15 +293,15 @@ export default function ProductPage() {
                   onClick={() => { if (settings.stripe_enabled) { setPaymentMethod("stripe"); setIsDropdownOpen(false); } }}
                   disabled={!settings.stripe_enabled}
                   className={`w-full px-4 py-3 text-left transition-colors flex items-center gap-3 ${!settings.stripe_enabled ? 'opacity-50 cursor-not-allowed grayscale' : 'hover:bg-white/5'}`}
-                >
-                  <div className="flex items-center justify-center w-8 h-8 bg-indigo-500/10 rounded-full shrink-0">
-                    <CreditCard className="w-4 h-4 text-indigo-400" />
-                  </div>
-                  <div>
-                    <div className="text-sm text-white">Credit Card / Apple Pay</div>
-                    <div className="text-xs text-gray-500">{!settings.stripe_enabled ? 'Temporarily disabled' : 'Mastercard, Visa etc. (3.5% + €0.30 fee)'}</div>
-                  </div>
-                </button>
+                  >
+                    <div className="flex items-center justify-center w-8 h-8 bg-[#635BFF]/10 rounded-full shrink-0">
+                      <SiStripe className="w-4 h-4 text-[#635BFF]" />
+                    </div>
+                    <div>
+                      <div className="text-sm text-white">Credit Card / Apple Pay</div>
+                      <div className="text-xs text-gray-500">{!settings.stripe_enabled ? 'Temporarily disabled' : 'Mastercard, Visa etc. (1.5% + €0.25 fee)'}</div>
+                    </div>
+                  </button>
                 <button 
                   onClick={() => { if (settings.crypto_enabled) { setPaymentMethod("crypto"); setIsDropdownOpen(false); } }}
                   disabled={!settings.crypto_enabled}

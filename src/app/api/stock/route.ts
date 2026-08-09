@@ -58,6 +58,8 @@ export async function GET() {
           available: item.stock !== undefined ? item.stock : item.available
         };
       });
+    }
+
     // Return a clean object without wholesale data
     return NextResponse.json({
       ok: true,

@@ -409,14 +409,15 @@ export default function TicketChat({ sessionId, initialMessage, onCloseTicket, u
             </div>
           </div>
         ))}
-        {isTicketClosed && (
-          <div className="text-center py-4">
-            <div className="inline-block bg-red-500/10 border border-red-500/20 text-red-400 px-4 py-2 rounded-xl text-sm font-medium">
-              🔒 This ticket has been closed by an admin.
-            </div>
-          </div>
-        )}
       </div>
+      
+      {isTicketClosed && (
+        <div className="w-full text-center py-3 bg-gradient-to-t from-[#0a0a0a] to-transparent z-10">
+          <div className="inline-block bg-red-500/10 border border-red-500/20 text-red-400 px-4 py-2 rounded-xl text-sm font-medium shadow-lg backdrop-blur-md">
+            🔒 This ticket has been closed by an admin.
+          </div>
+        </div>
+      )}
       
       {/* Input area */}
       <div className="p-4 bg-white/5 border-t border-white/10">

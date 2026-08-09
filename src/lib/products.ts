@@ -10,7 +10,7 @@ export const products: Product[] = [
     id: "prime",
     name: "Prime Ready",
     type: "prime",
-    price: 0.10,
+    price: 0.69,
   },
   {
     id: "premier",

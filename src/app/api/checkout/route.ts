@@ -80,52 +80,42 @@ export async function POST(req: Request) {
       return NextResponse.json({ url: "/crypto-mock" });
     }
 
-    if (paymentMethod === "polar") {
-      // Fee: 3.5% + €0.30 (covers Stripe/Polar processing costs)
-      const feeMultiplier = 0.035;
-      const fixedFee = 0.30;
+    if (paymentMethod === "stripe") {
+      const Stripe = require('stripe');
+      const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2025-01-27.acacia" as any });
+
+      const feeMultiplier = 0.015;
+      const fixedFee = 0.25;
       const cardFee = Number((totalPrice * feeMultiplier + fixedFee).toFixed(2));
       const finalAmount = totalPrice + cardFee;
 
-      if (!process.env.POLAR_TOPUP_PRODUCT_ID) {
-        console.error("Missing POLAR_TOPUP_PRODUCT_ID in environment variables");
-        return NextResponse.json({ error: "Polar configuration missing." }, { status: 500 });
-      }
-
-      try {
-        const response = await fetch("https://api.polar.sh/v1/checkouts/", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${process.env.POLAR_ACCESS_TOKEN}`
+      const session = await stripe.checkout.sessions.create({
+        line_items: [
+          {
+            price_data: {
+              currency: 'eur',
+              product_data: {
+                name: `LarpSense Store - ${product.name} (x${quantity})`,
+              },
+              unit_amount: Math.round(finalAmount * 100),
+            },
+            quantity: 1,
           },
-          body: JSON.stringify({
-            payment_processor: "stripe",
-            products: [process.env.POLAR_TOPUP_PRODUCT_ID],
-            amount: Math.round(finalAmount * 100),
-            success_url: `${req.headers.get("origin")}/dashboard?order=success`,
-            metadata: {
-              type: "product_checkout",
-              userId: userId,
-              productId: product.id,
-              quantity: quantity.toString(),
-              totalPrice: totalPrice.toString()
-            }
-          })
-        });
+        ],
+        mode: 'payment',
+        client_reference_id: userId,
+        metadata: {
+          type: "product_checkout",
+          userId: userId,
+          productId: product.id,
+          quantity: quantity.toString(),
+          totalPrice: totalPrice.toString()
+        },
+        success_url: `${req.headers.get("origin")}/dashboard?order=success`,
+        cancel_url: `${req.headers.get("origin")}/category/${product.id}`,
+      });
 
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error("Polar Checkout Error:", errorText);
-          return NextResponse.json({ error: "Failed to create Polar checkout" }, { status: 500 });
-        }
-
-        const session = await response.json();
-        return NextResponse.json({ url: session.url });
-      } catch (err: any) {
-        console.error("Polar Checkout Error:", err);
-        return NextResponse.json({ error: "Payment gateway error" }, { status: 500 });
-      }
+      return NextResponse.json({ url: session.url });
     }
 
     // Balance payment — proceed to NFA fulfillment

@@ -121,7 +121,7 @@ export default function TopUpModal() {
           setStep(1);
         }
       } else {
-        // Card (Polar)
+        // Card (Stripe)
         const res = await fetch("/api/create-checkout-session", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -129,7 +129,7 @@ export default function TopUpModal() {
             userId: session.user.id,
             token: session.access_token,
             amount: amount,
-            paymentMethod: 'polar',
+            paymentMethod: 'stripe',
           })
         });
 

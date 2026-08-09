@@ -51,7 +51,7 @@ export default function CategoryPage() {
   const [user, setUser] = useState<User | null>(null);
   const [authChecked, setAuthChecked] = useState(false);
   
-  const [paymentMethod, setPaymentMethod] = useState<"polar" | "crypto" | "balance">("polar");
+  const [paymentMethod, setPaymentMethod] = useState<"stripe" | "crypto" | "balance">("stripe");
   const [selectedCryptoCoin, setSelectedCryptoCoin] = useState<string | null>(null);
   const [isCryptoCoinDropdownOpen, setIsCryptoCoinDropdownOpen] = useState(false);
   const [isVariantDropdownOpen, setIsVariantDropdownOpen] = useState(false);
@@ -480,15 +480,15 @@ export default function CategoryPage() {
                 <>
               {/* Polar */}
               <button 
-                onClick={() => { if (settings.stripe_enabled) { setPaymentMethod("polar"); } }}
+                onClick={() => { if (settings.stripe_enabled) { setPaymentMethod("stripe"); } }}
                 disabled={!settings.stripe_enabled}
-                className={`w-full px-4 py-3 rounded-xl text-left flex items-center gap-3 border transition-all ${!settings.stripe_enabled ? "opacity-50 cursor-not-allowed grayscale bg-[#0a0a0a]/50 border-white/5" : paymentMethod === "polar" ? "bg-white/5 border-white/20" : "bg-[#0a0a0a]/50 border-white/10 hover:bg-white/5 hover:border-white/20"}`}
+                className={`w-full px-4 py-3 rounded-xl text-left flex items-center gap-3 border transition-all ${!settings.stripe_enabled ? "opacity-50 cursor-not-allowed grayscale bg-[#0a0a0a]/50 border-white/5" : paymentMethod === "stripe" ? "bg-white/5 border-white/20" : "bg-[#0a0a0a]/50 border-white/10 hover:bg-white/5 hover:border-white/20"}`}
               >
-                <div className={`flex items-center justify-center w-10 h-10 rounded-lg shrink-0 ${paymentMethod === "polar" ? "bg-gray-500/10" : "bg-[#141414] border border-white/5"}`}>
+                <div className={`flex items-center justify-center w-10 h-10 rounded-lg shrink-0 ${paymentMethod === "stripe" ? "bg-gray-500/10" : "bg-[#141414] border border-white/5"}`}>
                   <CreditCard className="w-5 h-5 text-gray-400" />
                 </div>
                 <div>
-                  <div className={`font-bold text-sm ${paymentMethod === "polar" ? "text-white" : settings.stripe_enabled ? "text-white" : "text-gray-400"}`}>Debit / Credit Card</div>
+                  <div className={`font-bold text-sm ${paymentMethod === "stripe" ? "text-white" : settings.stripe_enabled ? "text-white" : "text-gray-400"}`}>Debit / Credit Card</div>
                   <div className="text-xs text-gray-500">{!settings.stripe_enabled ? 'Temporarily disabled' : 'Mastercard, Visa, Apple Pay etc.'} <span className="text-indigo-400 font-bold">{settings.stripe_enabled ? '(3.5% + €0.30 fee)' : ''}</span></div>
                 </div>
               </button>
@@ -612,7 +612,7 @@ export default function CategoryPage() {
               {loadingCheckout ? (
                 <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin" />
               ) : (
-                  `Pay €${totalPrice.toFixed(2)} with ${paymentMethod === "polar" ? "Card" : paymentMethod === "crypto" ? "Crypto" : "Balance"}`
+                  `Pay €${totalPrice.toFixed(2)} with ${paymentMethod === "stripe" ? "Card" : paymentMethod === "crypto" ? "Crypto" : "Balance"}`
               )}
             </button>
           )}

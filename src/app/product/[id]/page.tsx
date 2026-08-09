@@ -31,7 +31,7 @@ export default function ProductPage() {
   const [user, setUser] = useState<User | null>(null);
   const [authChecked, setAuthChecked] = useState(false);
   
-  const [paymentMethod, setPaymentMethod] = useState<"polar" | "crypto" | "balance">("polar");
+  const [paymentMethod, setPaymentMethod] = useState<"stripe" | "crypto" | "balance">("stripe");
   const [selectedCryptoCoin, setSelectedCryptoCoin] = useState<string | null>(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isCryptoCoinDropdownOpen, setIsCryptoCoinDropdownOpen] = useState(false);
@@ -244,7 +244,7 @@ export default function ProductPage() {
               className="w-full bg-[#1c1c1c] border border-white/5 rounded-xl px-4 py-3 text-white flex items-center justify-between hover:bg-[#222] transition-colors"
             >
               <div className="flex items-center gap-3">
-                {paymentMethod === "polar" ? (
+                {paymentMethod === "stripe" ? (
                   <div className="w-8 h-8 bg-gray-500/10 rounded-full flex items-center justify-center shrink-0">
                     <CreditCard className="w-5 h-5 text-gray-400" />
                   </div>
@@ -259,10 +259,10 @@ export default function ProductPage() {
                 )}
                 <div className="text-left">
                   <div className="font-bold text-sm text-white">
-                    {paymentMethod === "polar" ? "Debit / Credit Card" : paymentMethod === "crypto" ? "Cryptocurrency" : "Balance"}
+                    {paymentMethod === "stripe" ? "Debit / Credit Card" : paymentMethod === "crypto" ? "Cryptocurrency" : "Balance"}
                   </div>
                   <div className="text-[11px] text-gray-500 font-medium">
-                    {paymentMethod === "polar" ? "Mastercard, Visa, Apple Pay etc. (3.5% + €0.30 fee)" : paymentMethod === "crypto" ? "Pay with any crypto via OxaPay (0.5% fee)" : "Pay with your NFA Store balance"}
+                    {paymentMethod === "stripe" ? "Mastercard, Visa, Apple Pay etc. (3.5% + €0.30 fee)" : paymentMethod === "crypto" ? "Pay with any crypto via OxaPay (0.5% fee)" : "Pay with your NFA Store balance"}
                   </div>
                 </div>
               </div>
@@ -290,7 +290,7 @@ export default function ProductPage() {
                 ) : (
                   <>
                 <button 
-                  onClick={() => { if (settings.stripe_enabled) { setPaymentMethod("polar"); setIsDropdownOpen(false); } }}
+                  onClick={() => { if (settings.stripe_enabled) { setPaymentMethod("stripe"); setIsDropdownOpen(false); } }}
                   disabled={!settings.stripe_enabled}
                   className={`w-full px-4 py-3 text-left transition-colors flex items-center gap-3 ${!settings.stripe_enabled ? 'opacity-50 cursor-not-allowed grayscale' : 'hover:bg-white/5'}`}
                 >
@@ -446,7 +446,7 @@ export default function ProductPage() {
             {loadingCheckout ? (
               <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin" />
             ) : (
-              `Pay €${totalPrice.toFixed(2)} with ${paymentMethod === "polar" ? "Card" : "Balance"}`
+              `Pay €${totalPrice.toFixed(2)} with ${paymentMethod === "stripe" ? "Card" : "Balance"}`
             )}
           </button>
         )}

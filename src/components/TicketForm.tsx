@@ -16,6 +16,7 @@ export default function TicketForm() {
   const [description, setDescription] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [loadingOrders, setLoadingOrders] = useState(false);
+  const [profile, setProfile] = useState<any>(null);
   
   // Chat state
   const [activeSession, setActiveSession] = useState<string | null>(null);
@@ -52,6 +53,13 @@ export default function TicketForm() {
       if (session?.user) {
         setUser(session.user);
         setLoadingOrders(true);
+
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('display_name, avatar_url')
+          .eq('id', session.user.id)
+          .single();
+        if (profileData) setProfile(profileData);
 
         const { data } = await supabase
           .from('orders')
@@ -239,8 +247,8 @@ ${description}`;
           sessionId={activeSession} 
           initialMessage={initialMessage} 
           onCloseTicket={handleCloseTicket} 
-          userAvatar={user?.user_metadata?.avatar_url}
-          userName={user?.user_metadata?.username || user?.user_metadata?.name || user?.email?.split('@')?.[0] || 'User'}
+          userAvatar={profile?.avatar_url || user?.user_metadata?.avatar_url}
+          userName={profile?.display_name || user?.user_metadata?.username || user?.user_metadata?.name || user?.email?.split('@')?.[0] || 'User'}
           isTicketClosed={isTicketClosed}
           onTicketClosedRemotely={() => {
              localStorage.removeItem('larpsense_ticket_session');

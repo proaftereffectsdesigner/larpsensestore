@@ -359,9 +359,9 @@ export default function TicketChat({ sessionId, initialMessage, onCloseTicket, u
                   {msg.attachments && msg.attachments.length > 0 && (
                     <div className="flex flex-col gap-2 mt-2">
                       {msg.attachments.map((url, idx) => {
-                        const isImage = url.startsWith('data:image/') || (url.includes('cdn.discordapp.com/attachments') && url.match(/\.(jpeg|jpg|gif|png|webp)(\?|$)/i));
-                        const isVideo = url.startsWith('data:video/') || (url.includes('cdn.discordapp.com/attachments') && url.match(/\.(mp4|webm|mov)(\?|$)/i));
-                        const isAudio = url.startsWith('data:audio/') || (url.includes('cdn.discordapp.com/attachments') && url.match(/\.(mp3|wav|ogg|m4a|aac|flac)(\?|$)/i));
+                        const isImage = url.startsWith('data:image/') || url.match(/\.(jpeg|jpg|gif|png|webp)(\?|$)/i) || url.includes('tenor.com/') || url.includes('klipy.com/');
+                        const isVideo = url.startsWith('data:video/') || url.match(/\.(mp4|webm|mov)(\?|$)/i);
+                        const isAudio = url.startsWith('data:audio/') || url.match(/\.(mp3|wav|ogg|m4a|aac|flac)(\?|$)/i);
                         
                         if (isImage) {
                           return (

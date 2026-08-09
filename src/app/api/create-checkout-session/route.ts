@@ -3,17 +3,16 @@ import Stripe from "stripe";
 import { createClient } from "@supabase/supabase-js";
 import { rateLimit, getClientIp } from "@/lib/rate-limit";
 
-// Initialize Stripe with the secret key from env
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'dummy_key_for_build', {
-  apiVersion: "2025-01-27.acacia" as any, // using any to bypass strict version typings if needed, but it's fine
-});
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
-
 export async function POST(req: Request) {
   try {
+    // Initialize Stripe with the secret key from env
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'dummy_key_for_build', {
+      apiVersion: "2025-01-27.acacia" as any, // using any to bypass strict version typings if needed, but it's fine
+    });
+
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
     // Rate limit: max 10 checkout sessions per minute per IP
     const ip = getClientIp(req);
     const rl = rateLimit(`checkout:${ip}`, { maxRequests: 10, windowMs: 60_000 });
@@ -25,7 +24,7 @@ export async function POST(req: Request) {
     }
     const { userId, amount, paymentMethod, token } = await req.json();
 
-    if (!userId || !amount || amount < 0.20 || !token) {
+    if (!userId || !amount || amount < 0.50 || !token) {
       return NextResponse.json({ error: "Invalid parameters or unauthorized" }, { status: 400 });
     }
 

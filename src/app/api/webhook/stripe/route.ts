@@ -2,13 +2,12 @@ import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { createClient } from "@supabase/supabase-js";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'dummy_key_for_build', {
-  apiVersion: "2025-01-27.acacia" as any,
-});
-
-const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET!;
-
 export async function POST(req: Request) {
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'dummy_key_for_build', {
+    apiVersion: "2025-01-27.acacia" as any,
+  });
+
+  const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET!;
   const payload = await req.text();
   const signature = req.headers.get('stripe-signature');
 

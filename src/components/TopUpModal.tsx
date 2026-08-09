@@ -205,10 +205,10 @@ export default function TopUpModal() {
                       }
                     }}
                     className="w-full bg-[#141414] border border-white/10 rounded-xl py-4 pl-10 pr-4 text-white font-bold focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/50 transition-all text-lg shadow-inner"
-                    placeholder="0.20"
+                    placeholder="0.50"
                   />
                 </div>
-                <p className="text-xs text-gray-600 font-medium pl-1">Minimum deposit: <span className="text-gray-500">€0.20</span>.</p>
+                <p className="text-xs text-gray-600 font-medium pl-1">Minimum deposit: <span className="text-gray-500">€0.50</span>.</p>
               </div>
 
               {/* Payment Method */}
@@ -370,7 +370,7 @@ export default function TopUpModal() {
 
                 <button
                   onClick={startPaymentSimulation}
-                  disabled={amount < 0.20 || (method === 'crypto' && selectedCryptoCoin === 'BTC' && amount < 15)}
+                  disabled={amount < 0.50 || (method === 'crypto' && selectedCryptoCoin === 'BTC' && amount < 15)}
                   className="w-full bg-accent hover:bg-accent/90 text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_20px_rgba(255,255,255,0.1)] hover:shadow-[0_0_30px_rgba(255,255,255,0.2)]"
                 >
                   Confirm Payment <ChevronRight className="w-5 h-5" />

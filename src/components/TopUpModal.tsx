@@ -370,7 +370,7 @@ export default function TopUpModal() {
 
                 <button
                   onClick={startPaymentSimulation}
-                  disabled={amount < 0.50 || (method === 'crypto' && selectedCryptoCoin === 'BTC' && amount < 15)}
+                  disabled={amount < 2 || (method === 'crypto' && selectedCryptoCoin === 'BTC' && amount < 15)}
                   className="w-full bg-accent hover:bg-accent/90 text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_20px_rgba(255,255,255,0.1)] hover:shadow-[0_0_30px_rgba(255,255,255,0.2)]"
                 >
                   Confirm Payment <ChevronRight className="w-5 h-5" />

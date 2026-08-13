@@ -21,8 +21,30 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "LarpSenseStore - Buy Digital Accounts",
-  description: "Secure, instant digital account delivery.",
+  title: "LarpSenseStore - Premium Digital Accounts",
+  description: "Secure, instant digital account delivery. Get your CS2 Prime and Premier ready accounts with automated warranty.",
+  openGraph: {
+    title: "LarpSense Store | Premium CS2 Accounts",
+    description: "Secure, instant digital account delivery. Get your CS2 Prime and Premier ready accounts today.",
+    url: "https://www.larpsensestore.com",
+    siteName: "LarpSenseStore",
+    images: [
+      {
+        url: "/embed.png",
+        width: 1200,
+        height: 630,
+        alt: "LarpSense Store",
+      },
+    ],
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "LarpSense Store | Premium CS2 Accounts",
+    description: "Secure, instant digital account delivery. Get your CS2 Prime and Premier ready accounts today.",
+    images: ["/embed.png"],
+  },
 };
 
 export default function RootLayout({

@@ -48,79 +48,42 @@ export default function ProductCards() {
       });
   }, []);
 
-  const primeProducts = products.filter(p => p.id === "prime");
-  const premierBaseProducts = products.filter(p => p.id === "premier");
-  const premierMedalsProducts = products.filter(p => p.id.includes("-medals"));
-  const premierRatingsProducts = products.filter(p => p.id.includes("k"));
-  const premierRareProducts = products.filter(p => p.id === "premier-rare");
-
-  const cards = [
-    {
-      id: "prime",
-      title: "Prime Ready",
-      desc: "Standard Prime NFA accounts for matchmaking. No bans, instantly delivered.",
-      products: primeProducts,
-      img: "/prime-bg.png"
-    },
-    {
-      id: "premier",
-      title: "Premier Ready",
-      desc: "Standard NFA accounts ready for Premier mode. Blank slate for your journey.",
-      products: premierBaseProducts,
-      img: "/premier-bg.jpg"
-    },
-    {
-      id: "premier-4-medals", 
-      title: "Premier with Medals",
-      desc: "Premier NFA accounts loaded with service medals. Show off your veteran status.",
-      products: premierMedalsProducts,
-      img: "/premier-bg.jpg" 
-    },
-    {
-      id: "premier-10k", 
-      title: "Premier with Ratings",
-      desc: "Jump straight into high Elo. Choose from 10k, 15k, or 20k CS Rating.",
-      products: premierRatingsProducts,
-      img: "/premier-bg.jpg" 
-    },
-    {
-      id: "premier-rare", 
-      title: "Premier Rare",
-      desc: "The ultimate flex. NFA Accounts loaded with a knife or gloves.",
-      products: premierRareProducts,
-      img: "/premier-bg.jpg" 
+  const getDescription = (id: string) => {
+    switch(id) {
+      case "prime": return "Standard Prime NFA accounts for matchmaking. No bans, instantly delivered.";
+      case "premier": return "Standard NFA accounts ready for Premier mode. Blank slate for your journey.";
+      case "premier-4-medals": return "Premier NFA accounts loaded with 4+ service medals. Show off your veteran status.";
+      case "premier-10-medals": return "Premier NFA accounts loaded with 10+ service medals. Show off your veteran status.";
+      case "premier-10k": return "Jump straight into high Elo with 10.000 CS Rating.";
+      case "premier-15k": return "Jump straight into high Elo with 15.000 CS Rating.";
+      case "premier-20k": return "Jump straight into high Elo with 20.000 CS Rating.";
+      case "premier-rare": return "The ultimate flex. NFA Accounts loaded with a knife or gloves.";
+      default: return "Premium NFA account instantly delivered.";
     }
-  ];
+  };
 
   return (
     <div className="w-full max-w-7xl mx-auto p-6 relative z-10" id="products" ref={containerRef}>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-full mx-auto">
-        {cards.map((card, index) => {
-          const minPrice = card.products.length > 0 ? Math.min(...card.products.map(p => p.price)) : 0;
-          const maxPrice = card.products.length > 0 ? Math.max(...card.products.map(p => p.price)) : 0;
-          const priceRange = card.products.length === 0 ? "Coming Soon" : minPrice === maxPrice ? `€${minPrice.toFixed(2)}` : `€${minPrice.toFixed(2)} - €${maxPrice.toFixed(2)}`;
-          
-          let totalStock = 0;
-          if (stockData) {
-            card.products.forEach(p => {
-              totalStock += (stockData[p.type]?.available || 0);
-            });
-          }
+        {products.map((product, index) => {
+          const totalStock = stockData ? (stockData[product.type]?.available || 0) : 0;
+          const img = product.id === "prime" ? "/prime-bg.png" : "/premier-bg.jpg";
+          const desc = getDescription(product.id);
 
           return (
             <Link 
-              key={card.id} 
-              href={`/category/${card.id}`}
-              className={`transition-all duration-1000 ease-out block ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-20'} ${index === 1 ? 'delay-200' : 'delay-100'}`}
+              key={product.id} 
+              href={`/product/${product.id}`}
+              className={`transition-all duration-1000 ease-out block ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-20'} ${index % 3 === 1 ? 'delay-200' : index % 3 === 2 ? 'delay-300' : 'delay-100'}`}
             >
               <div className="group bg-[#1a1a1a] border border-white/5 rounded-[2rem] overflow-hidden shadow-2xl transition-all hover:border-white/10 hover:-translate-y-1 flex flex-col h-full cursor-pointer">
                 {/* Obrazek (Graphic Placeholder) */}
                 <div className="w-full aspect-square relative flex flex-col items-center justify-center overflow-hidden">
                   <Image 
-                    src={card.img} 
-                    alt={card.title} 
+                    src={img} 
+                    alt={product.name} 
                     fill 
-                    className={`object-cover transition-transform duration-700 scale-[1.15] group-hover:scale-[1.20] ${card.products.length === 0 ? 'grayscale opacity-50' : ''}`} 
+                    className="object-cover transition-transform duration-700 scale-[1.15] group-hover:scale-[1.20]" 
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-[#1a1a1a] via-[#1a1a1a]/20 to-transparent z-10 pointer-events-none" />
                   
@@ -151,15 +114,15 @@ export default function ProductCards() {
 
                 {/* Dolna sekcja z opisem */}
                 <div className="px-6 pb-6 pt-2 md:px-8 md:pb-8 flex flex-col flex-1 bg-[#1a1a1a] relative z-20">
-                  <h2 className="text-2xl font-bold text-white group-hover:text-white transition-colors">{card.title}</h2>
+                  <h2 className="text-2xl font-bold text-white group-hover:text-white transition-colors">{product.name}</h2>
                   <p className="text-sm text-gray-400 mt-2 mb-6 line-clamp-2">
-                    {card.desc}
+                    {desc}
                   </p>
                   
                   <div className="mt-8 flex items-center justify-between border-t border-white/5 pt-6">
                     <div>
-                      <div className="text-[11px] text-gray-500 mb-1">Starting from</div>
-                      <div className="font-mono text-xl font-bold text-white tracking-tight">{priceRange}</div>
+                      <div className="text-[11px] text-gray-500 mb-1">Price</div>
+                      <div className="font-mono text-xl font-bold text-white tracking-tight">€{product.price.toFixed(2)}</div>
                     </div>
                     <div className="bg-white/5 p-3.5 rounded-full group-hover:bg-white/10 transition-colors text-white border border-white/5 group-hover:border-white/10">
                       <ChevronRight className="w-4 h-4" />

@@ -112,7 +112,7 @@ export async function POST(req: Request) {
           totalPrice: totalPrice.toString()
         },
         success_url: `${req.headers.get("origin")}/dashboard?order=success`,
-        cancel_url: `${req.headers.get("origin")}/category/${product.id}`,
+        cancel_url: `${req.headers.get("origin")}/product/${product.id}`,
       });
 
       return NextResponse.json({ url: session.url });

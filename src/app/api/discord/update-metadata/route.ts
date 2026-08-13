@@ -32,7 +32,7 @@ export async function POST(request: Request) {
       totalSpent = orders.reduce((sum, order) => sum + Number(order.total_price || 0), 0);
     }
     
-    const isElite = totalSpent >= 100 ? 1 : 0; // Discord boolean is represented as 0/1 in metadata payload
+    const daysRegistered = profile.created_at ? Math.floor((Date.now() - new Date(profile.created_at).getTime()) / (1000 * 60 * 60 * 24)) : 0;
 
     const clientId = process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID;
     const url = `https://discord.com/api/v10/users/@me/applications/${clientId}/role-connection`;
@@ -43,7 +43,7 @@ export async function POST(request: Request) {
       metadata: {
         orders_count: ordersCount,
         total_spent: Math.floor(totalSpent),
-        is_elite: isElite,
+        days_registered: daysRegistered,
       },
     };
 

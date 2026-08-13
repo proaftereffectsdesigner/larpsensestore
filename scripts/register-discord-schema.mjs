@@ -19,10 +19,10 @@ const body = [
     type: 2, // INTEGER_GREATER_THAN_OR_EQUAL
   },
   {
-    key: 'is_elite',
-    name: 'Elite Spender',
-    description: 'Has spent more than €100',
-    type: 7, // BOOLEAN_EQUAL
+    key: 'days_registered',
+    name: 'Days Registered',
+    description: 'Number of days since registration',
+    type: 2, // INTEGER_GREATER_THAN_OR_EQUAL
   }
 ];
 

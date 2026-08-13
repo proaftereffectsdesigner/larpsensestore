@@ -2051,6 +2051,18 @@ function DashboardContent() {
                     {totalOrders === 0 && <div className="text-[10px] uppercase font-bold text-gray-600 tracking-widest px-2">0/1 Orders</div>}
                   </div>
 
+                  <div className={`flex items-center gap-4 p-3 rounded-2xl border ${totalSpent >= 25 ? 'bg-[#0a0a0a] border-white/10' : 'bg-transparent border-transparent opacity-50 grayscale'}`}>
+                    <div className={`p-3 rounded-xl border shrink-0 ${totalSpent >= 25 ? 'bg-purple-500/10 border-purple-500/30 shadow-[0_0_15px_rgba(168,85,247,0.5)]' : 'bg-white/5 border-white/10'}`}>
+                      <Star className={`w-6 h-6 ${totalSpent >= 25 ? 'text-purple-400' : 'text-gray-400'}`} />
+                    </div>
+                    <div className="flex-1">
+                      <div className={`font-bold text-sm ${totalSpent >= 25 ? 'text-purple-400' : 'text-gray-400'}`}>Supporter Tier</div>
+                      <div className="text-xs text-gray-500 mt-1">Accumulative spend over $25.00.</div>
+                    </div>
+                    {totalSpent >= 25 && <div className="text-[10px] uppercase font-bold text-accent tracking-widest px-2">Owned</div>}
+                    {totalSpent < 25 && <div className="text-[10px] uppercase font-bold text-gray-600 tracking-widest px-2">${totalSpent.toFixed(2)} / $25.00</div>}
+                  </div>
+
                   <div className={`flex items-center gap-4 p-3 rounded-2xl border ${totalSpent >= 50 ? 'bg-[#0a0a0a] border-white/10' : 'bg-transparent border-transparent opacity-50 grayscale'}`}>
                     <div className={`p-3 rounded-xl border shrink-0 ${totalSpent >= 50 ? 'bg-yellow-500/10 border-yellow-500/30 shadow-[0_0_15px_rgba(234,179,8,0.5)]' : 'bg-white/5 border-white/10'}`}>
                       <Coins className={`w-6 h-6 ${totalSpent >= 50 ? 'text-yellow-400' : 'text-gray-400'}`} />

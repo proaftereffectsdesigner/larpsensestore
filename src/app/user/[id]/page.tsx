@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { supabase } from "@/lib/supabase-client";
 import ParticlesBackground from "@/components/ParticlesBackground";
-import { UserIcon, ShieldCheck, Crown, Syringe, Crosshair, ShieldAlert, Unlock, Ghost, FlaskConical, Package, Gem, Zap, ArrowLeft, Edit2, UserPlus, CalendarCheck, Award, Medal, ShoppingBag, Coins } from "lucide-react";
+import { UserIcon, ShieldCheck, Crown, Syringe, Crosshair, ShieldAlert, Unlock, Ghost, FlaskConical, Package, Gem, Zap, ArrowLeft, Edit2, UserPlus, CalendarCheck, Award, Medal, ShoppingBag, Coins, Star } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import Link from "next/link";
 import { usePresence } from "@/components/PresenceTracker";
@@ -284,6 +284,16 @@ export default function PublicProfile() {
                           <div>
                             <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-0.5">Spender Badge</div>
                             <div className="font-bold text-sm text-yellow-400">Premium Tier</div>
+                          </div>
+                        </>
+                      ) : total_spent >= 25 ? (
+                        <>
+                          <div className="p-3 rounded-xl border shrink-0 bg-purple-500/10 border-purple-500/30 shadow-[0_0_15px_rgba(168,85,247,0.5)]">
+                            <Star className="w-6 h-6 text-purple-400" />
+                          </div>
+                          <div>
+                            <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-0.5">Spender Badge</div>
+                            <div className="font-bold text-sm text-purple-400">Supporter Tier</div>
                           </div>
                         </>
                       ) : (

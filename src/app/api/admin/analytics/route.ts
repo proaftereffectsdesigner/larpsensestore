@@ -254,7 +254,7 @@ export async function GET(request: Request) {
         chartMap[key].rawOrders.push({
            time: new Date(dStr).toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' }),
            email,
-           method: 'Polar.sh / NFA',
+           method: 'Stripe / NFA',
            product: o.product_id,
            price: Number(o.total_price)
         });

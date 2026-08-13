@@ -77,7 +77,7 @@ export default function PrivacyPage() {
             <div>
               <h2 className="text-2xl font-bold text-white mb-4">4. Third-Party Services & Cookies</h2>
               <p className="text-gray-400 leading-relaxed text-lg">
-                We use cookies and local storage to remember your session and process items in your cart. We also partner with trusted third-party providers (like Stripe or Polar) for payment processing and Discord for customer support. These providers have their own strict privacy policies governing the data they process on our behalf.
+                We use cookies and local storage to remember your session and process items in your cart. We also partner with trusted third-party providers (like Stripe or Oxapay) for payment processing and Discord for customer support. These providers have their own strict privacy policies governing the data they process on our behalf.
               </p>
             </div>
           </section>

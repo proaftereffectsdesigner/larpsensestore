@@ -411,7 +411,7 @@ export default function ProductPage() {
                 </>
               ) : (
                 <>
-              {/* Polar */}
+              {/* Stripe */}
               <button 
                 onClick={() => { if (settings.stripe_enabled) { setPaymentMethod("stripe"); } }}
                 disabled={!settings.stripe_enabled}

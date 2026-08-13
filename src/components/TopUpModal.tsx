@@ -76,7 +76,7 @@ export default function TopUpModal() {
   const total = (amount + cardFee).toFixed(2);
 
   const startPaymentSimulation = async () => {
-    if (amount < 0.5) return;
+    if (amount < 2) return;
     if (!method) {
       setErrorMsg("Please select a payment method");
       return;
@@ -205,10 +205,10 @@ export default function TopUpModal() {
                       }
                     }}
                     className="w-full bg-[#141414] border border-white/10 rounded-xl py-4 pl-10 pr-4 text-white font-bold focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/50 transition-all text-lg shadow-inner"
-                    placeholder="0.50"
+                    placeholder="2.00"
                   />
                 </div>
-                <p className="text-xs text-gray-600 font-medium pl-1">Minimum deposit: <span className="text-gray-500">€0.50</span>.</p>
+                <p className="text-xs text-gray-600 font-medium pl-1">Minimum deposit: <span className="text-gray-500">€2.00</span>.</p>
               </div>
 
               {/* Payment Method */}

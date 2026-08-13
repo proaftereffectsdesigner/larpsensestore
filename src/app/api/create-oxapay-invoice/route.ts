@@ -22,7 +22,7 @@ export async function POST(req: Request) {
     let amount = Number(clientAmount);
     let quantity = Math.max(1, Math.floor(Number(clientQuantity || 1)));
 
-    if (!userId || !token || !amount) {
+    if (!userId || !token || !amount || (type === "topup" && amount < 2)) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 

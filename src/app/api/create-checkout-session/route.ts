@@ -24,7 +24,7 @@ export async function POST(req: Request) {
     }
     const { userId, amount, paymentMethod, token } = await req.json();
 
-    if (!userId || !amount || amount < 0.50 || !token) {
+    if (!userId || !amount || amount < 2 || !token) {
       return NextResponse.json({ error: "Invalid parameters or unauthorized" }, { status: 400 });
     }
 

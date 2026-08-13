@@ -5,9 +5,6 @@ import { ShieldCheck, Zap, RefreshCw, ChevronDown, FileKey2 } from "lucide-react
 
 export default function Hero() {
   const [mounted, setMounted] = useState(false);
-  const [badgePhase, setBadgePhase] = useState<'typing' | 'done'>('typing');
-  const [badgeText, setBadgeText] = useState('');
-  
   const [injectorState, setInjectorState] = useState<'idle' | 'parsing' | 'loaded' | 'launching'>('idle');
   const [isDraggingOver, setIsDraggingOver] = useState(false);
   const [isDraggingToken, setIsDraggingToken] = useState(false);
@@ -21,23 +18,7 @@ export default function Hero() {
 
     // Trigger mount animation
     setMounted(true);
-
-    const fullText = "> ping larpsense.store...";
-    let currentIndex = 0;
-    
-    if (badgePhase === 'typing') {
-      const interval = setInterval(() => {
-        if (currentIndex <= fullText.length) {
-          setBadgeText(fullText.slice(0, currentIndex));
-          currentIndex++;
-        } else {
-          clearInterval(interval);
-          setTimeout(() => setBadgePhase('done'), 800);
-        }
-      }, 40);
-      return () => clearInterval(interval);
-    }
-  }, [badgePhase]);
+  }, []);
 
   const handleDragStart = (e: React.DragEvent) => {
     e.dataTransfer.setData('text/plain', 'nfa-token');
@@ -94,16 +75,7 @@ export default function Hero() {
         {/* Left Column: Text & CTA */}
         <div className="w-full lg:w-[55%] flex flex-col items-start text-left relative z-20">
           
-          {/* Animated Badge */}
-          <div className={`mb-6 h-10 flex items-center bg-[#0a0a0a] border border-white/10 px-5 rounded-full font-mono text-xs text-gray-400 overflow-hidden shadow-sm transition-all duration-700 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-            {badgePhase === 'typing' ? (
-              <span>{badgeText}<span className="animate-pulse">_</span></span>
-            ) : (
-              <span className="flex items-center gap-2 text-gray-300">
-                <span className="text-emerald-500 font-bold">[✓]</span> Ping: 12ms <span className="text-white/20">|</span> Auto-Delivery: <span className="text-emerald-400">Active</span>
-              </span>
-            )}
-          </div>
+
 
           {/* Headline */}
           <h1 className={`text-5xl md:text-6xl lg:text-7xl font-black tracking-tighter mb-6 text-white leading-[1.1] text-balance transition-all duration-700 delay-200 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>

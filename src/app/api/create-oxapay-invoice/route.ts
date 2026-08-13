@@ -64,7 +64,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Purchases restricted" }, { status: 403 });
     }
 
-    const feeMultiplier = 0.005; // 0.5%
+    const feeMultiplier = 0.000; // 0%
     const cryptoFee = Number((amount * feeMultiplier).toFixed(2));
     const totalAmount = amount + cryptoFee;
 

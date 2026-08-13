@@ -440,7 +440,7 @@ export default function ProductPage() {
                     <div>
                       <div className={`font-bold text-sm ${paymentMethod === "crypto" ? "text-white" : settings.crypto_enabled ? "text-white" : "text-gray-400"}`}>Cryptocurrency</div>
                       <div className="text-xs text-gray-500">
-                        {!settings.crypto_enabled ? 'Temporarily disabled' : 'Pay via OxaPay'} <span className="text-amber-400 font-bold">{settings.crypto_enabled ? '(0.5% fee)' : ''}</span>
+                        {!settings.crypto_enabled ? 'Temporarily disabled' : 'Pay via OxaPay'} <span className="text-amber-400 font-bold">{settings.crypto_enabled ? '(0% fee)' : ''}</span>
                       </div>
                     </div>
                   </div>

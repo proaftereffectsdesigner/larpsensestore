@@ -81,8 +81,16 @@ export async function POST(req: Request) {
     }
 
     let costAmount = amount;
-    if (discountPct > 0) {
-      costAmount = Number((costAmount * (1 - discountPct / 100)).toFixed(2));
+    let finalAmountAdded = amount;
+
+    if (type === "product_checkout") {
+      if (discountPct > 0) {
+        costAmount = Number((costAmount * (1 - discountPct / 100)).toFixed(2));
+      }
+    } else {
+      if (discountPct > 0) {
+        finalAmountAdded = Number((amount * (1 + discountPct / 100)).toFixed(2));
+      }
     }
 
     const feeMultiplier = 0.000; // 0%
@@ -97,6 +105,9 @@ export async function POST(req: Request) {
     // This gives us a 36-character UUID, safely under OxaPay's 50-character limit for orderId,
     // avoiding string truncation and loss of metadata during the webhook.
     let accountsData = "Pending OxaPay Payment";
+    if (type === "topup" && finalAmountAdded !== amount) {
+      accountsData += ` | add:${finalAmountAdded}`;
+    }
     if (appliedPromoCode && affiliateOwnerId) {
       accountsData += ` | promo:${appliedPromoCode} | owner:${affiliateOwnerId}`;
     }

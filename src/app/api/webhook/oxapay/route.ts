@@ -137,6 +137,12 @@ export async function POST(req: Request) {
     }
 
     if (type === "TOPUP") {
+      let finalAmountToAdd = amountPaid;
+      if (pendingOrder.accounts_data && pendingOrder.accounts_data.includes("| add:")) {
+         const match = pendingOrder.accounts_data.match(/add:([0-9.]+)/);
+         if (match) finalAmountToAdd = Number(match[1]);
+      }
+
       const { data: profile } = await supabaseAdmin
         .from("profiles")
         .select("balance")
@@ -144,7 +150,7 @@ export async function POST(req: Request) {
         .single();
 
       if (profile) {
-        const newBalance = Number(profile.balance) + amountPaid;
+        const newBalance = Number(profile.balance) + finalAmountToAdd;
         await supabaseAdmin
           .from("profiles")
           .update({ balance: newBalance })

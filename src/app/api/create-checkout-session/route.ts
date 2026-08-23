@@ -68,26 +68,23 @@ export async function POST(req: Request) {
     }
 
     // Calculate fees (currently only Card/Stripe uses this gateway in checkout)
-    const feeMultiplier = 0.015;
-    const fixedFee = 0.25;
-
-    const cardFee = Number((costAmount * feeMultiplier + fixedFee).toFixed(2));
-    const totalAmount = costAmount + cardFee;
-    
-    const targetCurrency = (currency || "eur").toLowerCase();
-    const finalAmountInTarget = await convertToCurrency(totalAmount, targetCurrency);
+    // Calculate cost and bonus
+    const costInEur = Number((amount * 1.015 + 0.25).toFixed(2));
+    const finalAmountAdded = Number((amount * (1 + discountPct / 100)).toFixed(2));
+    const targetCurrencyAmount = await convertToCurrency(costInEur, 'EUR', currency || 'EUR');
 
     // Create Checkout Sessions from body params.
     const session = await stripe.checkout.sessions.create({
+      payment_method_types: ["card"],
       line_items: [
         {
           price_data: {
-            currency: targetCurrency,
+            currency: (currency || "eur").toLowerCase(),
             product_data: {
-              name: 'LarpSense Store Balance Top-Up',
-              description: `Top up €${amount.toFixed(2)} to your balance.`,
+              name: "Balance Top-up",
+              description: discountPct > 0 ? `Includes +${discountPct}% bonus from promo code!` : "Add funds to your LarpSense wallet",
             },
-            unit_amount: Math.round(finalAmountInTarget * 100), // Stripe expects amounts in cents
+            unit_amount: Math.round(targetCurrencyAmount * 100), // Stripe expects amounts in cents
           },
           quantity: 1,
         },
@@ -96,9 +93,9 @@ export async function POST(req: Request) {
       client_reference_id: userId,
       metadata: {
         userId: userId,
-        addedAmount: amount.toString(), // Store the pure amount without fee to add to balance
-        type: "topup", // to distinguish in the webhook
-        appliedPromoCode
+        addedAmount: finalAmountAdded.toString(),
+        type: "topup",
+        promoCode: appliedPromoCode || ""
       },
       success_url: `${req.headers.get("origin")}/dashboard?topup=success`,
       cancel_url: `${req.headers.get("origin")}/`,

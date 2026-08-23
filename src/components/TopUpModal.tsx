@@ -128,7 +128,7 @@ export default function TopUpModal() {
       const data = await res.json();
       if (data.ok) {
         setDiscountPct(data.discountPct);
-        setPromoCodeSuccess(data.message);
+        setPromoCodeSuccess(`Promo code applied! +${data.discountPct}% bonus added to your top-up.`);
       } else {
         setPromoCodeError(data.error || "Invalid promo code");
         setDiscountPct(0);
@@ -140,7 +140,8 @@ export default function TopUpModal() {
     }
   };
 
-  const costAmount = amount > 0 ? Number((amount * (1 - discountPct / 100)).toFixed(2)) : 0;
+  const costAmount = amount;
+  const bonusAmount = amount > 0 ? Number((amount * (discountPct / 100)).toFixed(2)) : 0;
   const cardFee = costAmount > 0 ? Number((costAmount * getFeeMultiplier() + getFixedFeeLocal()).toFixed(2)) : 0;
   const total = (costAmount + cardFee).toFixed(2);
 
@@ -478,8 +479,8 @@ export default function TopUpModal() {
                   </div>
                   {discountPct > 0 && (
                     <div className="flex justify-between text-emerald-400 text-sm font-medium mb-3">
-                      <span>Discount ({discountPct}%)</span>
-                      <span className="block">-{convert(convertFromLocal(amount - costAmount)).formatted}</span>
+                      <span>Bonus (+{discountPct}%)</span>
+                      <span className="block">+{convert(convertFromLocal(bonusAmount)).formatted}</span>
                     </div>
                   )}
                   <div className="flex justify-between text-gray-400 text-sm font-medium mb-4">

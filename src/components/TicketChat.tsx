@@ -96,6 +96,8 @@ export default function TicketChat({ sessionId, initialMessage, initialAttachmen
         // If we have an initial message from the form, send it immediately
         if (initialMessage || (initialAttachments && initialAttachments.length > 0)) {
           socket.send(JSON.stringify({ 
+            sender: 'user',
+            author: userName,
             content: initialMessage || '', 
             attachments: initialAttachments || [] 
           }));

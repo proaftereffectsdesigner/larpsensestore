@@ -1744,9 +1744,9 @@ function DashboardContent() {
                               type="text" 
                               required
                               value={affStats[platform]?.subs || ''}
-                              onChange={(e) => setAffStats(prev => ({...prev, [platform]: {...prev[platform], subs: e.target.value}}))}
+                              onChange={(e) => setAffStats(prev => ({...prev, [platform]: {...prev[platform], subs: e.target.value.replace(/\D/g, '')}}))}
                               className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-accent/50 transition-all placeholder:text-gray-600"
-                              placeholder="e.g. 50k"
+                              placeholder="e.g. 50000"
                             />
                           </div>
                           
@@ -1758,9 +1758,9 @@ function DashboardContent() {
                               <input 
                                 type="text" 
                                 value={affStats[platform]?.longViews || ''}
-                                onChange={(e) => setAffStats(prev => ({...prev, [platform]: {...prev[platform], longViews: e.target.value}}))}
+                                onChange={(e) => setAffStats(prev => ({...prev, [platform]: {...prev[platform], longViews: e.target.value.replace(/\D/g, '')}}))}
                                 className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-accent/50 transition-all placeholder:text-gray-600"
-                                placeholder="e.g. 100k"
+                                placeholder="e.g. 100000"
                               />
                             </div>
                           )}
@@ -1771,9 +1771,9 @@ function DashboardContent() {
                               <input 
                                 type="text" 
                                 value={affStats[platform]?.shortsViews || ''}
-                                onChange={(e) => setAffStats(prev => ({...prev, [platform]: {...prev[platform], shortsViews: e.target.value}}))}
+                                onChange={(e) => setAffStats(prev => ({...prev, [platform]: {...prev[platform], shortsViews: e.target.value.replace(/\D/g, '')}}))}
                                 className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-accent/50 transition-all placeholder:text-gray-600"
-                                placeholder="e.g. 200k"
+                                placeholder="e.g. 200000"
                               />
                             </div>
                           )}
@@ -1783,7 +1783,7 @@ function DashboardContent() {
                             <input 
                               type="text" 
                               value={affStats[platform]?.liveViewers || ''}
-                              onChange={(e) => setAffStats(prev => ({...prev, [platform]: {...prev[platform], liveViewers: e.target.value}}))}
+                              onChange={(e) => setAffStats(prev => ({...prev, [platform]: {...prev[platform], liveViewers: e.target.value.replace(/\D/g, '')}}))}
                               className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-accent/50 transition-all placeholder:text-gray-600"
                               placeholder="e.g. 500"
                             />

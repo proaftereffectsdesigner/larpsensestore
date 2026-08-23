@@ -1697,8 +1697,8 @@ function DashboardContent() {
                       setAffActiveChat(null);
                       setActiveTab('tickets');
                     }}
-                    userAvatar={user?.user_metadata?.avatar_url}
-                    userName={user?.user_metadata?.username || user?.user_metadata?.name || user?.email?.split('@')?.[0] || 'User'}
+                    userAvatar={profile?.avatar_url || user?.user_metadata?.avatar_url}
+                    userName={profile?.display_name || user?.user_metadata?.username || user?.user_metadata?.name || user?.email?.split('@')?.[0] || 'User'}
                   />
                 </div>
               ) : (

@@ -487,9 +487,13 @@ export default function TopUpModal() {
                     <span>Gateway Fee</span>
                     <span className="text-red-400 block">+{convert(convertFromLocal(cardFee)).formatted}</span>
                   </div>
-                  <div className="border-t border-dashed border-white/10 pt-4 flex justify-between items-end">
+                  <div className="border-t border-dashed border-white/10 pt-4 mb-3 flex justify-between items-end">
                     <span className="font-bold text-gray-300 uppercase tracking-widest text-xs">Total to pay</span>
                     <span className="font-black text-white text-2xl block">{convert(convertFromLocal(Number(total))).formatted}</span>
+                  </div>
+                  <div className="bg-accent/10 border border-accent/20 rounded-xl p-3 flex justify-between items-center">
+                    <span className="font-bold text-accent uppercase tracking-widest text-xs">You will receive</span>
+                    <span className="font-black text-accent text-xl block">{convert(convertFromLocal(amount + bonusAmount)).formatted}</span>
                   </div>
                 </div>
 

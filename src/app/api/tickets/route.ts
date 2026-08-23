@@ -138,7 +138,16 @@ export async function POST(req: Request) {
           // Update supabase with discord channel id using Admin (RLS bypass)
           await supabaseAdmin.from('tickets').update({ discord_channel_id: channel.id }).eq('id', ticketData.id);
 
-
+          // Ping roles
+          const pingContent = `<@&1531838773049163986> <@&1531840906632626236> New ticket created by ${userName}: ${title}`;
+          await fetch(`https://discord.com/api/v10/channels/${channel.id}/messages`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bot ${botToken}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ content: pingContent })
+          });
         } else {
           console.error("Discord Channel Creation Failed:", await channelRes.text());
         }

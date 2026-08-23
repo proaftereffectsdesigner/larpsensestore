@@ -71,7 +71,7 @@ export async function POST(req: Request) {
     // Calculate cost and bonus
     const costInEur = Number((amount * 1.015 + 0.25).toFixed(2));
     const finalAmountAdded = Number((amount * (1 + discountPct / 100)).toFixed(2));
-    const targetCurrencyAmount = await convertToCurrency(costInEur, 'EUR', currency || 'EUR');
+    const targetCurrencyAmount = await convertToCurrency(costInEur, currency || 'EUR');
 
     // Create Checkout Sessions from body params.
     const session = await stripe.checkout.sessions.create({

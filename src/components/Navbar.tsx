@@ -247,7 +247,7 @@ export default function Navbar() {
           >
             Home
           </Link>
-          <Link href={ticket.issue_type === 'affiliate_application' ? '/dashboard?tab=affiliate' : '/dashboard?tab=tickets'} className="text-sm font-medium text-gray-400 hover:text-white transition-colors">Support</Link>
+          <Link href="/support" className="text-sm font-medium text-gray-400 hover:text-white transition-colors">Support</Link>
           <Link href="/faq" className="text-sm font-medium text-gray-400 hover:text-white transition-colors">FAQ</Link>
 
         </div>

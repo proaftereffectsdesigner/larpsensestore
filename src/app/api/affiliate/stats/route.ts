@@ -1,20 +1,35 @@
 import { NextResponse } from "next/server";
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
-import { cookies } from "next/headers";
+import { createClient } from "@supabase/supabase-js";
 
 export async function GET(req: Request) {
   try {
-    const supabase = createRouteHandlerClient({ cookies });
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    const token = req.headers.get("authorization")?.replace("Bearer ", "");
+    if (!token) {
+      return NextResponse.json({ error: "Missing token" }, { status: 401 });
+    }
 
-    if (sessionError || !session?.user) {
+    const authenticatedSupabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        global: {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      }
+    );
+
+    const { data: { user }, error: userError } = await authenticatedSupabase.auth.getUser();
+
+    if (userError || !user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const userId = session.user.id;
+    const userId = user.id;
 
     // Fetch the user's affiliate code
-    const { data: code, error: codeError } = await supabase
+    const { data: code, error: codeError } = await authenticatedSupabase
       .from("affiliate_codes")
       .select("*")
       .eq("owner_id", userId)
@@ -28,16 +43,16 @@ export async function GET(req: Request) {
 
     // Calculate stats
     // 1. Get users referred by this owner
-    const { data: referredProfiles } = await supabase
+    const { data: referredProfiles } = await authenticatedSupabase
       .from("profiles")
       .select("id")
       .eq("referred_by", userId);
 
-    const referredIds = referredProfiles?.map(p => p.id) || [];
+    const referredIds = referredProfiles?.map((p: any) => p.id) || [];
     let ownerOrders: any[] = [];
     
     if (referredIds.length > 0) {
-      const { data: ord } = await supabase
+      const { data: ord } = await authenticatedSupabase
         .from("orders")
         .select("user_id, total_price, quantity")
         .eq("status", "completed")

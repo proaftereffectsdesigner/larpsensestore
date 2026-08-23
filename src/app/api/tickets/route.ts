@@ -139,7 +139,8 @@ export async function POST(req: Request) {
           await supabaseAdmin.from('tickets').update({ discord_channel_id: channel.id }).eq('id', ticketData.id);
 
           // Ping roles
-          const pingContent = `<@&1531838773049163986> <@&1531840906632626236> New ticket created by ${userName}: ${title}`;
+          const userName = profile?.display_name || user.email || 'User';
+          const pingContent = `<@&1531838773049163986> <@&1531840906632626236> New ticket created by ${userName}: ${formattedIssueType}`;
           await fetch(`https://discord.com/api/v10/channels/${channel.id}/messages`, {
             method: 'POST',
             headers: {

@@ -50,7 +50,7 @@ export async function POST(req: Request) {
 
     const { data: profile } = await supabaseAdmin
       .from("profiles")
-      .select("is_banned, can_topup, can_purchase")
+      .select("is_banned, can_topup, can_purchase, used_first_discount, referred_by")
       .eq("id", userId)
       .single();
 

@@ -21,6 +21,7 @@ function DashboardContent() {
   const [tickets, setTickets] = useState<any[]>([]);
   const [myReviews, setMyReviews] = useState<any[]>([]);
   const [balance, setBalance] = useState<number>(0);
+  const [affiliateStats, setAffiliateStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [sessionToken, setSessionToken] = useState<string | null>(null);
   
@@ -230,12 +231,27 @@ function DashboardContent() {
 
   const hasLoggedSessionRef = useRef(false);
 
+  const fetchAffiliateStats = async (token: string) => {
+    try {
+      const res = await fetch("/api/affiliate/stats", {
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.code) setAffiliateStats(data);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   const loadDashboardData = async (sessionUser: User) => {
     await Promise.all([fetchOrders(sessionUser.id), fetchBalance(sessionUser)]);
     
     // Log the session asynchronously in the background, then fetch activity so it shows immediately
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (session) {
+        fetchAffiliateStats(session.access_token);
         try {
           if (!hasLoggedSessionRef.current) {
             hasLoggedSessionRef.current = true;
@@ -1666,7 +1682,52 @@ function DashboardContent() {
                 )}
               </div>
               
-              {(affActiveChat || tickets.some(t => t.issue_type === 'affiliate_application' && t.status !== 'closed')) ? (
+              {affiliateStats ? (
+                <div className="bg-[#141414] border border-white/5 rounded-3xl p-6 md:p-8 shadow-2xl relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-64 h-64 bg-accent/5 rounded-full blur-[100px] pointer-events-none" />
+                  <h3 className="text-xl font-bold text-white mb-6">Affiliate Dashboard</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 relative z-10 mb-8">
+                    <div className="bg-white/5 border border-white/10 rounded-2xl p-5 flex flex-col justify-between">
+                      <span className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">Total Earned</span>
+                      <span className="text-2xl font-black text-accent">€{affiliateStats.stats?.totalEarned?.toFixed(2) || '0.00'}</span>
+                    </div>
+                    <div className="bg-white/5 border border-white/10 rounded-2xl p-5 flex flex-col justify-between">
+                      <span className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">Users Referred</span>
+                      <span className="text-2xl font-black text-white">{affiliateStats.stats?.usersReferred || 0}</span>
+                    </div>
+                    <div className="bg-white/5 border border-white/10 rounded-2xl p-5 flex flex-col justify-between">
+                      <span className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">Products Bought</span>
+                      <span className="text-2xl font-black text-white">{affiliateStats.stats?.totalProductsBought || 0}</span>
+                    </div>
+                    <div className="bg-white/5 border border-white/10 rounded-2xl p-5 flex flex-col justify-between">
+                      <span className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">Revenue Generated</span>
+                      <span className="text-2xl font-black text-white">€{affiliateStats.stats?.totalRevenue?.toFixed(2) || '0.00'}</span>
+                    </div>
+                  </div>
+                  <div className="relative z-10">
+                    <label className="block text-xs font-bold tracking-widest text-gray-500 mb-3 uppercase">Your Affiliate Code</label>
+                    <div className="flex items-center gap-3">
+                      <div className="bg-black/50 border border-accent/30 rounded-xl px-5 py-4 font-mono text-lg text-accent font-bold tracking-widest grow text-center shadow-[0_0_15px_rgba(34,197,94,0.1)]">
+                        {affiliateStats.code}
+                      </div>
+                      <button 
+                        onClick={() => {
+                          navigator.clipboard.writeText(affiliateStats.code);
+                          toast.success("Code copied to clipboard!");
+                        }}
+                        className="bg-white/10 hover:bg-white/20 text-white rounded-xl p-4 transition-colors"
+                      >
+                        <Copy className="w-6 h-6" />
+                      </button>
+                    </div>
+                    <div className="mt-4 flex flex-wrap gap-4 text-sm text-gray-400 justify-center">
+                      <span className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-accent"></span> You earn {affiliateStats.commission_pct}%</span>
+                      <span className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-blue-400"></span> Users get {affiliateStats.discount_pct}%</span>
+                      <span className="flex items-center gap-2 text-gray-500">Since {new Date(affiliateStats.created_at).toLocaleDateString()}</span>
+                    </div>
+                  </div>
+                </div>
+              ) : (affActiveChat || tickets.some(t => t.issue_type === 'affiliate_application' && t.status !== 'closed')) ? (
                 <div className="bg-[#141414] border border-white/5 rounded-3xl p-4 md:p-6 shadow-2xl">
                   <div className="mb-4 p-4 bg-accent/10 border border-accent/20 rounded-xl">
                     <p className="text-sm text-gray-300 text-center">

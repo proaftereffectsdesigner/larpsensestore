@@ -247,7 +247,7 @@ export default function Navbar() {
           >
             Home
           </Link>
-          <Link href="/support" className="text-sm font-medium text-gray-400 hover:text-white transition-colors">Support</Link>
+          <Link href={ticket.issue_type === 'affiliate_application' ? '/dashboard?tab=affiliate' : '/dashboard?tab=tickets'} className="text-sm font-medium text-gray-400 hover:text-white transition-colors">Support</Link>
           <Link href="/faq" className="text-sm font-medium text-gray-400 hover:text-white transition-colors">FAQ</Link>
 
         </div>
@@ -455,7 +455,7 @@ export default function Navbar() {
                         unreadTickets.map(ticket => (
                           <div key={ticket.id} className="relative group">
                             <Link
-                              href="/support"
+                              href={ticket.issue_type === 'affiliate_application' ? '/dashboard?tab=affiliate' : '/dashboard?tab=tickets'}
                               onClick={() => {
                                 setShowNotifications(false);
                                 clearNotification(ticket.id, { preventDefault: () => {}, stopPropagation: () => {} } as any);

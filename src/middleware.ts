@@ -1,40 +1,47 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, NextFetchEvent } from "next/server";
 import { rateLimit } from "./lib/rate-limit";
 
 /**
  * Next.js Middleware — runs on the Edge before any page is rendered.
- * Protects /7evenejoyer routes: verifies the session token from cookies
- * and checks is_admin flag in Supabase. Non-admins are redirected to /.
+ * Tracks page views for analytics (non-blocking via waitUntil).
+ * Admin auth is handled client-side by each /7evenejoyer page.
  */
-export async function middleware(req: NextRequest) {
+export async function middleware(req: NextRequest, event: NextFetchEvent) {
   const { pathname } = req.nextUrl;
+
+  // Skip API routes, static files, etc.
+  if (pathname.startsWith("/api") || pathname.startsWith("/_next") || pathname.includes(".")) {
+    return NextResponse.next();
+  }
+
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
+  // Build response immediately — never block the user
+  const response = NextResponse.next();
+
   // Analytics Tracking (non-blocking)
-  if (!pathname.startsWith("/api") && !pathname.startsWith("/_next") && !pathname.includes(".")) {
-    const userAgent = req.headers.get("user-agent") || "";
-    let deviceType = "Desktop";
-    if (/mobile/i.test(userAgent)) deviceType = "Mobile";
-    if (/tablet|ipad/i.test(userAgent)) deviceType = "Tablet";
-    
-    let sessionId = req.cookies.get("analytics_session_id")?.value;
-    const response = NextResponse.next();
-    
-    if (!sessionId) {
-      sessionId = crypto.randomUUID();
-      // Set session cookie for 30 minutes
-      response.cookies.set("analytics_session_id", sessionId, { maxAge: 60 * 30, path: '/' });
-    }
+  const userAgent = req.headers.get("user-agent") || "";
+  let deviceType = "Desktop";
+  if (/mobile/i.test(userAgent)) deviceType = "Mobile";
+  if (/tablet|ipad/i.test(userAgent)) deviceType = "Tablet";
 
-    const ipAddress = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
-    const referer = req.headers.get('referer') || '';
+  let sessionId = req.cookies.get("analytics_session_id")?.value;
 
-    // Protect Analytics DB with a lenient rate limit (max 60 views per minute per IP)
-    const analyticsLimit = rateLimit(`analytics_${ipAddress}`, { maxRequests: 60, windowMs: 60000 });
+  if (!sessionId) {
+    sessionId = crypto.randomUUID();
+    response.cookies.set("analytics_session_id", sessionId, { maxAge: 60 * 30, path: '/' });
+  }
 
-    if (analyticsLimit.allowed) {
-      // Fire and forget tracking
+  const ipAddress = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
+  const referer = req.headers.get('referer') || '';
+
+  // Protect Analytics DB with a lenient rate limit (max 60 views per minute per IP)
+  const analyticsLimit = rateLimit(`analytics_${ipAddress}`, { maxRequests: 60, windowMs: 60000 });
+
+  if (analyticsLimit.allowed) {
+    // Fire and forget — waitUntil keeps the fetch alive after response is sent
+    event.waitUntil(
       fetch(`${supabaseUrl}/rest/v1/page_views`, {
         method: 'POST',
         headers: {
@@ -51,94 +58,11 @@ export async function middleware(req: NextRequest) {
           ip_address: ipAddress,
           referer: referer
         })
-      }).catch(() => {});
-    }
-
-    // Only protect the hidden admin route
-    if (!pathname.startsWith("/7evenejoyer")) {
-      return response;
-    }
-  }
-
-  // Only protect the hidden admin route
-  if (!pathname.startsWith("/7evenejoyer")) {
-    return NextResponse.next();
-  }
-
-  const allCookies = req.cookies.getAll();
-  // ... rest of the code for admin validation ...
-  let accessToken: string | undefined;
-
-  for (const cookie of allCookies) {
-    if (cookie.name.startsWith("sb-") && cookie.name.endsWith("-auth-token")) {
-      const cookieValue = cookie.value;
-      try {
-        const decoded = decodeURIComponent(cookieValue);
-        const parsed = JSON.parse(decoded);
-        accessToken = parsed?.access_token ?? parsed?.[0] ?? parsed;
-      } catch {
-        try {
-          const parsed = JSON.parse(cookieValue);
-          accessToken = parsed?.access_token ?? parsed?.[0] ?? parsed;
-        } catch {
-          accessToken = cookieValue;
-        }
-      }
-      if (typeof accessToken === 'object' && accessToken !== null) {
-        accessToken = (accessToken as any).access_token;
-      }
-      break;
-    }
-  }
-
-  if (!accessToken) {
-    return NextResponse.redirect(new URL("/", req.url));
-  }
-
-  try {
-    const userRes = await fetch(`${supabaseUrl}/auth/v1/user`, {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        apikey: supabaseAnonKey,
-      },
-    });
-
-    if (!userRes.ok) return NextResponse.redirect(new URL("/", req.url));
-
-    const userData = await userRes.json();
-    const userId = userData?.id;
-
-    if (!userId) return NextResponse.redirect(new URL("/", req.url));
-
-    const profileRes = await fetch(
-      `${supabaseUrl}/rest/v1/profiles?id=eq.${userId}&select=is_admin`,
-      {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          apikey: supabaseAnonKey,
-          Accept: "application/json",
-        },
-      }
+      }).catch(() => {})
     );
-
-    if (!profileRes.ok) return NextResponse.redirect(new URL("/", req.url));
-
-    const profiles = await profileRes.json();
-    const isAdmin = profiles?.[0]?.is_admin === true;
-
-    if (!isAdmin) return NextResponse.redirect(new URL("/", req.url));
-
-    // If it's an admin route, we might have created a response object with cookies earlier
-    const adminResponse = NextResponse.next();
-    // Copy the analytics cookie if it was just created
-    const sessionCookie = req.cookies.get("analytics_session_id") || adminResponse.cookies.get("analytics_session_id");
-    if (!req.cookies.get("analytics_session_id") && sessionCookie) {
-         adminResponse.cookies.set("analytics_session_id", sessionCookie.value, { maxAge: 60 * 30, path: '/' });
-    }
-    return adminResponse;
-  } catch {
-    return NextResponse.redirect(new URL("/", req.url));
   }
+
+  return response;
 }
 
 export const config = {

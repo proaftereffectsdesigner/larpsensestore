@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { processAffiliateCommission } from "@/lib/affiliate";
 import { rateLimit, getClientIp } from "@/lib/rate-limit";
+import { sendOrderNotification } from "@/lib/discord";
 import crypto from "crypto";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -202,6 +203,9 @@ export async function POST(req: Request) {
           .eq("id", orderNumber);
           
         await processAffiliateCommission(supabaseAdmin, userId, amountPaid, appliedPromoCode);
+
+        // Send discord notification
+        await sendOrderNotification(supabaseAdmin, userId, productId, quantity, amountPaid, "OxaPay", orderNumber);
       } else {
         // Refund
         const { data: profile } = await supabaseAdmin

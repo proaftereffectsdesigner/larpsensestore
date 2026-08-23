@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { createClient } from "@supabase/supabase-js";
 import { processAffiliateCommission } from "@/lib/affiliate";
+import { sendOrderNotification } from "@/lib/discord";
 
 export async function POST(req: Request) {
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'dummy_key_for_build', {
@@ -119,6 +120,9 @@ export async function POST(req: Request) {
           // Process affiliate commission
           const appliedPromoCode = session.metadata?.appliedPromoCode;
           await processAffiliateCommission(supabaseAdmin, userId, totalPrice, appliedPromoCode);
+
+          // Send discord notification
+          await sendOrderNotification(supabaseAdmin, userId, productId as string, quantity, totalPrice, "Stripe", session.id);
         }
       } else {
         // Refund to balance if NFA failed or returned no accounts

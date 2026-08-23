@@ -772,7 +772,7 @@ export default function ProductPage() {
         trackId={cryptoPaymentData.trackId}
         orderId={cryptoPaymentData.orderId}
         currency={selectedCryptoCoin || 'BTC'}
-        fiatAmount={totalPrice}
+        fiatAmount={finalAmount}
         onClose={() => setCryptoPaymentData(null)}
         onSuccess={() => {
           setCryptoPaymentData(null);

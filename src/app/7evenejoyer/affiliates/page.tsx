@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase-client";
-import { Users, Plus, Trash2, Search, CheckCircle2 } from "lucide-react";
+import { Users, Plus, Trash2, Search, CheckCircle2, ChevronDown } from "lucide-react";
 
 export default function AffiliatesDashboard() {
   const [affiliates, setAffiliates] = useState<any[]>([]);
@@ -18,6 +18,8 @@ export default function AffiliatesDashboard() {
   const [commissionPct, setCommissionPct] = useState(10);
   const [isAssigning, setIsAssigning] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [userSearchTerm, setUserSearchTerm] = useState("");
+  const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -97,6 +99,12 @@ export default function AffiliatesDashboard() {
     a.profiles?.email?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const filteredUsers = users.filter(u => 
+    u.display_name?.toLowerCase().includes(userSearchTerm.toLowerCase()) || 
+    u.email?.toLowerCase().includes(userSearchTerm.toLowerCase()) ||
+    u.id.includes(userSearchTerm)
+  );
+
   if (loading) {
     return (
       <div className="flex items-center justify-center p-12">
@@ -114,16 +122,58 @@ export default function AffiliatesDashboard() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="md:col-span-2">
             <label className="text-xs text-gray-500 font-bold uppercase tracking-wider mb-2 block">Select User</label>
-            <select 
-              value={targetUserId}
-              onChange={(e) => setTargetUserId(e.target.value)}
-              className="w-full bg-[#141414] border border-white/10 rounded-xl py-3 px-4 text-white font-medium focus:outline-none focus:border-accent"
-            >
-              <option value="">-- Choose User --</option>
-              {users.map(u => (
-                <option key={u.id} value={u.id}>{u.display_name || u.email} ({u.id})</option>
-              ))}
-            </select>
+            <div className="relative">
+              <div 
+                className="w-full bg-[#141414] border border-white/10 rounded-xl py-3 px-4 text-white font-medium focus-within:border-accent flex items-center justify-between cursor-pointer"
+                onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
+              >
+                <span className={targetUserId ? "text-white" : "text-gray-500"}>
+                  {targetUserId 
+                    ? (() => {
+                        const u = users.find(u => u.id === targetUserId);
+                        return u ? `${u.display_name || u.email} (${u.id})` : targetUserId;
+                      })()
+                    : "-- Choose User --"}
+                </span>
+                <ChevronDown className={`w-4 h-4 text-gray-500 transition-transform ${isUserDropdownOpen ? 'rotate-180' : ''}`} />
+              </div>
+              
+              {isUserDropdownOpen && (
+                <div className="absolute top-full left-0 right-0 mt-2 bg-[#141414] border border-white/10 rounded-xl shadow-xl z-50 overflow-hidden flex flex-col max-h-[300px]">
+                  <div className="p-2 border-b border-white/10 shrink-0">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                      <input 
+                        type="text" 
+                        placeholder="Search by name, email, or ID..."
+                        value={userSearchTerm}
+                        onChange={(e) => setUserSearchTerm(e.target.value)}
+                        onClick={(e) => e.stopPropagation()}
+                        className="w-full bg-[#0a0a0a] border border-white/5 rounded-lg py-2 pl-9 pr-4 text-sm text-white focus:outline-none focus:border-accent/50"
+                      />
+                    </div>
+                  </div>
+                  <div className="overflow-y-auto p-2 space-y-1">
+                    {filteredUsers.length > 0 ? filteredUsers.map(u => (
+                      <button
+                        key={u.id}
+                        onClick={() => {
+                          setTargetUserId(u.id);
+                          setIsUserDropdownOpen(false);
+                          setUserSearchTerm("");
+                        }}
+                        className={`w-full text-left px-3 py-2 rounded-lg transition-colors flex flex-col ${targetUserId === u.id ? 'bg-accent/20 text-accent' : 'text-gray-300 hover:bg-white/5 hover:text-white'}`}
+                      >
+                        <span className="font-bold text-sm">{u.display_name || u.email}</span>
+                        <span className="text-[10px] text-gray-500 font-mono">{u.id}</span>
+                      </button>
+                    )) : (
+                      <div className="px-3 py-4 text-center text-sm text-gray-500">No users found</div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
           <div>
             <label className="text-xs text-gray-500 font-bold uppercase tracking-wider mb-2 block">Promo Code</label>

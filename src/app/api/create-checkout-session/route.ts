@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { createClient } from "@supabase/supabase-js";
 import { rateLimit, getClientIp } from "@/lib/rate-limit";
+import { convertToCurrency } from "@/lib/exchangeRates";
 
 export async function POST(req: Request) {
   try {
@@ -22,7 +23,7 @@ export async function POST(req: Request) {
         { status: 429 }
       );
     }
-    const { userId, amount, paymentMethod, token } = await req.json();
+    const { userId, amount, paymentMethod, token, currency, promoCode } = await req.json();
 
     if (!userId || !amount || amount < 2 || !token) {
       return NextResponse.json({ error: "Invalid parameters or unauthorized" }, { status: 400 });
@@ -46,24 +47,47 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "You are currently restricted from adding balance." }, { status: 403 });
     }
 
+    // Handle Promo Code
+    let discountPct = 0;
+    let appliedPromoCode = "";
+
+    if (promoCode) {
+      const { data: profile } = await supabaseAdmin.from("profiles").select("used_first_discount, referred_by").eq("id", userId).single();
+      if (profile && !profile.used_first_discount && !profile.referred_by) {
+        const { data: codeData } = await supabaseAdmin.from("affiliate_codes").select("*").eq("code", promoCode.toUpperCase()).single();
+        if (codeData && codeData.owner_id !== userId) {
+          discountPct = codeData.discount_pct || 10;
+          appliedPromoCode = codeData.code;
+        }
+      }
+    }
+
+    let costAmount = amount;
+    if (discountPct > 0) {
+      costAmount = Number((costAmount * (1 - discountPct / 100)).toFixed(2));
+    }
+
     // Calculate fees (currently only Card/Stripe uses this gateway in checkout)
     const feeMultiplier = 0.015;
     const fixedFee = 0.25;
 
-    const cardFee = Number((amount * feeMultiplier + fixedFee).toFixed(2));
-    const totalAmount = amount + cardFee;
+    const cardFee = Number((costAmount * feeMultiplier + fixedFee).toFixed(2));
+    const totalAmount = costAmount + cardFee;
+    
+    const targetCurrency = (currency || "eur").toLowerCase();
+    const finalAmountInTarget = await convertToCurrency(totalAmount, targetCurrency);
 
     // Create Checkout Sessions from body params.
     const session = await stripe.checkout.sessions.create({
       line_items: [
         {
           price_data: {
-            currency: 'eur',
+            currency: targetCurrency,
             product_data: {
               name: 'LarpSense Store Balance Top-Up',
               description: `Top up €${amount.toFixed(2)} to your balance.`,
             },
-            unit_amount: Math.round(totalAmount * 100), // Stripe expects amounts in cents
+            unit_amount: Math.round(finalAmountInTarget * 100), // Stripe expects amounts in cents
           },
           quantity: 1,
         },
@@ -73,7 +97,8 @@ export async function POST(req: Request) {
       metadata: {
         userId: userId,
         addedAmount: amount.toString(), // Store the pure amount without fee to add to balance
-        type: "topup" // to distinguish in the webhook
+        type: "topup", // to distinguish in the webhook
+        appliedPromoCode
       },
       success_url: `${req.headers.get("origin")}/dashboard?topup=success`,
       cancel_url: `${req.headers.get("origin")}/`,

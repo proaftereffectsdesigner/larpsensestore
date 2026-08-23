@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { processAffiliateCommission } from "@/lib/affiliate";
 import { rateLimit, getClientIp } from "@/lib/rate-limit";
 import crypto from "crypto";
 
@@ -124,6 +125,13 @@ export async function POST(req: Request) {
     const productId = pendingOrder.product_id;
     const quantity = Number(pendingOrder.quantity);
 
+    // Parse promo code if exists
+    let appliedPromoCode = "";
+    if (pendingOrder.accounts_data && pendingOrder.accounts_data.includes("| promo:")) {
+       const match = pendingOrder.accounts_data.match(/promo:([^ |]+)/);
+       if (match) appliedPromoCode = match[1];
+    }
+
     if (isNaN(amountPaid) || amountPaid <= 0) {
       return NextResponse.json({ error: "Invalid amount" }, { status: 400 });
     }
@@ -150,6 +158,8 @@ export async function POST(req: Request) {
             accounts_data: `Balance Top-up (Crypto) [${txnId}]`
           })
           .eq("id", orderNumber);
+          
+        await processAffiliateCommission(supabaseAdmin, userId, amountPaid, appliedPromoCode);
       }
     } else if (type === "PROD") {
       const { products } = await import("@/lib/products");
@@ -184,6 +194,8 @@ export async function POST(req: Request) {
             accounts_data: `${accountsStr}\n\n[OxaPay Txn: ${txnId}]`,
           })
           .eq("id", orderNumber);
+          
+        await processAffiliateCommission(supabaseAdmin, userId, amountPaid, appliedPromoCode);
       } else {
         // Refund
         const { data: profile } = await supabaseAdmin

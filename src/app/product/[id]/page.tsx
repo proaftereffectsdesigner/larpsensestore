@@ -9,6 +9,7 @@ import { CheckCircle2, CreditCard, Wallet, ChevronDown, ChevronRight, ChevronLef
 import { SiStripe, SiSolana, SiLitecoin, SiTether, SiBitcoin, SiEthereum } from "react-icons/si";
 import { CryptoPaymentModal } from "@/components/dashboard/CryptoPaymentModal";
 import { toast } from "sonner";
+import { useCurrency } from "@/lib/CurrencyContext";
 
 import ParticlesBackground from "@/components/ParticlesBackground";
 import Image from "next/image";
@@ -28,6 +29,7 @@ export default function ProductPage() {
   };
   
   const selectedProduct = products.find(p => p.id === id);
+  const { convert, currency } = useCurrency();
 
   const [stock, setStock] = useState<number | null>(null);
   const [allStockData, setAllStockData] = useState<any>(null);
@@ -60,6 +62,44 @@ export default function ProductPage() {
     if (newSet.has(index)) newSet.delete(index);
     else newSet.add(index);
     setExpandedReviews(newSet);
+  };
+
+  const [promoCode, setPromoCode] = useState("");
+  const [discountPct, setDiscountPct] = useState(0);
+  const [promoCodeError, setPromoCodeError] = useState("");
+  const [promoCodeSuccess, setPromoCodeSuccess] = useState("");
+  const [isApplyingPromo, setIsApplyingPromo] = useState(false);
+
+  const applyPromoCode = async () => {
+    if (!promoCode.trim()) return;
+    setIsApplyingPromo(true);
+    setPromoCodeError("");
+    setPromoCodeSuccess("");
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+         window.dispatchEvent(new Event('open-auth'));
+         setPromoCodeError("You must be logged in.");
+         return;
+      }
+      const res = await fetch("/api/redeem-code", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ promoCode: promoCode.trim(), userId: session.user.id })
+      });
+      const data = await res.json();
+      if (data.ok) {
+        setDiscountPct(data.discountPct);
+        setPromoCodeSuccess(data.message);
+      } else {
+        setPromoCodeError(data.error || "Invalid promo code");
+        setDiscountPct(0);
+      }
+    } catch (err) {
+      setPromoCodeError("Error validating code");
+    } finally {
+      setIsApplyingPromo(false);
+    }
   };
 
   useEffect(() => {
@@ -161,7 +201,7 @@ export default function ProductPage() {
     }
     if (!selectedProduct) return;
 
-    const totalPrice = selectedProduct.price * quantity;
+    const rawTotalPrice = selectedProduct.price * quantity;
 
     setLoadingCheckout(true);
     try {
@@ -181,11 +221,12 @@ export default function ProductPage() {
           body: JSON.stringify({
             userId: user.id,
             token,
-            amount: totalPrice,
+            amount: rawTotalPrice, // Backend recalculates with promo
             type: "product_checkout",
             productId: selectedProduct.id,
             quantity: quantity,
-            currency: selectedCryptoCoin
+            currency: selectedCryptoCoin,
+            promoCode: promoCode.trim() || undefined
           })
         });
         const data = await res.json();
@@ -204,7 +245,9 @@ export default function ProductPage() {
             quantity, 
             userId: user.id,
             token,
-            paymentMethod
+            paymentMethod,
+            currency,
+            promoCode: promoCode.trim() || undefined
           }),
         });
         const data = await res.json();
@@ -226,7 +269,13 @@ export default function ProductPage() {
 
   const totalReviews = reviews.length;
   const averageRating = totalReviews > 0 ? (reviews.reduce((acc, rev) => acc + rev.rating, 0) / totalReviews).toFixed(1) : "0.0";
-  const totalPrice = selectedProduct.price * quantity;
+  const rawTotalPrice = selectedProduct.price * quantity;
+  const costAmount = discountPct > 0 ? Number((rawTotalPrice * (1 - discountPct / 100)).toFixed(2)) : rawTotalPrice;
+
+  const feeMultiplier = 0.015;
+  const fixedFee = 0.25;
+  const cardFee = paymentMethod === "stripe" ? Number((costAmount * feeMultiplier + fixedFee).toFixed(2)) : 0;
+  const finalAmount = costAmount + cardFee;
 
   const sortedReviews = [...reviews].sort((a, b) => {
     if (sortBy === "newest") return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
@@ -349,9 +398,15 @@ export default function ProductPage() {
               <span>Total Price</span>
             </div>
             <div className="text-5xl font-medium text-white tracking-tight flex items-baseline gap-2">
-              €{totalPrice.toFixed(2)}
-              {quantity > 1 && <span className="text-sm text-gray-500 font-sans tracking-normal">(€{selectedProduct.price.toFixed(2)} ea)</span>}
+              {discountPct > 0 && <span className="text-3xl line-through text-gray-500 mr-2">{convert(rawTotalPrice + cardFee).formatted}</span>}
+              {convert(finalAmount).formatted}
+              {quantity > 1 && <span className="text-sm text-gray-500 font-sans tracking-normal">({convert(selectedProduct.price).formatted} ea)</span>}
             </div>
+            {paymentMethod === "stripe" && (
+              <div className="text-xs text-gray-500 mt-2 font-medium">
+                Includes <span className="text-indigo-400">{convert(cardFee).formatted}</span> payment gateway fee.
+              </div>
+            )}
           </div>
 
           {/* Sekcja Email */}
@@ -399,6 +454,29 @@ export default function ProductPage() {
             </div>
           </div>
 
+          {/* Sekcja Kodu Promocyjnego */}
+          <div className="mb-6">
+            <div className="text-[10px] font-bold text-gray-500 tracking-widest uppercase mb-2">Promo Code (Optional)</div>
+            <div className="flex gap-2 relative">
+              <input
+                type="text"
+                value={promoCode}
+                onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                placeholder="Enter code"
+                className="w-full bg-[#0a0a0a]/50 border border-white/10 rounded-xl py-3 pl-4 text-white font-bold focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/50 transition-all text-sm uppercase shadow-inner"
+              />
+              <button
+                onClick={applyPromoCode}
+                disabled={isApplyingPromo || !promoCode.trim()}
+                className="px-4 py-3 bg-white/5 hover:bg-white/10 text-white font-bold rounded-xl transition-colors disabled:opacity-50 text-sm border border-white/10"
+              >
+                {isApplyingPromo ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> : "Apply"}
+              </button>
+            </div>
+            {promoCodeSuccess && <p className="text-xs text-emerald-400 font-bold mt-2">{promoCodeSuccess}</p>}
+            {promoCodeError && <p className="text-xs text-red-400 font-bold mt-2">{promoCodeError}</p>}
+          </div>
+
           {/* Sekcja Metoda Płatności — inline, nie dropdown */}
           <div className="mb-8">
             <div className="text-[10px] font-bold text-gray-500 tracking-widest uppercase mb-2">Payment method</div>
@@ -422,7 +500,7 @@ export default function ProductPage() {
                 </div>
                 <div>
                   <div className={`font-bold text-sm ${paymentMethod === "stripe" ? "text-white" : settings.stripe_enabled ? "text-white" : "text-gray-400"}`}>Debit / Credit Card</div>
-                  <div className="text-xs text-gray-500">{!settings.stripe_enabled ? 'Temporarily disabled' : 'Mastercard, Visa, Apple Pay etc.'} <span className="text-indigo-400 font-bold">{settings.stripe_enabled ? '(1.5% + €0.25 fee)' : ''}</span></div>
+                  <div className="text-xs text-gray-500">{!settings.stripe_enabled ? 'Temporarily disabled' : 'Mastercard, Visa, Apple Pay etc.'} <span className="text-indigo-400 font-bold">{settings.stripe_enabled ? `(1.5% + ${convert(0.25).formatted} fee)` : ''}</span></div>
                 </div>
               </button>
 
@@ -469,7 +547,7 @@ export default function ProductPage() {
                               </span>
                               {selectedCryptoCoin === 'BTC' && (
                                 <span className="text-[10px] text-amber-500/80 font-bold ml-1">
-                                  (Min. €15)
+                                  (Min. {convert(15).formatted})
                                 </span>
                               )}
                             </>
@@ -498,7 +576,7 @@ export default function ProductPage() {
                               </div>
                               <span className="text-sm font-medium text-white">
                                 {coin.label}
-                                {coin.id === 'BTC' && <span className="text-[10px] text-amber-500/80 font-bold ml-2">(Min. €15)</span>}
+                                {coin.id === 'BTC' && <span className="text-[10px] text-amber-500/80 font-bold ml-2">(Min. {convert(15).formatted})</span>}
                               </span>
                             </button>
                           ))}
@@ -545,7 +623,7 @@ export default function ProductPage() {
               {loadingCheckout ? (
                 <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin" />
               ) : (
-                  `Pay €${totalPrice.toFixed(2)} with ${paymentMethod === "stripe" ? "Card" : paymentMethod === "crypto" ? "Crypto" : "Balance"}`
+                  `Pay ${convert(finalAmount).formatted} with ${paymentMethod === "stripe" ? "Card" : paymentMethod === "crypto" ? "Crypto" : "Balance"}`
               )}
             </button>
           )}

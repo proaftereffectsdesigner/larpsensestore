@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { products } from "@/lib/products";
 import { createClient } from "@supabase/supabase-js";
 import { rateLimit, getClientIp } from "@/lib/rate-limit";
+import { convertToCurrency } from "@/lib/exchangeRates";
 
 export async function POST(req: Request) {
   try {
@@ -15,7 +16,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const { productId, quantity: clientQuantity, userId, token, paymentMethod } = await req.json();
+    const { productId, quantity: clientQuantity, userId, token, paymentMethod, currency, promoCode } = await req.json();
     const quantity = Math.max(1, Math.floor(Number(clientQuantity || 1)));
 
     if (!productId || !quantity || quantity < 1 || quantity > 100 || !userId || !token) {
@@ -60,7 +61,28 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "You are currently restricted from purchasing." }, { status: 403 });
     }
 
-    const totalPrice = product.price * quantity;
+    let totalPrice = product.price * quantity;
+    let discountPct = 0;
+    let appliedPromoCode = "";
+    let affiliateOwnerId = null;
+    let commissionPct = 10;
+
+    if (promoCode) {
+      const { data: profile } = await supabaseAdmin.from("profiles").select("used_first_discount, referred_by").eq("id", userId).single();
+      if (profile && !profile.used_first_discount && !profile.referred_by) {
+        const { data: codeData } = await supabaseAdmin.from("affiliate_codes").select("*").eq("code", promoCode.toUpperCase()).single();
+        if (codeData && codeData.owner_id !== userId) {
+          discountPct = codeData.discount_pct || 10;
+          commissionPct = codeData.commission_pct || 10;
+          appliedPromoCode = codeData.code;
+          affiliateOwnerId = codeData.owner_id;
+        }
+      }
+    }
+
+    if (discountPct > 0) {
+      totalPrice = Number((totalPrice * (1 - discountPct / 100)).toFixed(2));
+    }
 
     if (paymentMethod === "balance") {
       const { data: profile } = await supabaseAdmin.from("profiles").select("balance").eq("id", userId).single();
@@ -89,15 +111,18 @@ export async function POST(req: Request) {
       const cardFee = Number((totalPrice * feeMultiplier + fixedFee).toFixed(2));
       const finalAmount = totalPrice + cardFee;
 
+      const targetCurrency = (currency || "eur").toLowerCase();
+      const finalAmountInTarget = await convertToCurrency(finalAmount, targetCurrency);
+
       const session = await stripe.checkout.sessions.create({
         line_items: [
           {
             price_data: {
-              currency: 'eur',
+              currency: targetCurrency,
               product_data: {
                 name: `LarpSense Store - ${product.name} (x${quantity})`,
               },
-              unit_amount: Math.round(finalAmount * 100),
+              unit_amount: Math.round(finalAmountInTarget * 100),
             },
             quantity: 1,
           },
@@ -109,7 +134,8 @@ export async function POST(req: Request) {
           userId: userId,
           productId: product.id,
           quantity: quantity.toString(),
-          totalPrice: totalPrice.toString()
+          totalPrice: totalPrice.toString(),
+          appliedPromoCode
         },
         success_url: `${req.headers.get("origin")}/dashboard?order=success`,
         cancel_url: `${req.headers.get("origin")}/product/${product.id}`,
@@ -156,6 +182,38 @@ export async function POST(req: Request) {
         .single();
         
       return NextResponse.json({ url: `/order/${orderData?.id || 'error'}` });
+    }
+
+    // Apply affiliate commission for Balance payment
+    if (appliedPromoCode && affiliateOwnerId) {
+      // Link the user
+      await supabaseAdmin.from("profiles").update({ 
+        referred_by: affiliateOwnerId,
+        used_first_discount: true
+      }).eq("id", userId);
+
+      // Give commission to affiliate
+      const commission = Number((totalPrice * (commissionPct / 100)).toFixed(2));
+      if (commission > 0) {
+        const { data: affProfile } = await supabaseAdmin.from("profiles").select("balance").eq("id", affiliateOwnerId).single();
+        if (affProfile) {
+          const newAffBalance = Number(affProfile.balance) + commission;
+          await supabaseAdmin.from("profiles").update({ balance: newAffBalance }).eq("id", affiliateOwnerId);
+        }
+      }
+    } else {
+      // Regular lifetime commission
+      const { data: profile } = await supabaseAdmin.from("profiles").select("referred_by").eq("id", userId).single();
+      if (profile && profile.referred_by) {
+        const commission = Number((totalPrice * 0.10).toFixed(2)); // default 10% lifetime
+        if (commission > 0) {
+          const { data: affProfile } = await supabaseAdmin.from("profiles").select("balance").eq("id", profile.referred_by).single();
+          if (affProfile) {
+            const newAffBalance = Number(affProfile.balance) + commission;
+            await supabaseAdmin.from("profiles").update({ balance: newAffBalance }).eq("id", profile.referred_by);
+          }
+        }
+      }
     }
 
     const { data: orderData, error: dbError } = await supabase

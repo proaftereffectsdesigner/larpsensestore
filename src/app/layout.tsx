@@ -9,6 +9,7 @@ import PresenceTracker from "@/components/PresenceTracker";
 import GlobalBanGuard from "@/components/GlobalBanGuard";
 import { Toaster } from 'sonner';
 import { AlertTriangle } from 'lucide-react';
+import { CurrencyProvider } from '@/lib/CurrencyContext';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -58,17 +59,18 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[#0a0a0a] text-[#ededed] min-h-screen flex flex-col`}
         suppressHydrationWarning
       >
-        <PresenceTracker>
-          <Navbar />
+        <CurrencyProvider>
+          <PresenceTracker>
+            <Navbar />
           <main className="flex-1 flex flex-col">
             {children}
           </main>
           <Footer />
           <TopUpModal />
           <AuthModal />
-          <GlobalBanGuard />
-          <Toaster theme="dark" position="bottom-right" richColors />
-        </PresenceTracker>
+            <Toaster theme="dark" position="bottom-right" richColors />
+          </PresenceTracker>
+        </CurrencyProvider>
       </body>
     </html>
   );

@@ -7,11 +7,13 @@ import { useEffect, useState, useRef } from "react";
 
 import ParticlesBackground from "@/components/ParticlesBackground";
 import Image from "next/image";
+import { useCurrency } from "@/lib/CurrencyContext";
 
 export default function ProductCards() {
   const [stockData, setStockData] = useState<any>(null);
   const [isVisible, setIsVisible] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const { convert, currency } = useCurrency();
 
   useEffect(() => {
     // Intersection Observer to trigger animation when scrolled into view
@@ -122,7 +124,9 @@ export default function ProductCards() {
                   <div className="mt-8 flex items-center justify-between border-t border-white/5 pt-6">
                     <div>
                       <div className="text-[11px] text-gray-500 mb-1">Price</div>
-                      <div className="font-mono text-xl font-bold text-white tracking-tight">€{product.price.toFixed(2)}</div>
+                      <div className="font-mono text-xl font-bold text-white tracking-tight">
+                        {convert(product.price).formatted}
+                      </div>
                     </div>
                     <div className="bg-white/5 p-3.5 rounded-full group-hover:bg-white/10 transition-colors text-white border border-white/5 group-hover:border-white/10">
                       <ChevronRight className="w-4 h-4" />

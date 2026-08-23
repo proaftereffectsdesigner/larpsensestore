@@ -25,6 +25,11 @@ export default function AdminDashboard() {
   const [balanceAction, setBalanceAction] = useState<'add' | 'subtract' | 'set'>('add');
   const [updatingBalance, setUpdatingBalance] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  // Affiliate Code state
+  const [affiliateCodeInput, setAffiliateCodeInput] = useState("");
+  const [affiliatePctInput, setAffiliatePctInput] = useState(10);
+  const [assigningAffiliate, setAssigningAffiliate] = useState(false);
   
   // Ban Modal state
   const [isBanModalOpen, setIsBanModalOpen] = useState(false);
@@ -177,6 +182,33 @@ export default function AdminDashboard() {
 
     fetchData();
   }, []);
+
+  const handleAssignAffiliate = async () => {
+    if (!selectedUser || !sessionToken || !affiliateCodeInput) return;
+    setAssigningAffiliate(true);
+    try {
+      const res = await fetch("/api/admin/users/assign-affiliate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${sessionToken}` },
+        body: JSON.stringify({
+          targetUserId: selectedUser.id,
+          promoCode: affiliateCodeInput,
+          commissionPct: affiliatePctInput
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert("Affiliate code assigned successfully!");
+        setAffiliateCodeInput("");
+      } else {
+        alert(data.error || "Failed to assign affiliate code.");
+      }
+    } catch (err) {
+      alert("Error assigning affiliate code.");
+    } finally {
+      setAssigningAffiliate(false);
+    }
+  };
 
   const handleUpdateBalance = async () => {
     if (!selectedUser || !sessionToken) return;
@@ -660,6 +692,46 @@ export default function AdminDashboard() {
                     >
                       {updatingBalance ? 'Updating...' : 'Execute'}
                     </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Affiliate & Promo Codes */}
+              <div className="bg-indigo-500/5 rounded-xl p-4 border border-indigo-500/10">
+                <h4 className="text-sm font-bold text-indigo-400 mb-4 flex items-center gap-2"><CreditCard className="w-4 h-4" /> Assign Affiliate Code</h4>
+                
+                <div className="space-y-4 bg-[#0a0a0a] p-4 rounded-xl border border-white/5">
+                  <div className="flex gap-3">
+                    <div className="flex-1">
+                      <label className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mb-1 block">Promo Code</label>
+                      <input 
+                        type="text" 
+                        value={affiliateCodeInput}
+                        onChange={(e) => setAffiliateCodeInput(e.target.value.toUpperCase())}
+                        className="w-full bg-[#141414] border border-white/10 rounded-xl py-3 px-4 text-white font-bold focus:outline-none focus:border-indigo-500/50 uppercase"
+                        placeholder="e.g. IZAK10"
+                      />
+                    </div>
+                    <div className="w-24">
+                      <label className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mb-1 block">Commission (%)</label>
+                      <input 
+                        type="number" 
+                        min="1"
+                        max="100"
+                        value={affiliatePctInput}
+                        onChange={(e) => setAffiliatePctInput(parseFloat(e.target.value) || 10)}
+                        className="w-full bg-[#141414] border border-white/10 rounded-xl py-3 px-4 text-white font-bold focus:outline-none focus:border-indigo-500/50"
+                      />
+                    </div>
+                    <div className="flex items-end">
+                      <button 
+                        onClick={handleAssignAffiliate}
+                        disabled={assigningAffiliate || !affiliateCodeInput}
+                        className="bg-indigo-500 hover:bg-indigo-400 text-white px-6 py-3 rounded-xl font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed shrink-0 h-[48px]"
+                      >
+                        {assigningAffiliate ? 'Assigning...' : 'Assign'}
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>

@@ -17,7 +17,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const { userId, token, amount: clientAmount, currency, type = "topup", productId, quantity: clientQuantity } = await req.json();
+    const { userId, token, amount: clientAmount, currency, type = "topup", productId, quantity: clientQuantity, promoCode } = await req.json();
 
     let amount = Number(clientAmount);
     let quantity = Math.max(1, Math.floor(Number(clientQuantity || 1)));
@@ -64,9 +64,30 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Purchases restricted" }, { status: 403 });
     }
 
+    // Handle Promo Code
+    let discountPct = 0;
+    let appliedPromoCode = "";
+    let affiliateOwnerId = null;
+
+    if (promoCode) {
+      if (profile && !profile.used_first_discount && !profile.referred_by) {
+        const { data: codeData } = await supabaseAdmin.from("affiliate_codes").select("*").eq("code", promoCode.toUpperCase()).single();
+        if (codeData && codeData.owner_id !== userId) {
+          discountPct = codeData.discount_pct || 10;
+          appliedPromoCode = codeData.code;
+          affiliateOwnerId = codeData.owner_id;
+        }
+      }
+    }
+
+    let costAmount = amount;
+    if (discountPct > 0) {
+      costAmount = Number((costAmount * (1 - discountPct / 100)).toFixed(2));
+    }
+
     const feeMultiplier = 0.000; // 0%
-    const cryptoFee = Number((amount * feeMultiplier).toFixed(2));
-    const totalAmount = amount + cryptoFee;
+    const cryptoFee = Number((costAmount * feeMultiplier).toFixed(2));
+    const totalAmount = costAmount + cryptoFee;
 
     let description = type === "product_checkout" 
       ? `LarpSense Store - Product Purchase (x${quantity})` 
@@ -75,6 +96,11 @@ export async function POST(req: Request) {
     // Create a pending order in Supabase BEFORE calling OxaPay. 
     // This gives us a 36-character UUID, safely under OxaPay's 50-character limit for orderId,
     // avoiding string truncation and loss of metadata during the webhook.
+    let accountsData = "Pending OxaPay Payment";
+    if (appliedPromoCode && affiliateOwnerId) {
+      accountsData += ` | promo:${appliedPromoCode} | owner:${affiliateOwnerId}`;
+    }
+
     const { data: pendingOrder, error: insertError } = await supabaseAdmin
       .from("orders")
       .insert({
@@ -83,7 +109,7 @@ export async function POST(req: Request) {
         quantity: quantity,
         total_price: totalAmount, // Requesting exact crypto checkout value including fee
         status: "pending",
-        accounts_data: "Pending OxaPay Payment"
+        accounts_data: accountsData
       })
       .select("id")
       .single();

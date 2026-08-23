@@ -5,9 +5,29 @@ import { X, CreditCard, Wallet, Bitcoin, ChevronRight, CheckCircle2, QrCode, Sma
 import { SiStripe, SiSolana, SiLitecoin, SiTether, SiBitcoin, SiEthereum } from "react-icons/si";
 import { supabase } from "@/lib/supabase-client";
 import { CryptoPaymentModal } from "@/components/dashboard/CryptoPaymentModal";
+import { useCurrency } from "@/lib/CurrencyContext";
 
 type PaymentMethod = 'card' | 'crypto';
-const PRESETS = [10, 25, 50, 100];
+const getPresets = (currency: string, rate: number) => {
+  // Hardcoded nice overrides for some major currencies
+  if (currency === 'PLN') return [50, 100, 250, 500];
+  if (currency === 'EUR' || currency === 'USD' || currency === 'GBP' || currency === 'CHF') return [10, 25, 50, 100];
+  
+  // Dynamic scaling for other currencies based on exchange rate!
+  // We want to roughly match 10, 25, 50, 100 EUR in value.
+  const basePresets = [10, 25, 50, 100];
+  
+  return basePresets.map(base => {
+    const rawValue = base * rate;
+    
+    // Rounding logic based on magnitude
+    if (rawValue < 20) return Math.ceil(rawValue);
+    if (rawValue < 100) return Math.ceil(rawValue / 5) * 5;     // Round to nearest 5 (e.g. 43 -> 45)
+    if (rawValue < 1000) return Math.ceil(rawValue / 50) * 50;  // Round to nearest 50 (e.g. 430 -> 450)
+    if (rawValue < 10000) return Math.ceil(rawValue / 500) * 500; // Round to nearest 500
+    return Math.ceil(rawValue / 1000) * 1000;
+  });
+};
 
 export default function TopUpModal() {
   const [isOpen, setIsOpen] = useState(false);
@@ -23,6 +43,18 @@ export default function TopUpModal() {
 
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [cryptoPaymentData, setCryptoPaymentData] = useState<{ payAddress: string, payAmount: string | number, trackId: string, orderId?: string } | null>(null);
+
+  const [promoCode, setPromoCode] = useState("");
+  const [discountPct, setDiscountPct] = useState(0);
+  const [promoCodeError, setPromoCodeError] = useState("");
+  const [promoCodeSuccess, setPromoCodeSuccess] = useState("");
+  const [isApplyingPromo, setIsApplyingPromo] = useState(false);
+
+  const { convert, currency, convertFromLocal, isSuffix } = useCurrency();
+  const rate = convertFromLocal(1) ? 1 / convertFromLocal(1) : 1; // get actual rate
+  const presets = getPresets(currency, rate);
+  const minLocalDeposit = convert(2).amount;
+  const currentSymbol = convert(0).symbol;
 
   useEffect(() => {
     const fetchSettings = async () => {
@@ -42,12 +74,17 @@ export default function TopUpModal() {
     const handleOpen = () => {
       setIsOpen(true);
       setStep(1);
-      setAmount(10);
-      setRawAmount('10');
+      const initialPreset = getPresets(currency, rate)[0] || 10;
+      setAmount(initialPreset);
+      setRawAmount(String(initialPreset));
       setMethod(null);
       setSelectedCryptoCoin(null);
       setIsCryptoExpanded(false);
       setErrorMsg(null);
+      setPromoCode("");
+      setDiscountPct(0);
+      setPromoCodeError("");
+      setPromoCodeSuccess("");
       fetchSettings();
     };
     window.addEventListener('open-topup', handleOpen);
@@ -64,19 +101,52 @@ export default function TopUpModal() {
     }
   };
 
-  const getFixedFee = () => {
+  const getFixedFeeLocal = () => {
     switch (method) {
-      case 'card': return 0.25;
+      case 'card': return convert(0.25).amount;
       case 'crypto': return 0.00;
       default: return 0;
     }
   };
 
-  const cardFee = amount > 0 ? Number((amount * getFeeMultiplier() + getFixedFee()).toFixed(2)) : 0;
-  const total = (amount + cardFee).toFixed(2);
+  const applyPromoCode = async () => {
+    if (!promoCode.trim()) return;
+    setIsApplyingPromo(true);
+    setPromoCodeError("");
+    setPromoCodeSuccess("");
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+         setPromoCodeError("You must be logged in.");
+         return;
+      }
+      const res = await fetch("/api/redeem-code", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ promoCode: promoCode.trim(), userId: session.user.id })
+      });
+      const data = await res.json();
+      if (data.ok) {
+        setDiscountPct(data.discountPct);
+        setPromoCodeSuccess(data.message);
+      } else {
+        setPromoCodeError(data.error || "Invalid promo code");
+        setDiscountPct(0);
+      }
+    } catch (err) {
+      setPromoCodeError("Error validating code");
+    } finally {
+      setIsApplyingPromo(false);
+    }
+  };
+
+  const costAmount = amount > 0 ? Number((amount * (1 - discountPct / 100)).toFixed(2)) : 0;
+  const cardFee = costAmount > 0 ? Number((costAmount * getFeeMultiplier() + getFixedFeeLocal()).toFixed(2)) : 0;
+  const total = (costAmount + cardFee).toFixed(2);
 
   const startPaymentSimulation = async () => {
-    if (amount < 2) return;
+    const amountInEur = convertFromLocal(amount);
+    if (amountInEur < 2) return;
     if (!method) {
       setErrorMsg("Please select a payment method");
       return;
@@ -106,9 +176,10 @@ export default function TopUpModal() {
           body: JSON.stringify({
             userId: session.user.id,
             token: session.access_token,
-            amount: amount,
+            amount: amountInEur,
             type: "topup",
-            currency: selectedCryptoCoin
+            currency: selectedCryptoCoin,
+            promoCode: promoCode.trim() || undefined
           })
         });
 
@@ -128,8 +199,10 @@ export default function TopUpModal() {
           body: JSON.stringify({
             userId: session.user.id,
             token: session.access_token,
-            amount: amount,
+            amount: amountInEur,
             paymentMethod: 'stripe',
+            currency: currency,
+            promoCode: promoCode.trim() || undefined
           })
         });
 
@@ -178,37 +251,59 @@ export default function TopUpModal() {
               <div className="space-y-4">
                 <label className="block text-xs font-bold tracking-widest text-gray-500 uppercase">Select Amount</label>
                 <div className="grid grid-cols-4 gap-2">
-                  {PRESETS.map(preset => (
+                  {presets.map(preset => (
                     <button
                       key={preset}
                     onClick={() => { setAmount(preset); setRawAmount(String(preset)); }}
-                      disabled={(method === 'crypto' && selectedCryptoCoin === 'BTC' && preset < 15)}
-                      className={`py-3 rounded-xl font-bold transition-all ${amount === preset ? 'bg-accent text-white shadow-[0_0_15px_rgba(255,255,255,0.1)]' : 'bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white'} disabled:opacity-30 disabled:cursor-not-allowed`}
+                      disabled={(method === 'crypto' && selectedCryptoCoin === 'BTC' && convertFromLocal(preset) < 15)}
+                      className={`py-3 flex flex-col items-center rounded-xl font-bold transition-all ${amount === preset ? 'bg-accent text-white shadow-[0_0_15px_rgba(255,255,255,0.1)]' : 'bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white'} disabled:opacity-30 disabled:cursor-not-allowed`}
                     >
-                      €{preset}
+                      <span className="text-lg">{convert(convertFromLocal(preset)).formatted}</span>
                     </button>
                   ))}
                 </div>
                 <div className="relative">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white font-bold">€</span>
-                  <input 
-                    type="text"
-                    inputMode="decimal"
-                    value={rawAmount}
-                    onChange={(e) => {
-                      const raw = e.target.value;
-                      // Allow digits, one dot, and a leading zero
-                      if (/^\d*\.?\d*$/.test(raw)) {
-                        setRawAmount(raw);
-                        const parsed = parseFloat(raw);
-                        setAmount(isNaN(parsed) ? 0 : parsed);
-                      }
-                    }}
-                    className="w-full bg-[#141414] border border-white/10 rounded-xl py-4 pl-10 pr-4 text-white font-bold focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/50 transition-all text-lg shadow-inner"
-                    placeholder="2.00"
-                  />
+                  {isSuffix ? (
+                    <>
+                      <input 
+                        type="text"
+                        inputMode="decimal"
+                        value={rawAmount}
+                        onChange={(e) => {
+                          const raw = e.target.value;
+                          if (/^\d*\.?\d*$/.test(raw)) {
+                            setRawAmount(raw);
+                            const parsed = parseFloat(raw);
+                            setAmount(isNaN(parsed) ? 0 : parsed);
+                          }
+                        }}
+                        className={`w-full bg-[#141414] border border-white/10 rounded-xl py-4 pl-4 text-white font-bold focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/50 transition-all text-lg shadow-inner ${currentSymbol.length > 2 ? 'pr-16' : 'pr-12'}`}
+                        placeholder="10"
+                      />
+                      <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold">{currentSymbol}</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold">{currentSymbol}</span>
+                      <input 
+                        type="text"
+                        inputMode="decimal"
+                        value={rawAmount}
+                        onChange={(e) => {
+                          const raw = e.target.value;
+                          if (/^\d*\.?\d*$/.test(raw)) {
+                            setRawAmount(raw);
+                            const parsed = parseFloat(raw);
+                            setAmount(isNaN(parsed) ? 0 : parsed);
+                          }
+                        }}
+                        className={`w-full bg-[#141414] border border-white/10 rounded-xl py-4 pr-4 text-white font-bold focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/50 transition-all text-lg shadow-inner ${currentSymbol.length > 1 ? 'pl-12' : 'pl-10'}`}
+                        placeholder="10"
+                      />
+                    </>
+                  )}
                 </div>
-                <p className="text-xs text-gray-600 font-medium pl-1">Minimum deposit: <span className="text-gray-500">€2.00</span>.</p>
+                <p className="text-xs text-gray-600 font-medium pl-1">Minimum deposit: <span className="text-gray-500">{convert(2).formatted}</span>.</p>
               </div>
 
               {/* Payment Method */}
@@ -238,7 +333,7 @@ export default function TopUpModal() {
                         </div>
                         <div className="text-left">
                           <div className={`font-bold text-sm ${method === 'card' ? 'text-white' : settings.stripe_enabled ? 'text-white' : 'text-gray-400'}`}>Debit / Credit Card</div>
-                          <div className="text-[11px] text-gray-500 font-medium">{!settings.stripe_enabled ? 'Temporarily disabled' : 'Mastercard, Visa, Apple Pay etc.'} <span className="text-indigo-400 font-bold">(1.5% + €0.25 fee)</span></div>
+                          <div className="text-xs text-gray-500">{!settings.stripe_enabled ? 'Temporarily disabled' : 'Mastercard, Visa, Apple Pay etc.'} <span className="text-indigo-400 font-bold">{settings.stripe_enabled ? `(1.5% + ${convert(0.25).formatted} fee)` : ''}</span></div>
                         </div>
                       </div>
                     <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${method === 'card' ? 'border-[#635BFF]' : 'border-gray-600'}`}>
@@ -341,6 +436,29 @@ export default function TopUpModal() {
                 </div>
               </div>
 
+              {/* Promo Code */}
+              <div className="space-y-4">
+                <label className="block text-xs font-bold tracking-widest text-gray-500 uppercase">Promo Code (Optional)</label>
+                <div className="flex gap-2 relative">
+                  <input
+                    type="text"
+                    value={promoCode}
+                    onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                    placeholder="Enter code"
+                    className="w-full bg-[#141414] border border-white/10 rounded-xl py-3 pl-4 text-white font-bold focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/50 transition-all text-sm uppercase"
+                  />
+                  <button
+                    onClick={applyPromoCode}
+                    disabled={isApplyingPromo || !promoCode.trim()}
+                    className="px-4 py-3 bg-white/5 hover:bg-white/10 text-white font-bold rounded-xl transition-colors disabled:opacity-50 text-sm"
+                  >
+                    {isApplyingPromo ? <Loader2 className="w-4 h-4 animate-spin" /> : "Apply"}
+                  </button>
+                </div>
+                {promoCodeSuccess && <p className="text-xs text-emerald-400 font-bold">{promoCodeSuccess}</p>}
+                {promoCodeError && <p className="text-xs text-red-400 font-bold">{promoCodeError}</p>}
+              </div>
+
               {/* Receipt & Action */}
               <div>
                 {errorMsg && (
@@ -356,21 +474,27 @@ export default function TopUpModal() {
                 <div className="bg-[#141414] rounded-2xl p-5 mb-4">
                   <div className="flex justify-between text-gray-400 text-sm font-medium mb-3">
                     <span>Deposit Amount</span>
-                    <span className="text-white">€{amount > 0 ? amount.toFixed(2) : '0.00'}</span>
+                    <span className="text-white block">{convert(convertFromLocal(amount > 0 ? amount : 0)).formatted}</span>
                   </div>
+                  {discountPct > 0 && (
+                    <div className="flex justify-between text-emerald-400 text-sm font-medium mb-3">
+                      <span>Discount ({discountPct}%)</span>
+                      <span className="block">-{convert(convertFromLocal(amount - costAmount)).formatted}</span>
+                    </div>
+                  )}
                   <div className="flex justify-between text-gray-400 text-sm font-medium mb-4">
                     <span>Gateway Fee</span>
-                    <span className="text-red-400">+€{cardFee.toFixed(2)}</span>
+                    <span className="text-red-400 block">+{convert(convertFromLocal(cardFee)).formatted}</span>
                   </div>
                   <div className="border-t border-dashed border-white/10 pt-4 flex justify-between items-end">
                     <span className="font-bold text-gray-300 uppercase tracking-widest text-xs">Total to pay</span>
-                    <span className="font-black text-white text-2xl">€{total}</span>
+                    <span className="font-black text-white text-2xl block">{convert(convertFromLocal(Number(total))).formatted}</span>
                   </div>
                 </div>
 
                 <button
                   onClick={startPaymentSimulation}
-                  disabled={amount < 2 || (method === 'crypto' && selectedCryptoCoin === 'BTC' && amount < 15)}
+                  disabled={convertFromLocal(amount) < 2 || (method === 'crypto' && selectedCryptoCoin === 'BTC' && convertFromLocal(amount) < 15)}
                   className="w-full bg-accent hover:bg-accent/90 text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_20px_rgba(255,255,255,0.1)] hover:shadow-[0_0_30px_rgba(255,255,255,0.2)]"
                 >
                   Confirm Payment <ChevronRight className="w-5 h-5" />
@@ -422,7 +546,7 @@ export default function TopUpModal() {
               
               <div className="text-center space-y-2">
                 <h4 className="text-2xl font-black text-white">Success!</h4>
-                <p className="text-gray-400 font-medium">€{amount.toFixed(2)} has been added to your balance.</p>
+                <p className="text-gray-400 font-medium">{convert(convertFromLocal(amount)).formatted} has been added to your balance.</p>
               </div>
             </div>
           )}
@@ -441,7 +565,7 @@ export default function TopUpModal() {
         trackId={cryptoPaymentData.trackId}
         orderId={cryptoPaymentData.orderId}
         currency={selectedCryptoCoin || 'BTC'}
-        fiatAmount={amount}
+        fiatAmount={convertFromLocal(amount)}
         onClose={() => {
           setCryptoPaymentData(null);
           setStep(1); // Reset loader in TopUpModal

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { createClient } from "@supabase/supabase-js";
+import { processAffiliateCommission } from "@/lib/affiliate";
 
 export async function POST(req: Request) {
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'dummy_key_for_build', {
@@ -59,6 +60,20 @@ export async function POST(req: Request) {
             status: "completed",
             accounts_data: `Balance Top-up (Stripe) [${session.id}]`
           });
+
+          // Process affiliate commission
+          const appliedPromoCode = session.metadata?.appliedPromoCode;
+          await processAffiliateCommission(supabaseAdmin, userId, addedAmount, appliedPromoCode);
+
+          // Push updated Discord metadata (total_spent, spent_10_eur) after balance top-up
+          fetch(new URL('/api/discord/update-metadata', req.url).toString(), {
+            method: 'POST',
+            body: JSON.stringify({ userId }),
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${process.env.VERIFICATION_JWT_SECRET}`
+            }
+          }).catch(console.error);
         }
       }
     } else if (type === "product_checkout") {
@@ -100,6 +115,10 @@ export async function POST(req: Request) {
           
         if (dbError) {
           console.error("Supabase error saving completed order in webhook:", dbError);
+        } else {
+          // Process affiliate commission
+          const appliedPromoCode = session.metadata?.appliedPromoCode;
+          await processAffiliateCommission(supabaseAdmin, userId, totalPrice, appliedPromoCode);
         }
       } else {
         // Refund to balance if NFA failed or returned no accounts

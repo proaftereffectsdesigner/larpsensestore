@@ -1,4 +1,8 @@
+import dotenv from 'dotenv';
+import path from 'path';
 
+// Load variables from .env.local (same pattern as discord-bot.mjs)
+dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
 
 const DISCORD_CLIENT_ID = process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID;
 const DISCORD_BOT_TOKEN = process.env.DISCORD_BOT_TOKEN;
@@ -23,7 +27,13 @@ const body = [
     name: 'Days Registered',
     description: 'Number of days since registration',
     type: 2, // INTEGER_GREATER_THAN_OR_EQUAL
-  }
+  },
+  {
+    key: 'spent_10_eur',
+    name: 'Spent 10+ EUR',
+    description: 'Has spent at least 10 EUR in the LarpSense Store',
+    type: 2, // INTEGER_GREATER_THAN_OR_EQUAL — set role requirement to >= 1
+  },
 ];
 
 async function registerSchema() {

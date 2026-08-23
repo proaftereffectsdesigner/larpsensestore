@@ -7,6 +7,8 @@ import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase-client";
 import { User } from "@supabase/supabase-js";
 import ToolDownloadButton from "./ToolDownloadButton";
+import CurrencySelector from "./CurrencySelector";
+import { useCurrency } from "@/lib/CurrencyContext";
 
 export default function Navbar() {
   const router = useRouter();
@@ -24,6 +26,7 @@ export default function Navbar() {
   const [showNotifications, setShowNotifications] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const notificationsRef = useRef<HTMLDivElement>(null);
+  const { convert } = useCurrency();
 
   const fetchProfileData = async (userId: string) => {
     const { data } = await supabase
@@ -272,7 +275,9 @@ export default function Navbar() {
                   <Plus className="w-4 h-4 text-emerald-400 group-hover:scale-110 transition-transform" />
                 </button>
                 <div className="flex items-center gap-2 pl-3 pr-4 text-sm text-white font-medium">
-                  <span className="font-mono tracking-tight text-gray-200">€{balance.toFixed(2)}</span>
+                  <span className="font-mono tracking-tight text-gray-200" title={`€${balance.toFixed(2)}`}>
+                    {convert(balance).formatted}
+                  </span>
                 </div>
               </div>
             )
@@ -479,6 +484,8 @@ export default function Navbar() {
               )}
             </div>
           )}
+          
+          <CurrencySelector />
         </div>
       </div>
 

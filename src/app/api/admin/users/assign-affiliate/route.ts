@@ -44,7 +44,7 @@ export async function POST(req: Request) {
       .from("affiliate_codes")
       .select("code")
       .eq("code", cleanCode)
-      .single();
+      .maybeSingle();
 
     if (existing) {
       return NextResponse.json({ error: "Promo code already exists" }, { status: 400 });

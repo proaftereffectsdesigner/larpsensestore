@@ -22,6 +22,7 @@ function DashboardContent() {
   const [myReviews, setMyReviews] = useState<any[]>([]);
   const [balance, setBalance] = useState<number>(0);
   const [affiliateStats, setAffiliateStats] = useState<any>(null);
+  const [isLoadingAffiliate, setIsLoadingAffiliate] = useState(true);
   const [loading, setLoading] = useState(true);
   const [sessionToken, setSessionToken] = useState<string | null>(null);
   
@@ -242,6 +243,8 @@ function DashboardContent() {
       }
     } catch (e) {
       console.error(e);
+    } finally {
+      setIsLoadingAffiliate(false);
     }
   };
 
@@ -1673,7 +1676,7 @@ function DashboardContent() {
                   </div>
                   Affiliate Program
                 </h2>
-                {(affActiveChat || tickets.some(t => t.issue_type === 'affiliate_application' && t.status !== 'closed')) && (
+                {!affiliateStats && !isLoadingAffiliate && (affActiveChat || tickets.some(t => t.issue_type === 'affiliate_application' && t.status !== 'closed')) && (
                   <div className="flex gap-2">
                     <span className="text-xs bg-green-500/20 text-green-400 px-3 py-2 rounded-lg font-bold border border-green-500/20">
                       Application Pending
@@ -1682,7 +1685,11 @@ function DashboardContent() {
                 )}
               </div>
               
-              {affiliateStats ? (
+              {isLoadingAffiliate ? (
+                <div className="flex justify-center items-center py-20">
+                  <Loader2 className="w-8 h-8 text-accent animate-spin" />
+                </div>
+              ) : affiliateStats ? (
                 <div className="bg-[#141414] border border-white/5 rounded-3xl p-6 md:p-8 shadow-2xl relative overflow-hidden">
                   <div className="absolute top-0 right-0 w-64 h-64 bg-accent/5 rounded-full blur-[100px] pointer-events-none" />
                   <h3 className="text-xl font-bold text-white mb-6">Affiliate Dashboard</h3>
@@ -1761,6 +1768,10 @@ function DashboardContent() {
                     userAvatar={profile?.avatar_url || user?.user_metadata?.avatar_url}
                     userName={profile?.display_name || user?.user_metadata?.username || user?.user_metadata?.name || user?.email?.split('@')?.[0] || 'User'}
                   />
+                </div>
+              ) : isLoadingAffiliate ? (
+                <div className="flex justify-center items-center py-20">
+                  <Loader2 className="w-8 h-8 text-accent animate-spin" />
                 </div>
               ) : (
               <div className="bg-[#141414] border border-white/5 rounded-3xl p-6 md:p-8 shadow-2xl relative overflow-hidden">

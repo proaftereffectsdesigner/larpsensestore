@@ -479,6 +479,7 @@ function DashboardContent() {
         });
         setAffPlatforms([]);
         setAffStats({});
+        if (user) fetchTickets(user.id);
       } else {
         toast.error(data.error || "Failed to submit application");
       }
@@ -1656,21 +1657,29 @@ function DashboardContent() {
                   </div>
                   Affiliate Program
                 </h2>
-                {affActiveChat && (
-                  <button onClick={() => setAffActiveChat(null)} className="text-xs bg-white/5 hover:bg-white/10 text-white font-bold px-4 py-2 rounded-lg transition-colors border border-white/10">
-                    &larr; Back to Application
-                  </button>
+                {(affActiveChat || tickets.some(t => t.issue_type === 'affiliate_application' && t.status !== 'closed')) && (
+                  <div className="flex gap-2">
+                    <span className="text-xs bg-green-500/20 text-green-400 px-3 py-2 rounded-lg font-bold border border-green-500/20">
+                      Application Pending
+                    </span>
+                  </div>
                 )}
               </div>
               
-              {affActiveChat ? (
+              {(affActiveChat || tickets.some(t => t.issue_type === 'affiliate_application' && t.status !== 'closed')) ? (
                 <div className="bg-[#141414] border border-white/5 rounded-3xl p-4 md:p-6 shadow-2xl">
+                  <div className="mb-4 p-4 bg-accent/10 border border-accent/20 rounded-xl">
+                    <p className="text-sm text-gray-300 text-center">
+                      <strong className="text-white">Your application is being reviewed.</strong> You can chat with our team below if you need to provide additional information.
+                    </p>
+                  </div>
                   <TicketChat 
-                    sessionId={affActiveChat.id} 
-                    initialMessage={affActiveChat.description} 
-                    initialAttachments={affActiveChat.attachments}
+                    sessionId={affActiveChat?.id || tickets.find(t => t.issue_type === 'affiliate_application' && t.status !== 'closed')?.ticket_number.toString()} 
+                    initialMessage={affActiveChat?.description} 
+                    initialAttachments={affActiveChat?.attachments}
                     onCloseTicket={() => {
                       setAffActiveChat(null);
+                      if (user) fetchTickets(user.id);
                       setActiveTab('tickets');
                     }}
                     userAvatar={user?.user_metadata?.avatar_url}

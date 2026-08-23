@@ -1677,9 +1677,24 @@ function DashboardContent() {
                     sessionId={affActiveChat?.id || tickets.find(t => t.issue_type === 'affiliate_application' && t.status !== 'closed')?.ticket_number.toString()} 
                     initialMessage={affActiveChat?.description} 
                     initialAttachments={affActiveChat?.attachments}
-                    onCloseTicket={() => {
+                    onCloseTicket={async () => {
+                      const tId = affActiveChat?.id || tickets.find(t => t.issue_type === 'affiliate_application' && t.status !== 'closed')?.ticket_number.toString();
+                      if (tId) {
+                        try {
+                          const { data: { session } } = await supabase.auth.getSession();
+                          await fetch("/api/tickets/close", {
+                            method: "POST",
+                            headers: {
+                              "Content-Type": "application/json",
+                              "Authorization": `Bearer ${session?.access_token}`
+                            },
+                            body: JSON.stringify({ ticketId: tId })
+                          });
+                        } catch (e) {
+                          console.error("Failed to close ticket:", e);
+                        }
+                      }
                       setAffActiveChat(null);
-                      if (user) fetchTickets(user.id);
                       setActiveTab('tickets');
                     }}
                     userAvatar={user?.user_metadata?.avatar_url}

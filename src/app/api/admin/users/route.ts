@@ -27,13 +27,6 @@ export async function GET(req: Request) {
 
     if (ordersError) throw ordersError;
 
-    // Fetch all affiliate codes
-    const { data: affiliateCodes, error: affiliateError } = await supabaseAdmin
-      .from("affiliate_codes")
-      .select("*");
-      
-    if (affiliateError) throw affiliateError;
-
     // Fetch auth users to get correct emails and display names if missing
     const { data: authData, error: authUsersError } = await supabaseAdmin.auth.admin.listUsers();
     if (authUsersError) throw authUsersError;
@@ -56,15 +49,6 @@ export async function GET(req: Request) {
       });
     }
 
-    // Group affiliate codes by owner_id
-    const codesByUser: Record<string, any[]> = {};
-    if (affiliateCodes) {
-      affiliateCodes.forEach(c => {
-        if (!codesByUser[c.owner_id]) codesByUser[c.owner_id] = [];
-        codesByUser[c.owner_id].push(c);
-      });
-    }
-
     // Calculate total spent for each user — only completed orders count
     const usersWithStats = profiles?.map((p) => {
       const userOrders = ordersByUser[p.id] || [];
@@ -78,8 +62,7 @@ export async function GET(req: Request) {
         email: p.email || authInfo.email,
         display_name: p.display_name || authInfo.display_name,
         total_orders: completedOrders.length,
-        total_spent: totalSpent,
-        affiliate_codes: codesByUser[p.id] || []
+        total_spent: totalSpent
       };
     }) || [];
 

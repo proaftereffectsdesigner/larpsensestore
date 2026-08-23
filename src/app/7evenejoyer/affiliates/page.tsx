@@ -230,6 +230,7 @@ export default function AffiliatesDashboard() {
                 <th className="p-4 font-bold">Code</th>
                 <th className="p-4 font-bold">Commission</th>
                 <th className="p-4 font-bold">Owner</th>
+                <th className="p-4 font-bold">Stats</th>
                 <th className="p-4 font-bold text-right">Actions</th>
               </tr>
             </thead>
@@ -247,6 +248,14 @@ export default function AffiliatesDashboard() {
                       <span className="text-sm font-bold text-white">{aff.profiles?.display_name || 'Unknown'}</span>
                       <span className="text-xs text-gray-500">{aff.profiles?.email}</span>
                       <code className="text-[10px] text-gray-600 font-mono mt-0.5">{aff.owner_id}</code>
+                    </div>
+                  </td>
+                  <td className="p-4">
+                    <div className="flex flex-col text-xs space-y-1">
+                      <div className="flex justify-between gap-4"><span className="text-gray-500">Users:</span> <span className="font-bold text-white">{aff.stats?.usersReferred || 0}</span></div>
+                      <div className="flex justify-between gap-4"><span className="text-gray-500">Products:</span> <span className="font-bold text-white">{aff.stats?.totalProductsBought || 0}</span></div>
+                      <div className="flex justify-between gap-4"><span className="text-gray-500">Revenue:</span> <span className="font-bold text-emerald-400">€{(aff.stats?.totalRevenue || 0).toFixed(2)}</span></div>
+                      <div className="flex justify-between gap-4"><span className="text-gray-500">Earned:</span> <span className="font-bold text-accent">€{(aff.stats?.totalEarned || 0).toFixed(2)}</span></div>
                     </div>
                   </td>
                   <td className="p-4 text-right">

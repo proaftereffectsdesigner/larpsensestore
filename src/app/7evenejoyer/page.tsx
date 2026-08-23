@@ -199,6 +199,10 @@ export default function AdminDashboard() {
       const data = await res.json();
       if (data.success) {
         alert("Affiliate code assigned successfully!");
+        const newCodeObj = { code: affiliateCodeInput.trim().toUpperCase(), commission_pct: affiliatePctInput, owner_id: selectedUser.id };
+        const updatedUser = { ...selectedUser, affiliate_codes: [...(selectedUser.affiliate_codes || []), newCodeObj] };
+        setUsers(users.map(u => u.id === selectedUser.id ? updatedUser : u));
+        setSelectedUser(updatedUser);
         setAffiliateCodeInput("");
       } else {
         alert(data.error || "Failed to assign affiliate code.");
@@ -207,6 +211,27 @@ export default function AdminDashboard() {
       alert("Error assigning affiliate code.");
     } finally {
       setAssigningAffiliate(false);
+    }
+  };
+
+  const handleDeleteAffiliate = async (code: string) => {
+    if (!confirm(`Are you sure you want to delete affiliate code ${code}?`)) return;
+    try {
+      const res = await fetch("/api/admin/users/delete-affiliate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${sessionToken}` },
+        body: JSON.stringify({ code })
+      });
+      const data = await res.json();
+      if (data.success) {
+        const updatedUser = { ...selectedUser, affiliate_codes: (selectedUser.affiliate_codes || []).filter((c: any) => c.code !== code) };
+        setUsers(users.map(u => u.id === selectedUser.id ? updatedUser : u));
+        setSelectedUser(updatedUser);
+      } else {
+        alert(data.error || "Failed to delete affiliate code.");
+      }
+    } catch (err) {
+      alert("Error deleting affiliate code.");
     }
   };
 
@@ -698,9 +723,30 @@ export default function AdminDashboard() {
 
               {/* Affiliate & Promo Codes */}
               <div className="bg-indigo-500/5 rounded-xl p-4 border border-indigo-500/10">
-                <h4 className="text-sm font-bold text-indigo-400 mb-4 flex items-center gap-2"><CreditCard className="w-4 h-4" /> Assign Affiliate Code</h4>
+                <h4 className="text-sm font-bold text-indigo-400 mb-4 flex items-center gap-2"><CreditCard className="w-4 h-4" /> Affiliate Codes</h4>
                 
+                {selectedUser?.affiliate_codes && selectedUser.affiliate_codes.length > 0 && (
+                  <div className="mb-4 space-y-2">
+                    {selectedUser.affiliate_codes.map((ac: any) => (
+                      <div key={ac.code} className="bg-[#141414] p-3 rounded-xl border border-white/5 flex items-center justify-between">
+                        <div>
+                          <div className="font-bold text-white tracking-widest">{ac.code}</div>
+                          <div className="text-xs text-indigo-400 font-bold">{ac.commission_pct}% Commission</div>
+                        </div>
+                        <button 
+                          onClick={() => handleDeleteAffiliate(ac.code)}
+                          className="bg-red-500/10 hover:bg-red-500/20 text-red-400 p-2 rounded-lg border border-red-500/20 transition-colors"
+                          title="Delete Code"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
                 <div className="space-y-4 bg-[#0a0a0a] p-4 rounded-xl border border-white/5">
+                  <div className="text-xs text-gray-500 font-bold uppercase tracking-wider mb-2">Assign New Code</div>
                   <div className="flex gap-3">
                     <div className="flex-1">
                       <label className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mb-1 block">Promo Code</label>

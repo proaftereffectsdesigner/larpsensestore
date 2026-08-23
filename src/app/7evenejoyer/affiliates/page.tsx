@@ -16,6 +16,7 @@ export default function AffiliatesDashboard() {
   const [targetUserId, setTargetUserId] = useState("");
   const [promoCode, setPromoCode] = useState("");
   const [commissionPct, setCommissionPct] = useState(10);
+  const [discountPct, setDiscountPct] = useState(10);
   const [isAssigning, setIsAssigning] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [userSearchTerm, setUserSearchTerm] = useState("");
@@ -54,7 +55,7 @@ export default function AffiliatesDashboard() {
       const res = await fetch("/api/admin/affiliates", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${sessionToken}` },
-        body: JSON.stringify({ targetUserId, promoCode, commissionPct })
+        body: JSON.stringify({ targetUserId, promoCode, commissionPct, discountPct })
       });
       const data = await res.json();
       if (data.success) {
@@ -119,7 +120,7 @@ export default function AffiliatesDashboard() {
         <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
           <Plus className="w-5 h-5 text-accent" /> Assign New Promo Code
         </h2>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
           <div className="md:col-span-2">
             <label className="text-xs text-gray-500 font-bold uppercase tracking-wider mb-2 block">Select User</label>
             <div className="relative">
@@ -194,6 +195,15 @@ export default function AffiliatesDashboard() {
               className="w-full bg-[#141414] border border-white/10 rounded-xl py-3 px-4 text-white font-medium focus:outline-none focus:border-accent"
             />
           </div>
+          <div>
+            <label className="text-xs text-gray-500 font-bold uppercase tracking-wider mb-2 block">Discount %</label>
+            <input 
+              type="number" 
+              value={discountPct}
+              onChange={(e) => setDiscountPct(Number(e.target.value) || 0)}
+              className="w-full bg-[#141414] border border-white/10 rounded-xl py-3 px-4 text-white font-medium focus:outline-none focus:border-accent"
+            />
+          </div>
         </div>
         <div className="mt-4 flex justify-end">
           <button 
@@ -228,7 +238,7 @@ export default function AffiliatesDashboard() {
             <thead>
               <tr className="bg-white/5 text-[10px] uppercase tracking-widest text-gray-500">
                 <th className="p-4 font-bold">Code</th>
-                <th className="p-4 font-bold">Commission</th>
+                <th className="p-4 font-bold">Comm / Disc</th>
                 <th className="p-4 font-bold">Owner</th>
                 <th className="p-4 font-bold">Stats</th>
                 <th className="p-4 font-bold text-right">Actions</th>
@@ -241,7 +251,10 @@ export default function AffiliatesDashboard() {
                     <span className="font-mono font-bold text-accent">{aff.code}</span>
                   </td>
                   <td className="p-4">
-                    <span className="font-bold text-white">{aff.commission_pct}%</span>
+                    <div className="flex flex-col">
+                      <span className="font-bold text-white text-sm">{aff.commission_pct}% <span className="text-gray-500 text-xs font-normal">comm</span></span>
+                      <span className="font-bold text-emerald-400 text-sm">{aff.discount_pct}% <span className="text-gray-500 text-xs font-normal">disc</span></span>
+                    </div>
                   </td>
                   <td className="p-4">
                     <div className="flex flex-col">

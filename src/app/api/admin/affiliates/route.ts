@@ -73,7 +73,7 @@ export async function POST(req: Request) {
     const { supabaseAdmin } = authResult;
 
     const body = await req.json();
-    const { targetUserId, promoCode, commissionPct } = body;
+    const { targetUserId, promoCode, commissionPct, discountPct } = body;
 
     if (!targetUserId || !promoCode) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
@@ -81,6 +81,7 @@ export async function POST(req: Request) {
 
     const cleanCode = promoCode.trim().toUpperCase();
     const commPct = Number(commissionPct) || 10;
+    const discPct = Number(discountPct) || 10;
 
     const { data: existing, error: existingError } = await supabaseAdmin
       .from("affiliate_codes")
@@ -101,7 +102,8 @@ export async function POST(req: Request) {
       .insert({
         code: cleanCode,
         owner_id: targetUserId,
-        commission_pct: commPct
+        commission_pct: commPct,
+        discount_pct: discPct
       });
 
     if (insertError) {

@@ -149,6 +149,22 @@ export async function POST(req: Request) {
             },
             body: JSON.stringify({ content: pingContent })
           });
+
+          // Send the ticket description/application content as a follow-up message
+          if (dbDescription) {
+            // Discord has a 2000 char limit, truncate if needed
+            const descContent = dbDescription.length > 1900 
+              ? dbDescription.substring(0, 1900) + '\n... (truncated)'
+              : dbDescription;
+            await fetch(`https://discord.com/api/v10/channels/${channel.id}/messages`, {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bot ${botToken}`,
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ content: descContent })
+            });
+          }
         } else {
           console.error("Discord Channel Creation Failed:", await channelRes.text());
         }

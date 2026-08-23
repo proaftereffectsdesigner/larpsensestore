@@ -5,7 +5,8 @@ import { toast } from "sonner";
 import { supabase } from "@/lib/supabase-client";
 import ParticlesBackground from "@/components/ParticlesBackground";
 import { User } from "@supabase/supabase-js";
-import { Copy, Search, RefreshCw, Lock, Package, KeyRound, Wallet, Plus, Eye, EyeOff, TrendingUp, Gamepad, ShoppingBag, User as UserIcon, LayoutGrid, Shield, Mail, Upload, X, Crop, Trash2, Crown, ShieldCheck, MessageSquare, Award, Gem, Zap, ExternalLink, ArrowRight, ChevronLeft, ChevronRight, Smartphone, Monitor, UserPlus, CalendarCheck, Medal, Coins, ShieldAlert, Star } from "lucide-react";
+import { Camera, ExternalLink, Key, Package, Plus, Send, Settings, Shield, ShieldAlert, Star, Wallet, User as UserIcon, LogOut, Check, ShoppingCart, Loader2, Upload, Crown, ShieldCheck, X, RefreshCw, Eye, EyeOff, LayoutGrid, MessageSquare, ChevronLeft, ChevronRight, UserPlus, Image as ImageIcon, CalendarCheck, Medal, Award, Copy, Search, Lock, KeyRound, TrendingUp, Gamepad, ShoppingBag, Mail, Crop, Trash2, Gem, Zap, ArrowRight, Smartphone, Monitor, Coins } from "lucide-react";
+import TicketChat from "@/components/TicketChat";
 import Cropper from 'react-easy-crop';
 import getCroppedImg from '@/lib/cropImage';
 import { products } from "@/lib/products";
@@ -89,6 +90,19 @@ function DashboardContent() {
   const [reviewRating, setReviewRating] = useState(5);
   const [reviewComment, setReviewComment] = useState("");
   const [submittingReview, setSubmittingReview] = useState(false);
+
+  // Affiliate Application State
+  const [affPlatforms, setAffPlatforms] = useState<string[]>([]);
+  const [affStats, setAffStats] = useState<Record<string, { 
+    channelLink: string; 
+    subs: string; 
+    longViews: string; 
+    shortsViews: string; 
+    liveViewers: string;
+    screenshots: string[];
+  }>>({});
+  const [affSubmitting, setAffSubmitting] = useState(false);
+  const [affActiveChat, setAffActiveChat] = useState<{ id: string; description: string, attachments: string[] } | null>(null);
 
   const router = useRouter();
 
@@ -393,6 +407,87 @@ function DashboardContent() {
     };
     confirmRecoveryAndEmail();
   }, [user]);
+
+
+
+  const handleAffiliateSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (affPlatforms.length === 0) {
+      toast.error("Please select at least one platform.");
+      return;
+    }
+    
+    for (const p of affPlatforms) {
+      const stats = affStats[p];
+      if (!stats?.channelLink || !stats?.subs) {
+        toast.error(`Please provide your channel link and followers/subs for ${p}.`);
+        return;
+      }
+      if (!stats?.screenshots || stats.screenshots.length === 0) {
+        toast.error(`Please provide at least one proof screenshot for ${p}.`);
+        return;
+      }
+    }
+
+    setAffSubmitting(true);
+    
+    // Format description for the ticket
+    let description = `**Affiliate Application**\n\n`;
+    description += `**Platforms:** ${affPlatforms.join(", ")}\n\n`;
+    
+    let allAttachments: string[] = [];
+
+    affPlatforms.forEach(p => {
+      const stats = affStats[p];
+      if (stats.screenshots) {
+        allAttachments = [...allAttachments, ...stats.screenshots];
+      }
+      description += `**--- ${p} ---**\n`;
+      description += `**Channel Link:** ${stats.channelLink}\n`;
+      description += `**Followers/Subscribers:** ${stats.subs}\n`;
+      if (p === 'YouTube') {
+        description += `**Avg Long Video Views:** ${stats.longViews}\n`;
+        description += `**Avg Shorts Views:** ${stats.shortsViews}\n`;
+      }
+      if (p === 'TikTok') {
+        description += `**Avg TikTok Views:** ${stats.longViews}\n`;
+      }
+      if (stats.liveViewers) description += `**Average Live Viewers:** ${stats.liveViewers}\n`;
+      description += `\n`;
+    });
+
+    try {
+      const res = await fetch("/api/tickets", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${sessionToken}`
+        },
+        body: JSON.stringify({
+          issueType: "affiliate_application",
+          description: description,
+        })
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        toast.success("Affiliate application submitted successfully!");
+        setAffActiveChat({
+          id: data.ticket_number.toString(),
+          description,
+          attachments: allAttachments
+        });
+        setAffPlatforms([]);
+        setAffStats({});
+      } else {
+        toast.error(data.error || "Failed to submit application");
+      }
+    } catch (err: any) {
+      toast.error("Failed to submit application");
+    } finally {
+      setAffSubmitting(false);
+    }
+  };
 
   const handlePasswordResetRequest = async () => {
     if (!user?.email) return;
@@ -937,6 +1032,9 @@ function DashboardContent() {
           </button>
           <button onClick={() => handleTabChange('tickets')} className={`w-full flex items-center gap-3 px-5 py-3.5 rounded-2xl transition-all ${activeTab === 'tickets' ? 'bg-white/10 text-white font-bold shadow-lg' : 'text-gray-400 hover:bg-white/5 hover:text-gray-200 font-medium'}`}>
             <MessageSquare className={`w-5 h-5 ${activeTab === 'tickets' ? 'text-accent' : ''}`} /> Support Tickets
+          </button>
+          <button onClick={() => handleTabChange('affiliate')} className={`w-full flex items-center gap-3 px-5 py-3.5 rounded-2xl transition-all ${activeTab === 'affiliate' ? 'bg-white/10 text-white font-bold shadow-lg' : 'text-gray-400 hover:bg-white/5 hover:text-gray-200 font-medium'}`}>
+            <UserPlus className={`w-5 h-5 ${activeTab === 'affiliate' ? 'text-accent' : ''}`} /> Affiliate Program
           </button>
           <button onClick={() => handleTabChange('reviews')} className={`w-full flex items-center gap-3 px-5 py-3.5 rounded-2xl transition-all ${activeTab === 'reviews' ? 'bg-white/10 text-white font-bold shadow-lg' : 'text-gray-400 hover:bg-white/5 hover:text-gray-200 font-medium'}`}>
             <Star className={`w-5 h-5 ${activeTab === 'reviews' ? 'text-accent' : ''}`} /> Reviews
@@ -1545,6 +1643,247 @@ function DashboardContent() {
                   </div>
                 )}
               </div>
+            </div>
+          )}
+
+          {/* AFFILIATE TAB */}
+          {activeTab === 'affiliate' && (
+            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <div className="flex items-center justify-between mb-8 border-b border-white/10 pb-4">
+                <h2 className="text-2xl font-bold text-white tracking-tight flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-[#141414] border border-white/10 flex items-center justify-center">
+                    <UserPlus className="w-5 h-5 text-gray-300" />
+                  </div>
+                  Affiliate Program
+                </h2>
+                {affActiveChat && (
+                  <button onClick={() => setAffActiveChat(null)} className="text-xs bg-white/5 hover:bg-white/10 text-white font-bold px-4 py-2 rounded-lg transition-colors border border-white/10">
+                    &larr; Back to Application
+                  </button>
+                )}
+              </div>
+              
+              {affActiveChat ? (
+                <div className="bg-[#141414] border border-white/5 rounded-3xl p-4 md:p-6 shadow-2xl">
+                  <TicketChat 
+                    sessionId={affActiveChat.id} 
+                    initialMessage={affActiveChat.description} 
+                    initialAttachments={affActiveChat.attachments}
+                    onCloseTicket={() => {
+                      setAffActiveChat(null);
+                      setActiveTab('tickets');
+                    }}
+                    userAvatar={user?.user_metadata?.avatar_url}
+                    userName={user?.user_metadata?.username || user?.user_metadata?.name || user?.email?.split('@')?.[0] || 'User'}
+                  />
+                </div>
+              ) : (
+              <div className="bg-[#141414] border border-white/5 rounded-3xl p-6 md:p-8 shadow-2xl relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-accent/5 rounded-full blur-[100px] pointer-events-none" />
+                <h3 className="text-xl font-bold text-white mb-2">Apply for Partnership</h3>
+                <p className="text-gray-400 text-sm mb-8">Join our affiliate program and earn commissions on every sale you bring. Fill out the application below and we will get back to you via a Discord ticket.</p>
+                
+                <form onSubmit={handleAffiliateSubmit} className="space-y-6 relative z-10">
+                  
+                  {/* Platforms Selection */}
+                  <div>
+                    <label className="block text-xs font-bold tracking-widest text-gray-500 mb-3 uppercase">Primary Platforms</label>
+                    <div className="flex flex-wrap gap-3">
+                      {['YouTube', 'TikTok', 'Kick / Twitch'].map((platform) => (
+                        <button
+                          key={platform}
+                          type="button"
+                          onClick={() => {
+                            if (affPlatforms.includes(platform)) {
+                              setAffPlatforms(prev => prev.filter(p => p !== platform));
+                              const newStats = {...affStats};
+                              delete newStats[platform];
+                              setAffStats(newStats);
+                            } else {
+                              setAffPlatforms(prev => [...prev, platform]);
+                              setAffStats(prev => ({ ...prev, [platform]: { channelLink: '', subs: '', longViews: '', shortsViews: '', liveViewers: '', screenshots: [] } }));
+                            }
+                          }}
+                          className={`px-4 py-2 rounded-xl text-sm font-bold border transition-all ${
+                            affPlatforms.includes(platform)
+                              ? 'bg-accent/20 border-accent/40 text-accent shadow-[0_0_15px_rgba(34,197,94,0.1)]'
+                              : 'bg-[#0a0a0a] border-white/10 text-gray-400 hover:border-white/20'
+                          }`}
+                        >
+                          {platform}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Per Platform Inputs */}
+                  {affPlatforms.map(platform => (
+                    <div key={platform} className="bg-[#0a0a0a]/50 border border-white/5 rounded-2xl p-6 mt-4">
+                      <h4 className="text-accent font-bold mb-4 uppercase tracking-widest text-sm flex items-center gap-2">
+                        {platform} Stats
+                      </h4>
+                      <div className="space-y-6">
+                        {/* Channel Link */}
+                        <div>
+                          <label className="block text-xs font-bold tracking-widest text-gray-500 mb-2 uppercase">Main Channel Link</label>
+                          <input 
+                            type="url" 
+                            required
+                            value={affStats[platform]?.channelLink || ''}
+                            onChange={(e) => setAffStats(prev => ({...prev, [platform]: {...prev[platform], channelLink: e.target.value}}))}
+                            className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-accent/50 transition-all placeholder:text-gray-600"
+                            placeholder={`https://${platform.toLowerCase().replace(' / ', '.')}.com/@yourchannel`}
+                          />
+                        </div>
+
+                        {/* Stats Grid */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-end">
+                          <div>
+                            <label className="block text-[10px] font-bold tracking-widest text-gray-500 mb-2 uppercase">Followers / Subs</label>
+                            <input 
+                              type="text" 
+                              required
+                              value={affStats[platform]?.subs || ''}
+                              onChange={(e) => setAffStats(prev => ({...prev, [platform]: {...prev[platform], subs: e.target.value}}))}
+                              className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-accent/50 transition-all placeholder:text-gray-600"
+                              placeholder="e.g. 50k"
+                            />
+                          </div>
+                          
+                          {(platform === 'YouTube' || platform === 'TikTok') && (
+                            <div>
+                              <label className="block text-[10px] font-bold tracking-widest text-gray-500 mb-2 uppercase">
+                                {platform === 'YouTube' ? 'Avg Views (Long Videos)' : 'Avg Views (TikToks)'}
+                              </label>
+                              <input 
+                                type="text" 
+                                value={affStats[platform]?.longViews || ''}
+                                onChange={(e) => setAffStats(prev => ({...prev, [platform]: {...prev[platform], longViews: e.target.value}}))}
+                                className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-accent/50 transition-all placeholder:text-gray-600"
+                                placeholder="e.g. 100k"
+                              />
+                            </div>
+                          )}
+
+                          {platform === 'YouTube' && (
+                            <div>
+                              <label className="block text-[10px] font-bold tracking-widest text-gray-500 mb-2 uppercase">Avg Views (Shorts)</label>
+                              <input 
+                                type="text" 
+                                value={affStats[platform]?.shortsViews || ''}
+                                onChange={(e) => setAffStats(prev => ({...prev, [platform]: {...prev[platform], shortsViews: e.target.value}}))}
+                                className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-accent/50 transition-all placeholder:text-gray-600"
+                                placeholder="e.g. 200k"
+                              />
+                            </div>
+                          )}
+
+                          <div>
+                            <label className="block text-[10px] font-bold tracking-widest text-gray-500 mb-2 uppercase">Avg Live Viewers</label>
+                            <input 
+                              type="text" 
+                              value={affStats[platform]?.liveViewers || ''}
+                              onChange={(e) => setAffStats(prev => ({...prev, [platform]: {...prev[platform], liveViewers: e.target.value}}))}
+                              className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-accent/50 transition-all placeholder:text-gray-600"
+                              placeholder="e.g. 500"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Screenshots */}
+                        <div>
+                          <label className="block text-xs font-bold tracking-widest text-gray-500 mb-2 uppercase">Proof Screenshots (Required)</label>
+                          <div className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl p-4">
+                            <label className="flex flex-col items-center justify-center w-full min-h-[120px] bg-white/5 hover:bg-white/10 border-2 border-dashed border-white/20 hover:border-accent/50 rounded-xl cursor-pointer transition-colors group relative">
+                              <input 
+                                type="file"
+                                multiple
+                                accept="image/png, image/jpeg, image/jpg, image/webp"
+                                className="absolute inset-0 opacity-0 cursor-pointer"
+                                onChange={(e) => {
+                                  const files = e.target.files;
+                                  if (!files) return;
+                                  const fileArr = Array.from(files);
+                                  
+                                  const processFiles = async () => {
+                                    const base64Arr: string[] = [];
+                                    for (const file of fileArr) {
+                                      if (file.size > 8 * 1024 * 1024) {
+                                        toast.error(`File ${file.name} is too large. Max 8MB.`);
+                                        continue;
+                                      }
+                                      const base64 = await new Promise<string>((resolve) => {
+                                        const reader = new FileReader();
+                                        reader.onload = (ev) => resolve(ev.target?.result as string);
+                                        reader.readAsDataURL(file);
+                                      });
+                                      base64Arr.push(base64);
+                                    }
+                                    if (base64Arr.length > 0) {
+                                      setAffStats(prev => ({
+                                        ...prev,
+                                        [platform]: {
+                                          ...prev[platform],
+                                          screenshots: [...(prev[platform].screenshots || []), ...base64Arr]
+                                        }
+                                      }));
+                                    }
+                                  };
+                                  processFiles();
+                                }}
+                              />
+                              <div className="flex flex-col items-center justify-center text-center p-4">
+                                <ImageIcon className="w-8 h-8 text-gray-400 group-hover:text-accent mb-2 transition-colors" />
+                                <span className="text-sm font-medium text-gray-300">Click to upload screenshots</span>
+                                <span className="text-xs text-gray-500 mt-1">PNG, JPG up to 8MB</span>
+                              </div>
+                            </label>
+                            
+                            {affStats[platform]?.screenshots && affStats[platform].screenshots.length > 0 && (
+                              <div className="flex flex-wrap gap-2 mt-4">
+                                {affStats[platform].screenshots.map((b64, idx) => (
+                                  <div key={idx} className="relative w-16 h-16 rounded-lg overflow-hidden border border-white/20 group">
+                                    <img src={b64} className="w-full h-full object-cover" alt="Preview" />
+                                    <button 
+                                      type="button"
+                                      onClick={() => {
+                                        setAffStats(prev => ({
+                                          ...prev,
+                                          [platform]: {
+                                            ...prev[platform],
+                                            screenshots: prev[platform].screenshots.filter((_, i) => i !== idx)
+                                          }
+                                        }));
+                                      }}
+                                      className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                                    >
+                                      <X className="w-4 h-4 text-red-400" />
+                                    </button>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                          
+                          <p className="text-xs text-orange-400 mt-3 font-medium bg-orange-400/10 border border-orange-400/20 p-2.5 rounded-lg flex items-start gap-2">
+                            <span className="text-lg">⚠️</span>
+                            <span>You must provide screenshots proving that the account belongs to you and the views/stats are yours (e.g. YouTube Studio / TikTok Analytics).</span>
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+
+                  <button 
+                    type="submit" 
+                    disabled={affSubmitting}
+                    className="w-full bg-accent hover:bg-accent/90 text-black font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_20px_rgba(34,197,94,0.1)] hover:shadow-[0_0_30px_rgba(34,197,94,0.2)] mt-8"
+                  >
+                    {affSubmitting ? <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin" /> : <><UserPlus className="w-5 h-5" /> Submit Application</>}
+                  </button>
+                </form>
+              </div>
+              )}
             </div>
           )}
 

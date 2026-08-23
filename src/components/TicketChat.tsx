@@ -16,6 +16,7 @@ interface ChatMessage {
 interface TicketChatProps {
   sessionId: string;
   initialMessage?: string;
+  initialAttachments?: string[];
   onCloseTicket: () => void;
   userAvatar?: string | null;
   userName?: string;
@@ -23,7 +24,7 @@ interface TicketChatProps {
   onTicketClosedRemotely?: () => void;
 }
 
-export default function TicketChat({ sessionId, initialMessage, onCloseTicket, userAvatar, userName = 'User', isTicketClosed = false, onTicketClosedRemotely }: TicketChatProps) {
+export default function TicketChat({ sessionId, initialMessage, initialAttachments, onCloseTicket, userAvatar, userName = 'User', isTicketClosed = false, onTicketClosedRemotely }: TicketChatProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [ticketInfo, setTicketInfo] = useState<any>(null);
   const [inputValue, setInputValue] = useState('');
@@ -93,8 +94,11 @@ export default function TicketChat({ sessionId, initialMessage, onCloseTicket, u
         console.log('Connected to Ticket Chat');
         
         // If we have an initial message from the form, send it immediately
-        if (initialMessage) {
-          socket.send(JSON.stringify({ content: initialMessage }));
+        if (initialMessage || (initialAttachments && initialAttachments.length > 0)) {
+          socket.send(JSON.stringify({ 
+            content: initialMessage || '', 
+            attachments: initialAttachments || [] 
+          }));
         }
       };
       

@@ -80,7 +80,11 @@ export async function POST(req: Request) {
     // Integrate with Discord if credentials are set
     const botToken = process.env.DISCORD_BOT_TOKEN?.trim();
     const guildId = process.env.DISCORD_GUILD_ID?.trim();
-    const categoryId = process.env.DISCORD_TICKETS_CATEGORY_ID?.trim();
+    let categoryId = process.env.DISCORD_TICKETS_CATEGORY_ID?.trim();
+
+    if (issueType === 'affiliate_application') {
+      categoryId = '1541097145136971807';
+    }
 
     if (botToken && guildId && categoryId) {
       try {
@@ -90,6 +94,7 @@ export async function POST(req: Request) {
           'missing_delivery': 'Order not delivered',
           'payment_issue': 'Payment Issue / Top-up failed',
           'general_question': 'General Question',
+          'affiliate_application': 'Affiliate Program Application',
           'other': 'Other'
         };
         const formattedIssueType = issueTypeLabels[issueType] || issueType;

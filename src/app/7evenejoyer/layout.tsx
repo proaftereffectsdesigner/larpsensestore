@@ -45,6 +45,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             Tickets
           </Link>
           <Link 
+            href="/7evenejoyer/affiliates" 
+            className={`flex items-center gap-2 px-4 py-3 text-sm font-bold border-b-2 transition-all whitespace-nowrap ${pathname?.startsWith('/7evenejoyer/affiliates') ? 'border-accent text-accent' : 'border-transparent text-gray-500 hover:text-gray-300 hover:border-white/20'}`}
+          >
+            <Users className="w-4 h-4" />
+            Affiliates
+          </Link>
+          <Link 
             href="/7evenejoyer/settings" 
             className={`flex items-center gap-2 px-4 py-3 text-sm font-bold border-b-2 transition-all whitespace-nowrap ${pathname?.startsWith('/7evenejoyer/settings') ? 'border-accent text-accent' : 'border-transparent text-gray-500 hover:text-gray-300 hover:border-white/20'}`}
           >

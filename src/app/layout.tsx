@@ -22,11 +22,11 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "LarpSenseStore - Premium Digital Accounts",
-  description: "Secure, instant digital account delivery. Get your CS2 Prime and Premier ready accounts with automated warranty.",
+  title: "LarpSense Store | Premium NFA Accounts",
+  description: "Secure, instant digital account delivery. Get your premium NFA accounts for a variety of games with automated warranty.",
   openGraph: {
-    title: "LarpSense Store | Premium CS2 Accounts",
-    description: "Secure, instant digital account delivery. Get your CS2 Prime and Premier ready accounts today.",
+    title: "LarpSense Store | Premium NFA Accounts",
+    description: "Secure, instant digital account delivery. Get your premium NFA accounts for a variety of games today.",
     url: "https://www.larpsensestore.com",
     siteName: "LarpSenseStore",
     images: [
@@ -42,8 +42,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "LarpSense Store | Premium CS2 Accounts",
-    description: "Secure, instant digital account delivery. Get your CS2 Prime and Premier ready accounts today.",
+    title: "LarpSense Store | Premium NFA Accounts",
+    description: "Secure, instant digital account delivery. Get your premium NFA accounts for a variety of games today.",
     images: ["/embed.png"],
   },
 };

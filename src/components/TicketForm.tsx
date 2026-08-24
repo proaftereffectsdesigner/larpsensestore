@@ -296,8 +296,10 @@ ${description}`;
           <select 
             value={issueType}
             onChange={(e) => setIssueType(e.target.value)}
-            className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/50 transition-all appearance-none"
             required
+            onInvalid={(e) => (e.target as HTMLSelectElement).setCustomValidity('Please select an item from the list.')}
+            onInput={(e) => (e.target as HTMLSelectElement).setCustomValidity('')}
+            className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/50 transition-all appearance-none"
           >
             <option value="" disabled>Select an issue type...</option>
             <option value="invalid_token">Invalid / Expired Token</option>

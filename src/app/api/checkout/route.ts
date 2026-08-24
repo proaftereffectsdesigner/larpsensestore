@@ -67,15 +67,48 @@ export async function POST(req: Request) {
     let affiliateOwnerId = null;
     let commissionPct = 10;
 
+    let isStandardPromo = false;
+    let promoCodeId = "";
+    let standardCodeData: any = null;
+
     if (promoCode) {
-      const { data: profile } = await supabaseAdmin.from("profiles").select("used_first_discount, referred_by").eq("id", userId).single();
-      if (profile && !profile.used_first_discount && !profile.referred_by) {
-        const { data: codeData } = await supabaseAdmin.from("affiliate_codes").select("*").eq("code", promoCode.toUpperCase()).single();
-        if (codeData && codeData.owner_id !== userId) {
-          discountPct = codeData.discount_pct || 10;
-          commissionPct = codeData.commission_pct || 10;
-          appliedPromoCode = codeData.code;
-          affiliateOwnerId = codeData.owner_id;
+      const codeUpper = promoCode.toUpperCase();
+      
+      // 1. Check if it's a standard promo code
+      const { data: standardCode } = await supabaseAdmin.from("promo_codes").select("*").eq("code", codeUpper).single();
+      
+      if (standardCode) {
+        const isExpired = standardCode.expires_at && new Date(standardCode.expires_at).getTime() < Date.now();
+        const isDepleted = standardCode.max_uses && standardCode.current_uses >= standardCode.max_uses;
+        
+        if (!isExpired && !isDepleted) {
+          const { data: profile } = await supabaseAdmin.from("profiles").select("total_spent").eq("id", userId).single();
+          const totalSpent = profile ? Number(profile.total_spent) : 0;
+          
+          if (totalSpent >= Number(standardCode.min_spent)) {
+            const { data: usage } = await supabaseAdmin.from("promo_code_usages").select("*").eq("user_id", userId).eq("promo_code_id", standardCode.id).single();
+            if (!usage) {
+              discountPct = standardCode.discount_pct;
+              appliedPromoCode = codeUpper;
+              isStandardPromo = true;
+              promoCodeId = standardCode.id;
+              standardCodeData = standardCode;
+            }
+          }
+        }
+      }
+
+      // 2. If not a standard promo, check if it's an affiliate code
+      if (!appliedPromoCode) {
+        const { data: profile } = await supabaseAdmin.from("profiles").select("used_first_discount, referred_by").eq("id", userId).single();
+        if (profile && !profile.used_first_discount && !profile.referred_by) {
+          const { data: codeData } = await supabaseAdmin.from("affiliate_codes").select("*").eq("code", codeUpper).single();
+          if (codeData && codeData.owner_id !== userId) {
+            discountPct = codeData.discount_pct || 10;
+            commissionPct = codeData.commission_pct || 10;
+            appliedPromoCode = codeData.code;
+            affiliateOwnerId = codeData.owner_id;
+          }
         }
       }
     }
@@ -135,7 +168,9 @@ export async function POST(req: Request) {
           productId: product.id,
           quantity: quantity.toString(),
           totalPrice: totalPrice.toString(),
-          appliedPromoCode
+          appliedPromoCode,
+          isStandardPromo: isStandardPromo ? "true" : "false",
+          promoCodeId: promoCodeId || ""
         },
         success_url: `${req.headers.get("origin")}/dashboard?order=success`,
         cancel_url: `${req.headers.get("origin")}/product/${product.id}`,
@@ -150,6 +185,7 @@ export async function POST(req: Request) {
     try {
       const { buyNfaAccounts } = await import("@/lib/nfa");
       const nfaResult = await buyNfaAccounts(
+        product.endpoint,
         product.type,
         quantity,
         `balance-${userId}-${Date.now()}`
@@ -214,6 +250,12 @@ export async function POST(req: Request) {
           }
         }
       }
+    }
+
+    // Apply promo code usage if standard
+    if (isStandardPromo && promoCodeId && standardCodeData) {
+      await supabaseAdmin.from("promo_codes").update({ current_uses: standardCodeData.current_uses + 1 }).eq("id", promoCodeId);
+      await supabaseAdmin.from("promo_code_usages").insert({ user_id: userId, promo_code_id: promoCodeId });
     }
 
     const { data: orderData, error: dbError } = await supabase

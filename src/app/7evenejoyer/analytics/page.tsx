@@ -19,6 +19,7 @@ import RecentActivityList from "@/components/admin/RecentActivityList";
 import { DateRangePicker } from "@/components/admin/DateRangePicker";
 import { DateRange } from "react-day-picker";
 import { format } from "date-fns";
+import { useCurrency } from "@/lib/CurrencyContext";
 
 const renderCustomizedLabel = ({ cx, cy, midAngle = 0, innerRadius, outerRadius, percent = 0 }: any) => {
   const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
@@ -52,6 +53,7 @@ export default function AnalyticsDashboard() {
   const [exportSuccess, setExportSuccess] = useState(false);
   const [selectedOrders, setSelectedOrders] = useState<any[] | null>(null);
   const [selectedDateLabel, setSelectedDateLabel] = useState<string>("");
+  const { convert, currency, isSuffix } = useCurrency();
 
   useEffect(() => {
     const fetchAnalytics = async () => {
@@ -115,7 +117,7 @@ export default function AnalyticsDashboard() {
     let prefix = '';
 
     if (activeTab === 'sales') {
-      headers = ['Date', 'Orders', 'Revenue (€)'];
+      headers = ['Date', 'Orders', `Revenue (${currency.toUpperCase()})`];
       rows = data.advanced.revenueChart.map((row: any) => [row.date, row.orders, row.revenue]);
       prefix = 'sales';
     } else if (activeTab === 'traffic') {
@@ -184,7 +186,7 @@ export default function AnalyticsDashboard() {
           <div className="flex flex-col gap-2">
             <div className="flex justify-between items-center gap-6">
               <span className="text-gray-400 text-sm">Revenue:</span>
-              <span className="text-emerald-400 font-bold text-sm">€{data.revenue}</span>
+              <span className="text-emerald-400 font-bold text-sm">{convert(data.revenue).formatted}</span>
             </div>
             <div className="flex justify-between items-center gap-6">
               <span className="text-gray-400 text-sm">Orders:</span>
@@ -300,8 +302,9 @@ export default function AnalyticsDashboard() {
              ========================================= */}
           {activeTab === 'sales' && (
             <div className="space-y-6 animate-in fade-in zoom-in-95 duration-300">
-              {/* Sales KPIs */}
-              <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+              
+              {/* Top KPI Cards from Component */}
+              <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
                 <EcommerceKPIs data={data} hideTrends={timeRanges['sales'] === 'all'} />
               </div>
               
@@ -337,8 +340,12 @@ export default function AnalyticsDashboard() {
                         </defs>
                         <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
                         <XAxis dataKey="date" stroke="#71717a" fontSize={11} tickMargin={15} tickLine={false} axisLine={false} tickFormatter={(val) => { if (typeof val === 'string' && val.includes(' ')) return val; const d = new Date(val); return `${d.getDate()}/${d.getMonth()+1}`; }} />
-                        <YAxis stroke="#71717a" fontSize={11} axisLine={false} tickLine={false} tickFormatter={(val) => `€${val}`} />
-                        <RechartsTooltip wrapperStyle={{ pointerEvents: 'none' }} cursor={{ stroke: 'rgba(255,255,255,0.1)', strokeWidth: 1, strokeDasharray: '3 3' }} content={<RevenueTooltip />} />
+                        <YAxis stroke="#71717a" fontSize={11} axisLine={false} tickLine={false} tickFormatter={(val) => convert(val).formatted} />
+                        <RechartsTooltip 
+                          contentStyle={{ backgroundColor: '#000', borderColor: '#333', borderRadius: '8px', color: '#fff' }}
+                          itemStyle={{ color: '#10b981', fontWeight: 'bold' }}
+                          formatter={(value: number) => [convert(value).formatted, 'Revenue']}
+                        />
                         <Area 
                           type="monotone" 
                           dataKey="revenue" 
@@ -387,7 +394,7 @@ export default function AnalyticsDashboard() {
                         <div key={idx} className="snap-start bg-black/50 border border-white/5 rounded-xl p-4 flex flex-col gap-3 hover:border-emerald-500/30 transition-colors">
                           <div className="flex justify-between items-start">
                             <div>
-                              <span className="text-2xl font-black text-emerald-400 block leading-none">€{ro.price}</span>
+                              <span className="text-2xl font-black text-emerald-400 block leading-none">{convert(ro.price).formatted}</span>
                               <span className="text-xs text-gray-500 font-mono mt-1 block">{ro.time}</span>
                             </div>
                             <div className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-1 rounded text-[10px] font-bold tracking-widest uppercase">
@@ -464,7 +471,7 @@ export default function AnalyticsDashboard() {
                             <tr key={i} className="hover:bg-white/[0.02] transition-colors">
                               <td className="py-3 font-medium text-sm text-white">{product.name}</td>
                               <td className="py-3 text-right font-bold text-gray-300">{product.units}</td>
-                              <td className="py-3 text-right font-bold text-emerald-400">€{product.revenue.toFixed(2)}</td>
+                              <td className="py-3 text-right font-bold text-emerald-400">{convert(product.revenue).formatted}</td>
                             </tr>
                           ))
                         ) : (

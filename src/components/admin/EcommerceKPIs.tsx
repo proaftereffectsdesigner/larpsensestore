@@ -1,4 +1,5 @@
-import { Euro, TrendingUp, ShoppingCart, ArrowUpRight, ArrowDownRight } from "lucide-react";
+import { Euro, TrendingUp, ShoppingCart, ArrowUpRight, ArrowDownRight, Activity } from "lucide-react";
+import { useCurrency } from "@/lib/CurrencyContext";
 
 const TrendIndicator = ({ trend, inverse = false }: { trend: string, inverse?: boolean }) => {
   const isPositive = trend.startsWith('+');
@@ -12,6 +13,8 @@ const TrendIndicator = ({ trend, inverse = false }: { trend: string, inverse?: b
 };
 
 export default function EcommerceKPIs({ data, hideTrends = false }: { data: any, hideTrends?: boolean }) {
+  const { convert } = useCurrency();
+  
   if (!data) return null;
 
   return (
@@ -24,8 +27,20 @@ export default function EcommerceKPIs({ data, hideTrends = false }: { data: any,
           </h3>
         </div>
         <div className="flex items-end justify-between">
-          <p className="text-3xl font-black text-white">€{data.summary.totalRevenue.toFixed(2)}</p>
+          <p className="text-3xl font-black text-white">{convert(data.summary.totalRevenue || 0).formatted}</p>
           {!hideTrends && <TrendIndicator trend="+14.2%" />}
+        </div>
+      </div>
+
+      <div className="bg-[#111] border border-white/10 rounded-2xl p-5 relative overflow-hidden group hover:border-accent/30 transition-colors">
+        <div className="absolute top-0 right-0 w-24 h-24 bg-accent/10 rounded-bl-full -mr-4 -mt-4 blur-xl transition-all group-hover:bg-accent/20"></div>
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-gray-400 text-xs font-bold uppercase tracking-widest flex items-center gap-2">
+            <Activity className="w-4 h-4 text-accent" /> Total Profit
+          </h3>
+        </div>
+        <div className="flex items-end justify-between">
+          <p className="text-3xl font-black text-white">{convert(data.summary.totalProfit || 0).formatted}</p>
         </div>
       </div>
 
@@ -63,7 +78,7 @@ export default function EcommerceKPIs({ data, hideTrends = false }: { data: any,
           </h3>
         </div>
         <div className="flex items-end justify-between">
-          <p className="text-3xl font-black text-white">€{data?.summary?.averageOrderValue || '0.00'}</p>
+          <p className="text-3xl font-black text-white">{convert(data.summary.averageOrderValue || 0).formatted}</p>
           {!hideTrends && <TrendIndicator trend={'+0%'} />}
         </div>
       </div>

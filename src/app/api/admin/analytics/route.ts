@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/auth';
+import { products } from '@/lib/products';
 
 export const dynamic = 'force-dynamic';
 
@@ -49,7 +50,7 @@ export async function GET(request: Request) {
     const endISO = endDate.toISOString();
 
     // 1. Fetch Orders (Revenue, Top Products, Conversion)
-    const { data: ordersData, error: ordersError } = await supabaseAdmin.from('orders').select('user_id, created_at, total_price, product_id, status').gte('created_at', startISO).lte('created_at', endISO).limit(100000);
+    const { data: ordersData, error: ordersError } = await supabaseAdmin.from('orders').select('user_id, created_at, total_price, product_id, status, quantity').gte('created_at', startISO).lte('created_at', endISO).limit(100000);
     if (ordersError) return NextResponse.json({ success: false, error: `Orders Error: ${ordersError.message}` });
     
     // 2. Fetch Traffic (Page Views, Unique Users, Devices, Top Pages, Traffic Chart)
@@ -96,7 +97,18 @@ export async function GET(request: Request) {
 
     // Summary
     const completedOrders = orders.filter(o => o.status === 'completed');
-    const totalRevenue = completedOrders.reduce((sum, o) => sum + Number(o.total_price), 0);
+    
+    let totalRevenue = 0;
+    let totalCost = 0;
+    completedOrders.forEach(o => {
+      totalRevenue += Number(o.total_price);
+      const product = products.find(p => p.id === o.product_id);
+      if (product && product.cost) {
+        totalCost += (product.cost * Number(o.quantity || 1));
+      }
+    });
+    
+    const totalProfit = totalRevenue - totalCost;
     const totalOrders = completedOrders.length;
     const averageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
 
@@ -308,6 +320,7 @@ export async function GET(request: Request) {
       success: true,
       summary: {
         totalRevenue: parseFloat(totalRevenue.toFixed(2)),
+        totalProfit: parseFloat(totalProfit.toFixed(2)),
         totalOrders,
         averageOrderValue: parseFloat(averageOrderValue.toFixed(2)),
         cartAbandonmentRate: parseFloat(abandonmentRate.toFixed(1))

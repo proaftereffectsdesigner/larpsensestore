@@ -68,10 +68,43 @@ export async function POST(req: Request) {
     let discountPct = 0;
     let appliedPromoCode = "";
     let affiliateOwnerId = null;
+    let isStandardPromo = false;
+    let promoCodeId = "";
 
     if (promoCode) {
-      if (profile && !profile.used_first_discount && !profile.referred_by) {
-        const { data: codeData } = await supabaseAdmin.from("affiliate_codes").select("*").eq("code", promoCode.toUpperCase()).single();
+      const codeUpper = promoCode.toUpperCase();
+      
+      // 1. Check if it's a standard promo code
+      const { data: standardCode } = await supabaseAdmin.from("promo_codes").select("*").eq("code", codeUpper).single();
+      
+      if (standardCode) {
+        // Validate standard promo code
+        const now = new Date();
+        const expiresAt = standardCode.expires_at ? new Date(standardCode.expires_at) : null;
+        const isNotExpired = !expiresAt || now < expiresAt;
+        const hasUsesLeft = !standardCode.max_uses || standardCode.current_uses < standardCode.max_uses;
+        
+        let meetsMinSpent = true;
+        if (standardCode.min_spent > 0) {
+          const { data: userOrders } = await supabaseAdmin.from("orders").select("total_price").eq("user_id", userId).eq("status", "completed");
+          const totalSpent = userOrders?.reduce((acc, order) => acc + Number(order.total_price), 0) || 0;
+          meetsMinSpent = totalSpent >= standardCode.min_spent;
+        }
+        
+        // Check if user already used this standard code
+        const { data: usage } = await supabaseAdmin.from("promo_code_usages").select("*").eq("user_id", userId).eq("promo_code_id", standardCode.id).single();
+        
+        if (isNotExpired && hasUsesLeft && meetsMinSpent && !usage) {
+          discountPct = standardCode.discount_pct;
+          appliedPromoCode = codeUpper;
+          isStandardPromo = true;
+          promoCodeId = standardCode.id;
+        }
+      }
+
+      // 2. If not standard, check if affiliate code
+      if (!appliedPromoCode && profile && !profile.used_first_discount && !profile.referred_by) {
+        const { data: codeData } = await supabaseAdmin.from("affiliate_codes").select("*").eq("code", codeUpper).single();
         if (codeData && codeData.owner_id !== userId) {
           discountPct = codeData.discount_pct || 10;
           appliedPromoCode = codeData.code;
@@ -108,8 +141,10 @@ export async function POST(req: Request) {
     if (type === "topup" && finalAmountAdded !== amount) {
       accountsData += ` | add:${finalAmountAdded}`;
     }
-    if (appliedPromoCode && affiliateOwnerId) {
-      accountsData += ` | promo:${appliedPromoCode} | owner:${affiliateOwnerId}`;
+    if (appliedPromoCode) {
+      accountsData += ` | promo:${appliedPromoCode}`;
+      if (affiliateOwnerId) accountsData += ` | owner:${affiliateOwnerId}`;
+      if (isStandardPromo) accountsData += ` | standard:true | promo_id:${promoCodeId}`;
     }
 
     const { data: pendingOrder, error: insertError } = await supabaseAdmin

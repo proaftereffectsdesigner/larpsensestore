@@ -6,7 +6,6 @@ import { ShoppingCart, LogOut, LayoutGrid, Plus, User as UserIcon, Lock, Shield,
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase-client";
 import { User } from "@supabase/supabase-js";
-import ToolDownloadButton from "./ToolDownloadButton";
 import CurrencySelector from "./CurrencySelector";
 import { useCurrency } from "@/lib/CurrencyContext";
 
@@ -243,22 +242,19 @@ export default function Navbar() {
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }
             }}
-            className="text-sm font-medium text-gray-400 hover:text-white transition-colors"
+            className={`text-sm font-medium transition-colors ${pathname === '/' ? 'text-white' : 'text-gray-400 hover:text-white'}`}
           >
             Home
           </Link>
-          <Link href="/support" className="text-sm font-medium text-gray-400 hover:text-white transition-colors">Support</Link>
-          <Link href="/faq" className="text-sm font-medium text-gray-400 hover:text-white transition-colors">FAQ</Link>
-
+          <Link href="/shop" className={`text-sm font-medium transition-colors ${pathname === '/shop' ? 'text-white' : 'text-gray-400 hover:text-white'}`}>Shop</Link>
+          <Link href="/support" className={`text-sm font-medium transition-colors ${pathname === '/support' ? 'text-white' : 'text-gray-400 hover:text-white'}`}>Support</Link>
+          <Link href="/faq" className={`text-sm font-medium transition-colors ${pathname === '/faq' ? 'text-white' : 'text-gray-400 hover:text-white'}`}>FAQ</Link>
+          <Link href="/tool" className={`text-sm font-medium transition-colors ${pathname === '/tool' ? 'text-white' : 'text-gray-400 hover:text-white'}`}>Tool</Link>
         </div>
 
         <div className="flex items-center gap-3 sm:gap-4">
+          <CurrencySelector />
           
-          {/* Notifications Bell used to be here */}
-
-          {/* GitHub Download Tool Button */}
-          <ToolDownloadButton />
-
           {/* Balance Pill or Banned Pill */}
           {user && (
             isBanned ? (
@@ -282,6 +278,83 @@ export default function Navbar() {
               </div>
             )
           )}
+
+          {/* Notifications Bell */}
+          {user && (
+            <div ref={notificationsRef} className="relative">
+              <button 
+                onClick={() => setShowNotifications(!showNotifications)}
+                className="relative flex items-center justify-center w-10 h-10 rounded-full bg-[#141414]/80 hover:bg-[#1f1f1f]/80 border border-white/10 transition-colors shadow-lg group"
+              >
+                <Bell className={`w-5 h-5 ${unreadTickets.length > 0 ? 'text-white' : 'text-gray-400 group-hover:text-white'} transition-colors`} />
+                {unreadTickets.length > 0 && (
+                  <>
+                    <span className="absolute top-0 right-0 w-4 h-4 bg-red-500 border-2 border-[#0a0a0a] rounded-full flex items-center justify-center text-[9px] font-bold text-white leading-none z-10">
+                      {unreadTickets.length}
+                    </span>
+                    <span className="absolute top-0 right-0 w-4 h-4 bg-red-500 rounded-full animate-ping opacity-75"></span>
+                  </>
+                )}
+              </button>
+
+              {/* Notifications Dropdown */}
+              {showNotifications && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setShowNotifications(false)}></div>
+                  <div className="absolute top-full right-0 mt-3 w-72 bg-[#141414] border border-white/10 rounded-2xl p-2 shadow-2xl animate-in fade-in zoom-in-95 origin-top-right z-50">
+                    <div className="flex items-center justify-between px-3 py-2 border-b border-white/5 mb-2">
+                      <span className="text-sm font-bold text-white">Notifications</span>
+                      {unreadTickets.length > 0 && (
+                        <button onClick={clearAllNotifications} className="text-xs font-medium text-gray-400 hover:text-white transition-colors">
+                          Clear all
+                        </button>
+                      )}
+                    </div>
+                    
+                    <div className="max-h-64 overflow-y-auto space-y-1 pr-1 custom-scrollbar">
+                      {unreadTickets.length === 0 ? (
+                        <div className="py-6 text-center">
+                          <Bell className="w-8 h-8 text-white/10 mx-auto mb-2" />
+                          <p className="text-sm text-gray-500 font-medium">No new notifications</p>
+                        </div>
+                      ) : (
+                        unreadTickets.map(ticket => (
+                          <div key={ticket.id} className="relative group">
+                            <Link
+                              href={ticket.issue_type === 'affiliate_application' ? '/dashboard?tab=affiliate' : '/support'}
+                              onClick={() => {
+                                if (ticket.issue_type !== 'affiliate_application') {
+                                  localStorage.setItem('larpsense_ticket_session', ticket.ticket_number.toString());
+                                }
+                                setShowNotifications(false);
+                                clearNotification(ticket.id, { preventDefault: () => {}, stopPropagation: () => {} } as any);
+                              }}
+                              className="block p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 transition-colors pr-10"
+                            >
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="w-2 h-2 rounded-full bg-red-500"></span>
+                                <span className="text-xs font-bold text-gray-300">New Reply in Ticket</span>
+                              </div>
+                              <p className="text-sm text-white font-medium truncate">Ticket #{ticket.ticket_number}</p>
+                            </Link>
+                            <button
+                              onClick={(e) => clearNotification(ticket.id, e)}
+                              className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:text-white hover:bg-white/10 transition-all opacity-0 group-hover:opacity-100"
+                              title="Dismiss"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+
+
 
           {user ? (
             <div ref={dropdownRef} className="relative">
@@ -417,83 +490,6 @@ export default function Navbar() {
               Sign In
             </button>
           )}
-
-          {/* Notifications Bell moved to the right of User Pill */}
-          {user && (
-            <div ref={notificationsRef} className="relative">
-              <button 
-                onClick={() => setShowNotifications(!showNotifications)}
-                className="relative flex items-center justify-center w-10 h-10 rounded-full bg-[#141414]/80 hover:bg-[#1f1f1f]/80 border border-white/10 transition-colors shadow-lg group"
-              >
-                <Bell className={`w-5 h-5 ${unreadTickets.length > 0 ? 'text-white' : 'text-gray-400 group-hover:text-white'} transition-colors`} />
-                {unreadTickets.length > 0 && (
-                  <>
-                    <span className="absolute top-0 right-0 w-4 h-4 bg-red-500 border-2 border-[#0a0a0a] rounded-full flex items-center justify-center text-[9px] font-bold text-white leading-none z-10">
-                      {unreadTickets.length}
-                    </span>
-                    <span className="absolute top-0 right-0 w-4 h-4 bg-red-500 rounded-full animate-ping opacity-75"></span>
-                  </>
-                )}
-              </button>
-
-              {/* Notifications Dropdown */}
-              {showNotifications && (
-                <>
-                  <div className="fixed inset-0 z-40" onClick={() => setShowNotifications(false)}></div>
-                  <div className="absolute top-full right-0 mt-3 w-72 bg-[#141414] border border-white/10 rounded-2xl p-2 shadow-2xl animate-in fade-in zoom-in-95 origin-top-right z-50">
-                    <div className="flex items-center justify-between px-3 py-2 border-b border-white/5 mb-2">
-                      <span className="text-sm font-bold text-white">Notifications</span>
-                      {unreadTickets.length > 0 && (
-                        <button onClick={clearAllNotifications} className="text-xs font-medium text-gray-400 hover:text-white transition-colors">
-                          Clear all
-                        </button>
-                      )}
-                    </div>
-                    
-                    <div className="max-h-64 overflow-y-auto space-y-1 pr-1 custom-scrollbar">
-                      {unreadTickets.length === 0 ? (
-                        <div className="py-6 text-center">
-                          <Bell className="w-8 h-8 text-white/10 mx-auto mb-2" />
-                          <p className="text-sm text-gray-500 font-medium">No new notifications</p>
-                        </div>
-                      ) : (
-                        unreadTickets.map(ticket => (
-                          <div key={ticket.id} className="relative group">
-                            <Link
-                              href={ticket.issue_type === 'affiliate_application' ? '/dashboard?tab=affiliate' : '/support'}
-                              onClick={() => {
-                                if (ticket.issue_type !== 'affiliate_application') {
-                                  localStorage.setItem('larpsense_ticket_session', ticket.ticket_number.toString());
-                                }
-                                setShowNotifications(false);
-                                clearNotification(ticket.id, { preventDefault: () => {}, stopPropagation: () => {} } as any);
-                              }}
-                              className="block p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 transition-colors pr-10"
-                            >
-                              <div className="flex items-center gap-2 mb-1">
-                                <span className="w-2 h-2 rounded-full bg-red-500"></span>
-                                <span className="text-xs font-bold text-gray-300">New Reply in Ticket</span>
-                              </div>
-                              <p className="text-sm text-white font-medium truncate">Ticket #{ticket.ticket_number}</p>
-                            </Link>
-                            <button
-                              onClick={(e) => clearNotification(ticket.id, e)}
-                              className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:text-white hover:bg-white/10 transition-all opacity-0 group-hover:opacity-100"
-                              title="Dismiss"
-                            >
-                              <X className="w-4 h-4" />
-                            </button>
-                          </div>
-                        ))
-                      )}
-                    </div>
-                  </div>
-                </>
-              )}
-            </div>
-          )}
-          
-          <CurrencySelector />
         </div>
       </div>
 

@@ -13,7 +13,7 @@ export default function ProductCards() {
   const [stockData, setStockData] = useState<any>(null);
   const [isVisible, setIsVisible] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
-  const { convert, currency } = useCurrency();
+  const { convert } = useCurrency();
 
   useEffect(() => {
     // Intersection Observer to trigger animation when scrolled into view
@@ -38,8 +38,8 @@ export default function ProductCards() {
     fetch("/api/stock")
       .then((res) => res.json())
       .then((data) => {
-        if (data.ok && data.stock && data.stock.cs2) {
-          setStockData(data.stock.cs2);
+        if (data.ok && data.stock) {
+          setStockData(data.stock);
         } else {
           setStockData({});
         }
@@ -50,40 +50,48 @@ export default function ProductCards() {
       });
   }, []);
 
-  const getDescription = (id: string) => {
-    switch(id) {
-      case "prime": return "Standard Prime NFA accounts for matchmaking. No bans, instantly delivered.";
-      case "premier": return "Standard NFA accounts ready for Premier mode. Blank slate for your journey.";
-      case "premier-4-medals": return "Premier NFA accounts loaded with 4+ service medals. Show off your veteran status.";
-      case "premier-10-medals": return "Premier NFA accounts loaded with 10+ service medals. Show off your veteran status.";
-      case "premier-10k": return "Jump straight into high Elo with 10.000 CS Rating.";
-      case "premier-15k": return "Jump straight into high Elo with 15.000 CS Rating.";
-      case "premier-20k": return "Jump straight into high Elo with 20.000 CS Rating.";
-      case "premier-rare": return "The ultimate flex. NFA Accounts loaded with a knife or gloves.";
-      default: return "Premium NFA account instantly delivered.";
+  const displayCategories = [
+    { id: "cs2", name: "Counter Strike 2 Accounts", image: "/premier-bg.jpg", desc: "Premium CS2 NFA accounts with varying ratings and medals." },
+    { id: "rust", name: "Rust Accounts", image: "/premier-bg.jpg", desc: "Rust NFA accounts with different playtime hours. Build your base immediately." },
+    { id: "extra", name: "Extra Accounts", image: "/premier-bg.jpg", desc: "Additional games: Rainbow Six Siege, DayZ, Battlefield 6." },
+  ];
+
+  const getPriceRange = (categoryId: string) => {
+    const catProducts = products.filter(p => p.category === categoryId);
+    if (catProducts.length === 0) return { min: 0, max: 0 };
+    const prices = catProducts.map(p => p.price);
+    return { min: Math.min(...prices), max: Math.max(...prices) };
+  };
+
+  const isCategoryInStock = (categoryId: string) => {
+    if (!stockData) return null;
+    const catProducts = products.filter(p => p.category === categoryId);
+    for (const product of catProducts) {
+      const stock = stockData[product.endpoint]?.[product.type]?.available || 0;
+      if (stock > 0) return true;
     }
+    return false;
   };
 
   return (
     <div className="w-full max-w-7xl mx-auto p-6 relative z-10" id="products" ref={containerRef}>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-full mx-auto">
-        {products.map((product, index) => {
-          const totalStock = stockData ? (stockData[product.type]?.available || 0) : 0;
-          const img = product.id === "prime" ? "/prime-bg.png" : "/premier-bg.jpg";
-          const desc = getDescription(product.id);
+        {displayCategories.map((category, index) => {
+          const inStock = isCategoryInStock(category.id);
+          const { min, max } = getPriceRange(category.id);
 
           return (
             <Link 
-              key={product.id} 
-              href={`/product/${product.id}`}
+              key={category.id} 
+              href={`/shop?category=${category.id}`}
               className={`transition-all duration-1000 ease-out block ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-20'} ${index % 3 === 1 ? 'delay-200' : index % 3 === 2 ? 'delay-300' : 'delay-100'}`}
             >
               <div className="group bg-[#1a1a1a] border border-white/5 rounded-[2rem] overflow-hidden shadow-2xl transition-all hover:border-white/10 hover:-translate-y-1 flex flex-col h-full cursor-pointer">
                 {/* Obrazek (Graphic Placeholder) */}
                 <div className="w-full aspect-square relative flex flex-col items-center justify-center overflow-hidden">
                   <Image 
-                    src={img} 
-                    alt={product.name} 
+                    src={category.image} 
+                    alt={category.name} 
                     fill 
                     className="object-cover transition-transform duration-700 scale-[1.15] group-hover:scale-[1.20]" 
                   />
@@ -92,16 +100,16 @@ export default function ProductCards() {
                   {/* Tagi na górze */}
                   <div className="absolute top-6 left-6 z-20">
                     <span className="inline-flex items-center bg-black/40 text-white px-3 py-1 rounded-full text-[10px] font-bold tracking-widest backdrop-blur-md border border-white/10 uppercase">
-                      Counter Strike 2
+                      Category
                     </span>
                   </div>
 
                   <div className="absolute top-6 right-6 z-20">
-                    {stockData === null ? (
+                    {inStock === null ? (
                       <span className="inline-flex items-center gap-1.5 bg-black/40 text-gray-400 px-3 py-1 rounded-full text-[11px] font-medium backdrop-blur-md border border-white/10 animate-pulse">
                         Checking...
                       </span>
-                    ) : totalStock > 0 ? (
+                    ) : inStock ? (
                       <span className="inline-flex items-center gap-1.5 bg-green-500/10 text-green-400 px-3 py-1 rounded-full text-[11px] font-medium backdrop-blur-md border border-green-500/20">
                         <CheckCircle2 className="w-3 h-3" />
                         In Stock
@@ -116,16 +124,16 @@ export default function ProductCards() {
 
                 {/* Dolna sekcja z opisem */}
                 <div className="px-6 pb-6 pt-2 md:px-8 md:pb-8 flex flex-col flex-1 bg-[#1a1a1a] relative z-20">
-                  <h2 className="text-2xl font-bold text-white group-hover:text-white transition-colors">{product.name}</h2>
+                  <h2 className="text-2xl font-bold text-white group-hover:text-white transition-colors">{category.name}</h2>
                   <p className="text-sm text-gray-400 mt-2 mb-6 line-clamp-2">
-                    {desc}
+                    {category.desc}
                   </p>
                   
                   <div className="mt-8 flex items-center justify-between border-t border-white/5 pt-6">
                     <div>
-                      <div className="text-[11px] text-gray-500 mb-1">Price</div>
+                      <div className="text-[11px] text-gray-500 mb-1">Price Range</div>
                       <div className="font-mono text-xl font-bold text-white tracking-tight">
-                        {convert(product.price).formatted}
+                        {min === max ? convert(min).formatted : `${convert(min).formatted} - ${convert(max).formatted}`}
                       </div>
                     </div>
                     <div className="bg-white/5 p-3.5 rounded-full group-hover:bg-white/10 transition-colors text-white border border-white/5 group-hover:border-white/10">

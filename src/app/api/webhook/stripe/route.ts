@@ -82,6 +82,11 @@ export async function POST(req: Request) {
       const quantity = Number(session.metadata?.quantity || 1);
       const totalPrice = Number(session.metadata?.totalPrice || 0);
 
+      const { products } = await import("@/lib/products");
+      const product = products.find(p => p.id === productId);
+      const nfaEndpoint = product ? product.endpoint : "cs2";
+      const nfaType = product ? product.type : productId!;
+
       console.log(`Fulfilling product checkout for user ${userId}, product ${productId}, quantity ${quantity}`);
 
       // Use Stripe session ID as idempotency key — safe to retry
@@ -91,7 +96,8 @@ export async function POST(req: Request) {
 
       try {
         const nfaResult = await buyNfaAccounts(
-          productId!, // NFA type matches our product type exactly
+          nfaEndpoint,
+          nfaType,
           quantity,
           `stripe-${session.id}` // unique per Stripe session → no double charges
         );
@@ -119,7 +125,18 @@ export async function POST(req: Request) {
         } else {
           // Process affiliate commission
           const appliedPromoCode = session.metadata?.appliedPromoCode;
-          await processAffiliateCommission(supabaseAdmin, userId, totalPrice, appliedPromoCode);
+          const isStandardPromo = session.metadata?.isStandardPromo === "true";
+          const promoCodeId = session.metadata?.promoCodeId;
+
+          if (isStandardPromo && promoCodeId) {
+            const { data: codeData } = await supabaseAdmin.from("promo_codes").select("current_uses").eq("id", promoCodeId).single();
+            if (codeData) {
+              await supabaseAdmin.from("promo_codes").update({ current_uses: codeData.current_uses + 1 }).eq("id", promoCodeId);
+              await supabaseAdmin.from("promo_code_usages").insert({ user_id: userId, promo_code_id: promoCodeId });
+            }
+          } else {
+            await processAffiliateCommission(supabaseAdmin, userId, totalPrice, appliedPromoCode);
+          }
 
           // Send discord notification
           await sendOrderNotification(supabaseAdmin, userId, productId as string, quantity, totalPrice, "Stripe", session.id);

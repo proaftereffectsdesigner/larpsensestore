@@ -25,7 +25,7 @@ export default function FAQ() {
   const faqs = [
     {
       question: "What do we sell?",
-      answer: "We sell high-quality, hand-verified CS2 NFA accounts perfect for immediate matchmaking. Our automated system provides seamless and secure access through isolated environments."
+      answer: "We sell a variety of high-quality, hand-verified NFA accounts perfect for immediate gameplay. Our automated system provides seamless and secure access through isolated environments."
     },
     {
       question: "How long does delivery take?",

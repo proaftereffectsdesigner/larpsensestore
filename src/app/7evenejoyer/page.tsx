@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase-client";
+import { useCurrency } from "@/lib/CurrencyContext";
 import { Users, CreditCard, Activity, Euro, Plus, Minus, Search, Shield, Copy, CheckCircle2, UserX, Trash2, Calendar, Monitor, Link as LinkIcon, ExternalLink, Settings, MessageSquare } from "lucide-react";
 
 export default function AdminDashboard() {
@@ -18,6 +19,8 @@ export default function AdminDashboard() {
   const [sessionToken, setSessionToken] = useState<string | null>(null);
   const [sortField, setSortField] = useState<'orders' | 'spent' | 'balance' | null>(null);
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc' | null>(null);
+  
+  const { convert, isSuffix, currency } = useCurrency();
 
   // Modal for updating balance
   const [selectedUser, setSelectedUser] = useState<any>(null);
@@ -395,11 +398,25 @@ export default function AdminDashboard() {
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-[#111] border border-white/10 rounded-2xl p-6 relative overflow-hidden">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
+        <div className="bg-[#141414] border border-white/5 rounded-2xl p-6 relative overflow-hidden group hover:border-white/10 transition-colors md:col-span-1">
           <div className="absolute top-0 right-0 w-24 h-24 bg-accent/10 rounded-bl-full -mr-4 -mt-4 blur-xl"></div>
-          <h3 className="text-gray-400 text-sm font-bold uppercase tracking-widest mb-2 flex items-center gap-2"><Euro className="w-4 h-4 text-accent" /> Total Revenue</h3>
-          <p className="text-4xl font-black text-white">€{stats?.totalEarned?.toFixed(2) || '0.00'}</p>
+          <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity"><CreditCard className="w-24 h-24" /></div>
+          <div className="flex items-center gap-3 text-emerald-400 mb-4">
+            <CreditCard className="w-5 h-5" />
+            <h3 className="text-xs font-bold tracking-widest uppercase">Total Revenue</h3>
+          </div>
+          <p className="text-4xl font-black text-white">{convert(stats?.totalEarned || 0).formatted}</p>
+        </div>
+        
+        <div className="bg-[#141414] border border-white/5 rounded-2xl p-6 relative overflow-hidden group hover:border-white/10 transition-colors md:col-span-1">
+          <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/10 rounded-bl-full -mr-4 -mt-4 blur-xl"></div>
+          <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity"><Activity className="w-24 h-24" /></div>
+          <div className="flex items-center gap-3 text-accent mb-4">
+            <Activity className="w-5 h-5" />
+            <h3 className="text-xs font-bold tracking-widest uppercase">Total Profit</h3>
+          </div>
+          <p className="text-4xl font-black text-white">{convert(stats?.totalProfit || 0).formatted}</p>
         </div>
         <div className="bg-[#111] border border-white/10 rounded-2xl p-6 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/10 rounded-bl-full -mr-4 -mt-4 blur-xl"></div>
@@ -474,8 +491,8 @@ export default function AdminDashboard() {
                   </td>
                   <td className="p-4 text-sm text-gray-400">{user.discord_username || '-'}</td>
                   <td className="p-4 text-sm font-bold text-gray-300">{user.total_orders}</td>
-                  <td className="p-4 text-sm font-bold text-accent">€{(user.total_spent || 0).toFixed(2)}</td>
-                  <td className="p-4 text-sm font-mono text-emerald-400 font-bold">€{(Number(user.balance) || 0).toFixed(2)}</td>
+                  <td className="p-4 text-sm font-bold text-accent">{convert(user.total_spent || 0).formatted}</td>
+                  <td className="p-4 text-sm font-mono text-emerald-400 font-bold">{convert(Number(user.balance) || 0).formatted}</td>
                   <td className="p-4 text-right">
                     <div className="flex items-center justify-end gap-2">
                       <a 
@@ -650,9 +667,9 @@ export default function AdminDashboard() {
               <div className="bg-emerald-500/5 rounded-xl p-4 border border-emerald-500/10">
                 <h4 className="text-sm font-bold text-emerald-400 mb-4 flex items-center gap-2"><CreditCard className="w-4 h-4" /> Wallet Management</h4>
                 <div className="flex items-center gap-4 mb-4">
-                  <div className="flex-1">
-                    <p className="text-xs text-emerald-400/70 mb-1 font-bold uppercase tracking-wider">Current Balance</p>
-                    <p className="text-2xl font-mono font-bold text-white">€{(Number(selectedUser.balance) || 0).toFixed(2)}</p>
+                  <div className="bg-black/30 border border-white/10 rounded-xl p-4 flex flex-col items-center justify-center w-full">
+                    <p className="text-xs text-gray-500 font-bold uppercase tracking-widest mb-1">Current Balance</p>
+                    <p className="text-2xl font-mono font-bold text-white">{convert(Number(selectedUser.balance) || 0).formatted}</p>
                   </div>
                 </div>
                 

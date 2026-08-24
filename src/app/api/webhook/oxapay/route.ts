@@ -128,9 +128,17 @@ export async function POST(req: Request) {
 
     // Parse promo code if exists
     let appliedPromoCode = "";
+    let isStandardPromo = false;
+    let promoCodeId = "";
     if (pendingOrder.accounts_data && pendingOrder.accounts_data.includes("| promo:")) {
        const match = pendingOrder.accounts_data.match(/promo:([^ |]+)/);
        if (match) appliedPromoCode = match[1];
+       
+       if (pendingOrder.accounts_data.includes("| standard:true")) {
+         isStandardPromo = true;
+         const idMatch = pendingOrder.accounts_data.match(/promo_id:([^ |]+)/);
+         if (idMatch) promoCodeId = idMatch[1];
+       }
     }
 
     if (isNaN(amountPaid) || amountPaid <= 0) {
@@ -180,6 +188,7 @@ export async function POST(req: Request) {
         try {
           const { buyNfaAccounts } = await import("@/lib/nfa");
           const nfaResult = await buyNfaAccounts(
+            product.endpoint,
             product.type,
             quantity,
             `oxapay-${txnId}`
@@ -202,6 +211,26 @@ export async function POST(req: Request) {
           })
           .eq("id", orderNumber);
           
+        let isStandardPromo = false;
+        if (appliedPromoCode) {
+          const { data: standardCode } = await supabaseAdmin.from("promo_codes").select("*").eq("code", appliedPromoCode.toUpperCase()).single();
+          if (standardCode) {
+            isStandardPromo = true;
+            await supabaseAdmin.from("promo_codes").update({ current_uses: standardCode.current_uses + 1 }).eq("id", standardCode.id);
+            await supabaseAdmin.from("promo_code_usages").insert({ user_id: userId, promo_code_id: standardCode.id });
+          }
+        }
+        
+        // Process Standard Promo Code
+        if (isStandardPromo && promoCodeId) {
+          const { data: codeData } = await supabaseAdmin.from("promo_codes").select("current_uses").eq("id", promoCodeId).single();
+          if (codeData) {
+            await supabaseAdmin.from("promo_codes").update({ current_uses: codeData.current_uses + 1 }).eq("id", promoCodeId);
+            await supabaseAdmin.from("promo_code_usages").insert({ user_id: userId, promo_code_id: promoCodeId });
+          }
+        }
+
+        // Apply affiliate commission
         await processAffiliateCommission(supabaseAdmin, userId, amountPaid, appliedPromoCode);
 
         // Send discord notification

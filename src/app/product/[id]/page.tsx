@@ -129,8 +129,8 @@ export default function ProductPage() {
     fetch("/api/stock")
       .then((res) => res.json())
       .then((data) => {
-        if (data.ok && data.stock && data.stock.cs2) {
-          setAllStockData(data.stock.cs2);
+        if (data.ok && data.stock) {
+          setAllStockData(data.stock);
         }
       })
       .catch((err) => console.error(err))
@@ -139,7 +139,7 @@ export default function ProductPage() {
 
   useEffect(() => {
     if (allStockData && selectedProduct) {
-      const available = allStockData[selectedProduct.type]?.available || 0;
+      const available = allStockData[selectedProduct.endpoint]?.[selectedProduct.type]?.available || 0;
       setStock(available);
       setQuantity(1); // reset quantity when product changes
       
@@ -296,7 +296,7 @@ export default function ProductPage() {
           <div className="w-full aspect-[4/3] relative flex flex-col items-center justify-center overflow-hidden rounded-3xl border border-white/10 shadow-[0_0_40px_rgba(0,0,0,0.5)] group transition-all">
             <Image 
               src={id === "prime" ? "/prime-bg.png" : "/premier-bg.jpg"} 
-              alt={id === "prime" ? "CS2 Prime Ready" : "CS2 Premier Ready"} 
+              alt={product.name} 
               fill 
               className="object-cover transition-transform duration-700 scale-[1.15] group-hover:scale-[1.20]" 
             />

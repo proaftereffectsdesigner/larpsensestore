@@ -14,12 +14,14 @@ export interface NfaBuyResult {
 }
 
 /**
- * Buy CS2 accounts from NFA API.
- * @param type    Product type — must match NFA type exactly (prime, premier, premier-15k, etc.)
+ * Buy accounts from NFA API.
+ * @param endpoint  API endpoint (cs2, rust, extra)
+ * @param type    Product type — must match NFA type exactly (prime, 1-99, etc.)
  * @param quantity How many accounts to buy (1–100)
  * @param idempotencyKey Unique key to prevent double-charges on webhook retries
  */
 export async function buyNfaAccounts(
+  endpoint: string,
   type: string,
   quantity: number,
   idempotencyKey: string
@@ -27,7 +29,7 @@ export async function buyNfaAccounts(
   const apiKey = process.env.NFA_API_KEY;
   if (!apiKey) throw new Error("NFA_API_KEY is not set");
 
-  const url = `${NFA_BASE}/cs2?type=${encodeURIComponent(type)}&quantity=${quantity}&result=json`;
+  const url = `${NFA_BASE}/${encodeURIComponent(endpoint)}?type=${encodeURIComponent(type)}&quantity=${quantity}&result=json`;
 
   const res = await fetch(url, {
     method: "POST",

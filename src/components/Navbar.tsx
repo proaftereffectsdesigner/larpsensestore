@@ -455,8 +455,11 @@ export default function Navbar() {
                         unreadTickets.map(ticket => (
                           <div key={ticket.id} className="relative group">
                             <Link
-                              href={ticket.issue_type === 'affiliate_application' ? '/dashboard?tab=affiliate' : '/dashboard?tab=tickets'}
+                              href={ticket.issue_type === 'affiliate_application' ? '/dashboard?tab=affiliate' : '/support'}
                               onClick={() => {
+                                if (ticket.issue_type !== 'affiliate_application') {
+                                  localStorage.setItem('larpsense_ticket_session', ticket.ticket_number.toString());
+                                }
                                 setShowNotifications(false);
                                 clearNotification(ticket.id, { preventDefault: () => {}, stopPropagation: () => {} } as any);
                               }}

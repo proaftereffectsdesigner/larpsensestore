@@ -26,6 +26,7 @@ interface TicketChatProps {
 
 export default function TicketChat({ sessionId, initialMessage, initialAttachments, onCloseTicket, userAvatar, userName = 'User', isTicketClosed = false, onTicketClosedRemotely }: TicketChatProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const initialMessageSentRef = useRef(false);
   const [ticketInfo, setTicketInfo] = useState<any>(null);
   const [inputValue, setInputValue] = useState('');
   const ws = useRef<WebSocket | null>(null);
@@ -93,8 +94,9 @@ export default function TicketChat({ sessionId, initialMessage, initialAttachmen
         setIsConnected(true);
         console.log('Connected to Ticket Chat');
         
-        // If we have an initial message from the form, send it immediately
-        if (initialMessage || (initialAttachments && initialAttachments.length > 0)) {
+        // If we have an initial message from the form and haven't sent it yet, send it once
+        if (!initialMessageSentRef.current && (initialMessage || (initialAttachments && initialAttachments.length > 0))) {
+          initialMessageSentRef.current = true;
           socket.send(JSON.stringify({ 
             sender: 'user',
             author: userName,

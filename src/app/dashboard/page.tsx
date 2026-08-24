@@ -104,7 +104,7 @@ function DashboardContent() {
     screenshots: string[];
   }>>({});
   const [affSubmitting, setAffSubmitting] = useState(false);
-  const [affActiveChat, setAffActiveChat] = useState<{ id: string; description: string, attachments: string[] } | null>(null);
+  const [affActiveChat, setAffActiveChat] = useState<{ id: string; description: string, attachments: string[], isNew?: boolean } | null>(null);
 
   const router = useRouter();
 
@@ -494,7 +494,8 @@ function DashboardContent() {
         setAffActiveChat({
           id: data.ticket_number.toString(),
           description,
-          attachments: allAttachments
+          attachments: allAttachments,
+          isNew: true
         });
         setAffPlatforms([]);
         setAffStats({});
@@ -1743,8 +1744,8 @@ function DashboardContent() {
                   </div>
                   <TicketChat 
                     sessionId={affActiveChat?.id || tickets.find(t => t.issue_type === 'affiliate_application' && t.status !== 'closed')?.ticket_number.toString()} 
-                    initialMessage={affActiveChat?.description} 
-                    initialAttachments={affActiveChat?.attachments}
+                    initialMessage={affActiveChat?.isNew ? affActiveChat.description : undefined} 
+                    initialAttachments={affActiveChat?.isNew ? affActiveChat.attachments : undefined}
                     onCloseTicket={async () => {
                       const tId = affActiveChat?.id || tickets.find(t => t.issue_type === 'affiliate_application' && t.status !== 'closed')?.ticket_number.toString();
                       if (tId) {

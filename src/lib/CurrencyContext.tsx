@@ -20,6 +20,27 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
     const saved = localStorage.getItem("preferred_currency");
     if (saved) {
       setCurrencyState(saved);
+    } else {
+      // First visit: Auto-detect currency based on IP
+      fetch("https://get.geojs.io/v1/ip/country.json")
+        .then(res => res.json())
+        .then(data => {
+          const country = data.country;
+          const countryToCurrency: Record<string, string> = {
+            PL: "PLN", US: "USD", GB: "GBP", CH: "CHF", SE: "SEK",
+            NO: "NOK", DK: "DKK", CA: "CAD", AU: "AUD", JP: "JPY",
+            CZ: "CZK", HU: "HUF", RO: "RON", BG: "BGN", TR: "TRY",
+            IL: "ILS", BR: "BRL", MX: "MXN", IN: "INR", NZ: "NZD", ZA: "ZAR"
+          };
+          const autoCurrency = countryToCurrency[country] || "EUR";
+          setCurrencyState(autoCurrency);
+          localStorage.setItem("preferred_currency", autoCurrency);
+        })
+        .catch(err => {
+          console.error("Failed to detect location, defaulting to EUR", err);
+          setCurrencyState("EUR");
+          localStorage.setItem("preferred_currency", "EUR");
+        });
     }
 
     fetch("/api/rates")

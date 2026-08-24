@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { products, Product } from "@/lib/products";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
@@ -21,7 +21,7 @@ const sortOptions = [
   { id: "price_desc", name: "Price: High to Low" }
 ];
 
-export default function ShopPage() {
+function ShopContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
@@ -260,5 +260,13 @@ export default function ShopPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function ShopPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen py-16 flex items-center justify-center text-gray-500">Loading shop...</div>}>
+      <ShopContent />
+    </Suspense>
   );
 }

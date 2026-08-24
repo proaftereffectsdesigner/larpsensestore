@@ -344,7 +344,7 @@ export default function AnalyticsDashboard() {
                         <RechartsTooltip 
                           contentStyle={{ backgroundColor: '#000', borderColor: '#333', borderRadius: '8px', color: '#fff' }}
                           itemStyle={{ color: '#10b981', fontWeight: 'bold' }}
-                          formatter={(value: number) => [convert(value).formatted, 'Revenue']}
+                          formatter={(value: any) => [convert(Number(value) || 0).formatted, 'Revenue']}
                         />
                         <Area 
                           type="monotone" 

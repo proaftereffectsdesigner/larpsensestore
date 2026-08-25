@@ -109,7 +109,7 @@ export async function POST(req: Request) {
       }
 
       if (fulfilled) {
-        const { error: dbError } = await supabaseAdmin
+        const { data: insertedOrder, error: dbError } = await supabaseAdmin
           .from("orders")
           .insert({
             user_id: userId,

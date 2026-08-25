@@ -102,7 +102,7 @@ export default function Navbar() {
         // Polling fallback w razie braku włączonego Supabase Realtime na tabeli tickets
         pollInterval = setInterval(() => {
           checkUnread(session.user.id);
-        }, 3000);
+        }, 60000);
 
         channel = supabase.channel('realtime:tickets_unread')
           .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'tickets', filter: `user_id=eq.${session.user.id}` }, () => {

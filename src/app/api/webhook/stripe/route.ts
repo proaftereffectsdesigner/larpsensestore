@@ -118,7 +118,9 @@ export async function POST(req: Request) {
             total_price: totalPrice,
             status: "completed",
             accounts_data: accountsStr,
-          });
+          })
+          .select("id")
+          .single();
           
         if (dbError) {
           console.error("Supabase error saving completed order in webhook:", dbError);
@@ -139,7 +141,7 @@ export async function POST(req: Request) {
           }
 
           // Send discord notification
-          await sendOrderNotification(supabaseAdmin, userId, productId as string, quantity, totalPrice, "Stripe", session.id);
+          await sendOrderNotification(supabaseAdmin, userId, productId as string, quantity, totalPrice, "Stripe", insertedOrder?.id || session.id);
         }
       } else {
         // Refund to balance if NFA failed or returned no accounts

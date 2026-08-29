@@ -52,10 +52,37 @@ export async function POST(req: Request) {
     const NFA_API_KEY = process.env.NFA_API_KEY!;
     const NFA_API_URL = process.env.NFA_API_URL || "https://www.nfa.pub/api/v1";
 
+    const typeMapping: Record<string, string> = {
+      "prime": "prime-ready",
+      "premier": "premier-ready",
+      "premier-4-medals": "premier-ready-4-medals",
+      "premier-10-medals": "premier-ready-10-medals",
+      "premier-10k": "premier-ready-10k-rating",
+      "premier-15k": "premier-ready-15k-rating",
+      "premier-20k": "premier-ready-20k-rating",
+      "premier-rare": "premier-ready-knife-glove",
+      "1-99": "rust-1-99-hours",
+      "100-199": "rust-100-199-hours",
+      "200-499": "rust-200-499-hours",
+      "500-999": "rust-500-999-hours",
+      "1000-plus": "rust-1000-plus-hours",
+      "arc-0-100h": "xg-arc-0-100h",
+      "arc-100-200h": "xg-arc-100-200h",
+      "arc-200h-plus": "xg-arc-200h-plus",
+      "apex-0-100h": "xg-apex-0-100h",
+      "apex-100-200h": "xg-apex-100-200h",
+      "apex-200h-plus": "xg-apex-200h-plus",
+      "r6": "xg-r6",
+      "dayz": "xg-dayz",
+      "bf6": "xg-bf6",
+    };
+    
+    const mappedType = typeMapping[type] || type;
+
     // 1. Zlecenie wymiany do NFA API
-    // NFA API /replace oczekuje parametru "account" oraz "type" (np. premier-15k)
+    // NFA API /replace oczekuje parametru "account" oraz "type" (teraz z nowymi ID np. prime-ready)
     // Co ważne, NFA weryfikuje na żywo (check), więc osobny endpoint check nie jest wymagany
-    const nfaRes = await fetch(`${NFA_API_URL}/replace?account=${encodeURIComponent(accountStr)}&type=${type}`, {
+    const nfaRes = await fetch(`${NFA_API_URL}/replace?account=${encodeURIComponent(accountStr)}&type=${mappedType}`, {
       method: "POST",
       headers: {
         "X-Api-Key": NFA_API_KEY,

@@ -31,19 +31,15 @@ function AccountCard({
   account, 
   orderId, 
   productId, 
-  accountIdx,
-  onReplaceSuccess
+  accountIdx
 }: { 
   account: { id: number, token: string },
   orderId: string,
   productId: string,
-  accountIdx: number,
-  onReplaceSuccess: () => void
+  accountIdx: number
 }) {
   const [revealed, setRevealed] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [replacing, setReplacing] = useState(false);
-  const [confirmingReplace, setConfirmingReplace] = useState(false);
 
   const handleCopy = () => {
     navigator.clipboard.writeText(account.token);
@@ -53,53 +49,7 @@ function AccountCard({
 
 
 
-  const handleReplace = async () => {
-    if (!confirmingReplace) {
-      setConfirmingReplace(true);
-      setTimeout(() => setConfirmingReplace(false), 4000);
-      return;
-    }
-    
-    setConfirmingReplace(false);
-    setReplacing(true);
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        toast.error("You must be logged in to replace accounts.");
-        setReplacing(false);
-        return;
-      }
 
-      const res = await fetch("/api/replace", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          accountStr: account.token, 
-          orderId, 
-          accountIdx, 
-          type: productId,
-          userId: session.user.id,
-          token: session.access_token
-        }),
-      });
-      const data = await res.json();
-      
-      if (data.ok) {
-        toast.success("Account replaced successfully!");
-        onReplaceSuccess();
-      } else {
-        toast.error("Replacement failed", {
-          description: data.raw && !data.error.includes(data.raw) 
-            ? `${data.error}\n\nNFA Output: ${data.raw.substring(0, 100)}...` 
-            : data.error
-        });
-      }
-    } catch (err) {
-      toast.error("Error processing replacement.");
-    } finally {
-      setReplacing(false);
-    }
-  };
 
   return (
     <div className="bg-[#0f0f0f] border border-white/5 rounded-2xl p-4 space-y-4">
@@ -111,7 +61,7 @@ function AccountCard({
         />
       </div>
 
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-2 gap-2">
         <button 
           onClick={() => setRevealed(!revealed)}
           className="flex items-center justify-center gap-2 py-2.5 rounded-xl border border-white/10 text-gray-400 hover:text-white hover:bg-white/5 transition-colors text-xs font-semibold"
@@ -130,27 +80,6 @@ function AccountCard({
         >
           {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
           {copied ? "Copied!" : "Copy"}
-        </button>
-
-        <button 
-          onClick={handleReplace}
-          disabled={replacing}
-          className={`flex items-center justify-center gap-2 py-2.5 rounded-xl border transition-colors text-xs font-semibold disabled:opacity-50 ${
-            confirmingReplace
-              ? 'border-orange-500/50 bg-orange-500/10 text-orange-400 hover:bg-orange-500/20'
-              : 'border-red-500/20 text-red-400 bg-red-500/5 hover:bg-red-500/10'
-          }`}
-        >
-          {replacing ? (
-            <div className="w-3.5 h-3.5 border-2 border-red-400/30 border-t-red-400 rounded-full animate-spin" />
-          ) : (
-            <RefreshCw className="w-3.5 h-3.5" /> 
-          )}
-          {replacing 
-            ? "Replacing..." 
-            : confirmingReplace 
-              ? "Confirm" 
-              : "Replace"}
         </button>
       </div>
     </div>
@@ -380,24 +309,6 @@ export default function OrderDetails() {
                       orderId={order?.id}
                       productId={order?.product_id}
                       accountIdx={idx}
-                      onReplaceSuccess={() => {
-                        // Re-fetch order to show the newly replaced account
-                        supabase.from('orders').select('*').eq('id', id as string).single().then(({data}) => {
-                          if (data) {
-                            setOrder(data);
-                            const splitAccounts = data.accounts_data
-                              ? data.accounts_data
-                                  .split(/\\n|\n/)
-                                  .map((t: string) => t.trim())
-                                  .filter((t: string) => t.length > 0 && !t.startsWith('[') && t.includes(':'))
-                              : [];
-                            setAccounts(splitAccounts.map((token: string, i: number) => ({
-                              id: i + 1,
-                              token
-                            })));
-                          }
-                        });
-                      }}
                     />
                   ))}
                 </div>

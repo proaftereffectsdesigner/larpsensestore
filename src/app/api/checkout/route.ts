@@ -181,7 +181,7 @@ export async function POST(req: Request) {
 
     // Balance payment — proceed to NFA fulfillment
     let accountsStr = "";
-    let fulfilled = false;
+    let nfaOrderId = null;
     try {
       const { buyNfaAccounts } = await import("@/lib/nfa");
       const nfaResult = await buyNfaAccounts(
@@ -191,6 +191,7 @@ export async function POST(req: Request) {
         `balance-${userId}-${Date.now()}`
       );
       accountsStr = nfaResult.accounts.join("\n");
+      nfaOrderId = nfaResult.order_id;
       fulfilled = nfaResult.accounts.length > 0;
     } catch (nfaErr) {
       console.error("NFA API error during Balance fulfillment:", nfaErr);
@@ -267,6 +268,7 @@ export async function POST(req: Request) {
         total_price: totalPrice,
         status: "completed",
         accounts_data: accountsStr,
+        nfa_order_id: typeof nfaOrderId !== 'undefined' ? nfaOrderId : null,
       })
       .select()
       .single();

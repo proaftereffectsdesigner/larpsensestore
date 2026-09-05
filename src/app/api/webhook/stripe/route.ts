@@ -93,6 +93,7 @@ export async function POST(req: Request) {
       const { buyNfaAccounts } = await import("@/lib/nfa");
       let accountsStr = "";
       let fulfilled = false;
+      let nfaOrderId = null;
 
       try {
         const nfaResult = await buyNfaAccounts(
@@ -102,6 +103,7 @@ export async function POST(req: Request) {
           `stripe-${session.id}` // unique per Stripe session → no double charges
         );
         accountsStr = nfaResult.accounts.join("\n");
+        nfaOrderId = nfaResult.order_id;
         fulfilled = nfaResult.accounts.length > 0;
         console.log(`NFA delivered ${nfaResult.accounts.length} accounts for ${productId}`);
       } catch (nfaErr) {
@@ -118,6 +120,7 @@ export async function POST(req: Request) {
             total_price: totalPrice,
             status: "completed",
             accounts_data: accountsStr,
+            nfa_order_id: typeof nfaOrderId !== 'undefined' ? nfaOrderId : null,
           })
           .select("id")
           .single();

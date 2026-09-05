@@ -183,6 +183,8 @@ export async function POST(req: Request) {
       let fulfilled = false;
       let accountsStr = "";
 
+      let nfaOrderId = null;
+
       const expectedPrice = product ? product.price * quantity : Infinity;
       if (product && amountPaid >= expectedPrice) {
         try {
@@ -195,6 +197,7 @@ export async function POST(req: Request) {
           );
 
           accountsStr = nfaResult.accounts.join("\n");
+          nfaOrderId = nfaResult.order_id;
           fulfilled = nfaResult.accounts.length > 0;
         } catch (nfaErr) {
           console.error("NFA API error during OxaPay fulfillment:", nfaErr);
@@ -208,6 +211,7 @@ export async function POST(req: Request) {
           .update({
             status: "completed",
             accounts_data: `${accountsStr}\n\n[OxaPay Txn: ${txnId}]`,
+            nfa_order_id: typeof nfaOrderId !== 'undefined' ? nfaOrderId : null,
           })
           .eq("id", orderNumber);
           

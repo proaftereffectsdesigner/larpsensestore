@@ -11,6 +11,7 @@ export interface NfaBuyResult {
   ok: boolean;
   accounts: string[];
   charged_eur: number;
+  order_id?: string;
 }
 
 /**
@@ -55,5 +56,6 @@ export async function buyNfaAccounts(
     ok: data.ok,
     accounts: Array.isArray(data.accounts) ? data.accounts : [],
     charged_eur: Number(data.charged_eur ?? 0),
+    order_id: data.order_id,
   };
 }

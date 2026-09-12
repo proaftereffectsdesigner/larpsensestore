@@ -182,6 +182,7 @@ export async function POST(req: Request) {
     // Balance payment — proceed to NFA fulfillment
     let accountsStr = "";
     let nfaOrderId = null;
+    let fulfilled = false;
     try {
       const { buyNfaAccounts } = await import("@/lib/nfa");
       const nfaResult = await buyNfaAccounts(

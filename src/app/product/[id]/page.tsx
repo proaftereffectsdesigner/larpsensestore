@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { products } from "@/lib/products";
+import { products, getProductImage } from "@/lib/products";
 import { supabase } from "@/lib/supabase-client";
 import { User } from "@supabase/supabase-js";
 import { CheckCircle2, CreditCard, Wallet, ChevronDown, ChevronRight, ChevronLeft, Minus, Plus, ShieldCheck, Gamepad2, Info, Zap, Lock, RefreshCcw, ShieldAlert, Star, CircleDollarSign } from "lucide-react";
@@ -292,15 +292,16 @@ export default function ProductPage() {
         
         {/* Lewa kolumna: Grafika i Opis */}
         <div className="flex flex-col gap-6">
-          {/* Obrazek (Graphic Placeholder) */}
-          <div className="w-full aspect-[4/3] relative flex flex-col items-center justify-center overflow-hidden rounded-3xl border border-white/10 shadow-[0_0_40px_rgba(0,0,0,0.5)] group transition-all">
+          {/* Obrazek (16:9 Graphic) */}
+          <div className="w-full aspect-video relative flex flex-col items-center justify-center overflow-hidden rounded-3xl border border-white/10 shadow-[0_0_40px_rgba(0,0,0,0.5)] group transition-all">
             <Image 
-              src={id === "prime" ? "/prime-bg.png" : "/premier-bg.jpg"} 
+              src={selectedProduct?.image || getProductImage(selectedProduct?.id || (typeof id === 'string' ? id : ''), selectedProduct?.category)} 
               alt={selectedProduct?.name || "Product"} 
               fill 
-              className="object-cover transition-transform duration-700 scale-[1.15] group-hover:scale-[1.20]" 
+              sizes="(max-width: 1024px) 100vw, 50vw"
+              className="object-cover transition-transform duration-500 scale-100 group-hover:scale-105" 
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#141414] via-black/20 to-transparent z-10 pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#141414]/60 via-transparent to-transparent z-10 pointer-events-none" />
           </div>
 
           {/* Opis Produktu */}

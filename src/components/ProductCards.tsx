@@ -51,9 +51,9 @@ export default function ProductCards() {
   }, []);
 
   const displayCategories = [
-    { id: "cs2", name: "Counter Strike 2 Accounts", image: "/premier-bg.jpg", desc: "Premium CS2 NFA accounts with varying ratings and medals." },
-    { id: "rust", name: "Rust Accounts", image: "/premier-bg.jpg", desc: "Rust NFA accounts with different playtime hours. Build your base immediately." },
-    { id: "extra", name: "Extra Accounts", image: "/premier-bg.jpg", desc: "Additional games: Rainbow Six Siege, DayZ, Battlefield 6." },
+    { id: "cs2", name: "Counter Strike 2 Accounts", image: "/kategoria-cs2.webp", desc: "Premium CS2 NFA accounts with varying ratings and medals." },
+    { id: "rust", name: "Rust Accounts", image: "/kategoria-rust.webp", desc: "Rust NFA accounts with different playtime hours. Build your base immediately." },
+    { id: "extra", name: "Extra Accounts", image: "/kategoria-extra.webp", desc: "Additional games: Rainbow Six Siege, DayZ, Battlefield 6." },
   ];
 
   const getPriceRange = (categoryId: string) => {
@@ -87,35 +87,29 @@ export default function ProductCards() {
               className={`transition-all duration-1000 ease-out block ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-20'} ${index % 3 === 1 ? 'delay-200' : index % 3 === 2 ? 'delay-300' : 'delay-100'}`}
             >
               <div className="group bg-[#1a1a1a] border border-white/5 rounded-[2rem] overflow-hidden shadow-2xl transition-all hover:border-white/10 hover:-translate-y-1 flex flex-col h-full cursor-pointer">
-                {/* Obrazek (Graphic Placeholder) */}
-                <div className="w-full aspect-square relative flex flex-col items-center justify-center overflow-hidden">
+                {/* Obrazek (16:9 Graphic) */}
+                <div className="w-full aspect-video relative flex flex-col items-center justify-center overflow-hidden">
                   <Image 
                     src={category.image} 
                     alt={category.name} 
                     fill 
-                    className="object-cover transition-transform duration-700 scale-[1.15] group-hover:scale-[1.20]" 
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    className="object-cover transition-transform duration-500 scale-100 group-hover:scale-105" 
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#1a1a1a] via-[#1a1a1a]/20 to-transparent z-10 pointer-events-none" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#1a1a1a] via-transparent to-transparent z-10 pointer-events-none" />
                   
-                  {/* Tagi na górze */}
-                  <div className="absolute top-6 left-6 z-20">
-                    <span className="inline-flex items-center bg-black/40 text-white px-3 py-1 rounded-full text-[10px] font-bold tracking-widest backdrop-blur-md border border-white/10 uppercase">
-                      Category
-                    </span>
-                  </div>
-
-                  <div className="absolute top-6 right-6 z-20">
+                  <div className="absolute top-4 right-4 z-20">
                     {inStock === null ? (
-                      <span className="inline-flex items-center gap-1.5 bg-black/40 text-gray-400 px-3 py-1 rounded-full text-[11px] font-medium backdrop-blur-md border border-white/10 animate-pulse">
+                      <span className="inline-flex items-center gap-1.5 bg-black/50 text-gray-400 px-3 py-1 rounded-full text-[11px] font-medium backdrop-blur-md border border-white/10 animate-pulse">
                         Checking...
                       </span>
                     ) : inStock ? (
-                      <span className="inline-flex items-center gap-1.5 bg-green-500/10 text-green-400 px-3 py-1 rounded-full text-[11px] font-medium backdrop-blur-md border border-green-500/20">
+                      <span className="inline-flex items-center gap-1.5 bg-green-500/20 text-green-400 px-3 py-1 rounded-full text-[11px] font-medium backdrop-blur-md border border-green-500/30 shadow-[0_0_10px_rgba(34,197,94,0.2)]">
                         <CheckCircle2 className="w-3 h-3" />
                         In Stock
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1.5 bg-red-500/10 text-red-400 px-3 py-1 rounded-full text-[11px] font-medium backdrop-blur-md border border-red-500/20">
+                      <span className="inline-flex items-center gap-1.5 bg-red-500/20 text-red-400 px-3 py-1 rounded-full text-[11px] font-medium backdrop-blur-md border border-red-500/30">
                         Out of Stock
                       </span>
                     )}

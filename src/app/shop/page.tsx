@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, Suspense } from "react";
-import { products, Product } from "@/lib/products";
+import { products, Product, getProductImage, getGameName } from "@/lib/products";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -183,7 +183,7 @@ function ShopContent() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                   {categoryProducts.map((product) => {
                     const totalStock = stockData ? (stockData[product.endpoint]?.[product.type]?.available || 0) : 0;
-                    const img = product.id === "prime" ? "/prime-bg.png" : "/premier-bg.jpg";
+                    const img = product.image || getProductImage(product.id, product.category);
                     const desc = getDescription(product.id);
                     const gameTag = getGameName(product.endpoint, product.id);
 
@@ -198,37 +198,37 @@ function ShopContent() {
                             src={img} 
                             alt={product.name} 
                             fill 
-                            className="object-cover transition-transform duration-700 scale-[1.15] group-hover:scale-[1.20]" 
+                            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                            className="object-cover transition-transform duration-500 scale-100 group-hover:scale-105" 
                           />
-                          <div className="absolute inset-0 bg-gradient-to-t from-[#1a1a1a] via-[#1a1a1a]/20 to-transparent z-10 pointer-events-none" />
+                          <div className="absolute inset-0 bg-gradient-to-t from-[#1a1a1a] via-transparent to-transparent z-10 pointer-events-none" />
                           
-                          <div className="absolute top-4 left-4 z-20">
-                            <span className="inline-flex items-center bg-black/40 text-white px-2 py-1 rounded-md text-[9px] font-bold tracking-widest backdrop-blur-md border border-white/10 uppercase">
-                              {gameTag}
-                            </span>
-                          </div>
-
-                          <div className="absolute top-4 right-4 z-20">
+                          <div className="absolute top-3 right-3 z-20">
                             {stockData === null ? (
-                              <span className="inline-flex items-center gap-1.5 bg-black/40 text-gray-400 px-2 py-1 rounded-md text-[9px] font-bold backdrop-blur-md border border-white/10 uppercase animate-pulse">
+                              <span className="inline-flex items-center gap-1.5 bg-black/60 text-gray-400 px-2 py-1 rounded-md text-[9px] font-bold backdrop-blur-md border border-white/10 uppercase animate-pulse">
                                 Checking
                               </span>
                             ) : totalStock > 0 ? (
-                              <span className="inline-flex items-center gap-1.5 bg-green-500/10 text-green-400 px-2 py-1 rounded-md text-[9px] font-bold backdrop-blur-md border border-green-500/20 uppercase">
+                              <span className="inline-flex items-center gap-1.5 bg-green-500/20 text-green-400 px-2 py-1 rounded-md text-[9px] font-bold backdrop-blur-md border border-green-500/30 uppercase shadow-[0_0_10px_rgba(34,197,94,0.2)]">
                                 <CheckCircle2 className="w-3 h-3" />
                                 In Stock
                               </span>
                             ) : (
-                              <span className="inline-flex items-center gap-1.5 bg-red-500/10 text-red-400 px-2 py-1 rounded-md text-[9px] font-bold backdrop-blur-md border border-red-500/20 uppercase">
+                              <span className="inline-flex items-center gap-1.5 bg-red-500/20 text-red-400 px-2 py-1 rounded-md text-[9px] font-bold backdrop-blur-md border border-red-500/30 uppercase">
                                 Out of Stock
                               </span>
                             )}
                           </div>
                         </div>
 
-                        <div className="px-5 pb-5 pt-3 flex flex-col flex-1 bg-[#1a1a1a] relative z-20">
+                        <div className="px-5 pb-5 pt-3.5 flex flex-col flex-1 bg-[#1a1a1a] relative z-20">
+                          <div className="flex items-center gap-2 mb-1.5">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400/90 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+                              {gameTag}
+                            </span>
+                          </div>
                           <h2 className="text-xl font-bold text-white group-hover:text-white transition-colors truncate">{product.name}</h2>
-                          <p className="text-xs text-gray-400 mt-2 mb-4 line-clamp-2 leading-relaxed">
+                          <p className="text-xs text-gray-400 mt-1.5 mb-4 line-clamp-2 leading-relaxed">
                             {desc}
                           </p>
                           

@@ -7,6 +7,7 @@ export type Product = {
   cost?: number; // wholesale cost in euros
   category: string;
   popularity: number; // Higher number = more popular
+  image?: string;
 };
 
 export const products: Product[] = [
@@ -20,6 +21,7 @@ export const products: Product[] = [
     price: 0.79,
     cost: 0.40,
     popularity: 100,
+    image: "/gra-cs2.webp",
   },
   {
     id: "premier",
@@ -30,6 +32,7 @@ export const products: Product[] = [
     price: 0.99,
     cost: 0.50,
     popularity: 90,
+    image: "/gra-cs2.webp",
   },
   {
     id: "premier-4-medals",
@@ -40,6 +43,7 @@ export const products: Product[] = [
     price: 1.49,
     cost: 0.80,
     popularity: 70,
+    image: "/gra-cs2.webp",
   },
   {
     id: "premier-10-medals",
@@ -50,6 +54,7 @@ export const products: Product[] = [
     price: 1.79,
     cost: 1.00,
     popularity: 50,
+    image: "/gra-cs2.webp",
   },
   {
     id: "premier-10k",
@@ -60,6 +65,7 @@ export const products: Product[] = [
     price: 1.99,
     cost: 1.10,
     popularity: 45,
+    image: "/gra-cs2.webp",
   },
   {
     id: "premier-15k",
@@ -70,6 +76,7 @@ export const products: Product[] = [
     price: 2.99,
     cost: 1.50,
     popularity: 40,
+    image: "/gra-cs2.webp",
   },
   {
     id: "premier-20k",
@@ -80,6 +87,7 @@ export const products: Product[] = [
     price: 4.49,
     cost: 2.50,
     popularity: 35,
+    image: "/gra-cs2.webp",
   },
   {
     id: "premier-rare",
@@ -90,6 +98,7 @@ export const products: Product[] = [
     price: 4.99,
     cost: 2.80,
     popularity: 30,
+    image: "/gra-cs2.webp",
   },
   
   // Rust Products
@@ -102,6 +111,7 @@ export const products: Product[] = [
     price: 1.81,
     cost: 0.90,
     popularity: 85,
+    image: "/gra-rust.webp",
   },
   {
     id: "rust-100-199",
@@ -112,6 +122,7 @@ export const products: Product[] = [
     price: 1.97,
     cost: 1.00,
     popularity: 75,
+    image: "/gra-rust.webp",
   },
   {
     id: "rust-200-499",
@@ -122,6 +133,7 @@ export const products: Product[] = [
     price: 2.15,
     cost: 1.10,
     popularity: 65,
+    image: "/gra-rust.webp",
   },
   {
     id: "rust-500-999",
@@ -132,6 +144,7 @@ export const products: Product[] = [
     price: 2.45,
     cost: 1.25,
     popularity: 55,
+    image: "/gra-rust.webp",
   },
   {
     id: "rust-1000-plus",
@@ -142,6 +155,7 @@ export const products: Product[] = [
     price: 2.85,
     cost: 1.50,
     popularity: 45,
+    image: "/gra-rust.webp",
   },
 
   // Extra Products (R6, DayZ, Battlefield)
@@ -154,6 +168,7 @@ export const products: Product[] = [
     price: 1.40,
     cost: 0.70,
     popularity: 60,
+    image: "/gra-rainbow-six-siege.webp",
   },
   {
     id: "dayz",
@@ -164,6 +179,7 @@ export const products: Product[] = [
     price: 1.40,
     cost: 0.70,
     popularity: 60,
+    image: "/gra-dayz.webp",
   },
   {
     id: "bf6",
@@ -174,5 +190,31 @@ export const products: Product[] = [
     price: 1.40,
     cost: 0.70,
     popularity: 60,
+    image: "/gra-battlefield-6.webp",
   }
 ];
+
+export function getProductImage(productId?: string, category?: string): string {
+  if (!productId) return "/gra-cs2.webp";
+  if (productId === "r6") return "/gra-rainbow-six-siege.webp";
+  if (productId === "dayz") return "/gra-dayz.webp";
+  if (productId === "bf6") return "/gra-battlefield-6.webp";
+  if (category === "rust" || productId.startsWith("rust")) return "/gra-rust.webp";
+  if (category === "cs2" || productId.startsWith("prime") || productId.startsWith("premier")) return "/gra-cs2.webp";
+  if (category === "extra") return "/kategoria-extra.webp";
+  
+  // Try to find directly in products array
+  const p = products.find(prod => prod.id === productId);
+  if (p?.image) return p.image;
+
+  return "/gra-cs2.webp";
+}
+
+export function getGameName(endpoint?: string, productId?: string): string {
+  if (endpoint === "rust" || (productId && productId.startsWith("rust"))) return "Rust";
+  if (productId === "r6") return "Rainbow Six Siege";
+  if (productId === "dayz") return "DayZ";
+  if (productId === "bf6") return "Battlefield 6";
+  return "Counter Strike 2";
+}
+

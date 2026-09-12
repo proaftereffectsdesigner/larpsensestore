@@ -9,7 +9,7 @@ import { Camera, ExternalLink, Key, Package, Plus, Send, Settings, Shield, Shiel
 import TicketChat from "@/components/TicketChat";
 import Cropper from 'react-easy-crop';
 import getCroppedImg from '@/lib/cropImage';
-import { products } from "@/lib/products";
+import { products, getProductImage, getGameName } from "@/lib/products";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -1413,10 +1413,11 @@ function DashboardContent() {
                                   <Wallet className="w-6 h-6 text-accent z-10" />
                                 ) : (
                                   <Image 
-                                    src={order.product_id === "prime" ? "/prime-bg.png" : "/premier-bg.jpg"} 
+                                    src={pInfo?.image || getProductImage(order.product_id, pInfo?.category)} 
                                     alt={pInfo?.name || "Product"} 
                                     fill 
-                                    className="object-cover scale-[1.15]"
+                                    sizes="64px"
+                                    className="object-cover"
                                   />
                                 )}
                                 <div className="absolute inset-0 bg-black/20 pointer-events-none" />
@@ -1425,7 +1426,9 @@ function DashboardContent() {
                                 {order.product_id === "topup" ? (
                                   <div className="text-[10px] uppercase tracking-widest font-bold text-accent mb-0.5">Store Balance</div>
                                 ) : (
-                                  <div className="text-[10px] uppercase tracking-widest font-bold text-emerald-500 mb-0.5">Counter Strike 2</div>
+                                  <div className="text-[10px] uppercase tracking-widest font-bold text-emerald-500 mb-0.5">
+                                    {getGameName(pInfo?.endpoint, order.product_id)}
+                                  </div>
                                 )}
                                 <div className="font-bold text-white text-lg tracking-tight group-hover:text-emerald-400 transition-colors">
                                   {order.product_id === "topup" ? "Balance Top-up" : pInfo?.name || "Premier Ready"}

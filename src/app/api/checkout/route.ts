@@ -3,6 +3,7 @@ import { products } from "@/lib/products";
 import { createClient } from "@supabase/supabase-js";
 import { rateLimit, getClientIp } from "@/lib/rate-limit";
 import { convertToCurrency } from "@/lib/exchangeRates";
+import { processAffiliateCommission } from "@/lib/affiliate";
 
 export async function POST(req: Request) {
   try {
@@ -223,36 +224,7 @@ export async function POST(req: Request) {
     }
 
     // Apply affiliate commission for Balance payment
-    if (appliedPromoCode && affiliateOwnerId) {
-      // Link the user
-      await supabaseAdmin.from("profiles").update({ 
-        referred_by: affiliateOwnerId,
-        used_first_discount: true
-      }).eq("id", userId);
-
-      // Give commission to affiliate
-      const commission = Number((totalPrice * (commissionPct / 100)).toFixed(2));
-      if (commission > 0) {
-        const { data: affProfile } = await supabaseAdmin.from("profiles").select("balance").eq("id", affiliateOwnerId).single();
-        if (affProfile) {
-          const newAffBalance = Number(affProfile.balance) + commission;
-          await supabaseAdmin.from("profiles").update({ balance: newAffBalance }).eq("id", affiliateOwnerId);
-        }
-      }
-    } else {
-      // Regular lifetime commission
-      const { data: profile } = await supabaseAdmin.from("profiles").select("referred_by").eq("id", userId).single();
-      if (profile && profile.referred_by) {
-        const commission = Number((totalPrice * 0.10).toFixed(2)); // default 10% lifetime
-        if (commission > 0) {
-          const { data: affProfile } = await supabaseAdmin.from("profiles").select("balance").eq("id", profile.referred_by).single();
-          if (affProfile) {
-            const newAffBalance = Number(affProfile.balance) + commission;
-            await supabaseAdmin.from("profiles").update({ balance: newAffBalance }).eq("id", profile.referred_by);
-          }
-        }
-      }
-    }
+    await processAffiliateCommission(supabaseAdmin, userId, totalPrice, isStandardPromo ? undefined : appliedPromoCode);
 
     // Apply promo code usage if standard
     if (isStandardPromo && promoCodeId && standardCodeData) {

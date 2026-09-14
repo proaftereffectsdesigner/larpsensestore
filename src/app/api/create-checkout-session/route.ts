@@ -95,7 +95,8 @@ export async function POST(req: Request) {
         userId: userId,
         addedAmount: finalAmountAdded.toString(),
         type: "topup",
-        promoCode: appliedPromoCode || ""
+        promoCode: appliedPromoCode || "",
+        appliedPromoCode: appliedPromoCode || ""
       },
       success_url: `${req.headers.get("origin")}/dashboard?topup=success`,
       cancel_url: `${req.headers.get("origin")}/`,

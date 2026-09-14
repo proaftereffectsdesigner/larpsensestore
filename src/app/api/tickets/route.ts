@@ -103,6 +103,16 @@ export async function POST(req: Request) {
             id: guildId, // @everyone role
             type: 0,
             deny: (1 << 10).toString(), // View Channel
+          },
+          {
+            id: '1531840906632626236', // Support role
+            type: 0,
+            allow: '126032', // View, Send, History, Attach, Embed, Reactions, Manage Messages, Manage Channel
+          },
+          {
+            id: '1531838773049163986', // Founders role
+            type: 0,
+            allow: '126032', // View, Send, History, Attach, Embed, Reactions, Manage Messages, Manage Channel
           }
         ];
 
@@ -110,7 +120,7 @@ export async function POST(req: Request) {
           permissionOverwrites.push({
             id: profile.discord_id,
             type: 1, // member
-            allow: ((1 << 10) | (1 << 11)).toString(), // View Channel + Send Messages
+            allow: ((1 << 10) | (1 << 11) | (1 << 16) | (1 << 15) | (1 << 14) | (1 << 6)).toString(), // View, Send, History, Attach, Embed, React
           });
         }
 

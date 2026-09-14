@@ -82,15 +82,32 @@ export default function TicketChat({ sessionId, initialMessage, initialAttachmen
 
   // Connect to WebSocket
   useEffect(() => {
-    if (!sessionId || ws.current || isTicketClosed) return;
+    if (!sessionId || isTicketClosed) return;
+
+    let isUnmounted = false;
+    let reconnectTimeout: any = null;
 
     const connectWs = async () => {
+      if (isUnmounted || ws.current) return;
+
       const { data: { session } } = await supabase.auth.getSession();
       const token = session?.access_token || '';
-      const wsUrl = process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:8000';
+      
+      if (!token) {
+        console.warn('Waiting for session token before connecting to Ticket Chat WS...');
+        reconnectTimeout = setTimeout(connectWs, 2000);
+        return;
+      }
+
+      const wsUrl = process.env.NEXT_PUBLIC_WS_URL || 'wss://larpsense-bot.onrender.com';
+      console.log(`Connecting to Ticket Chat WS: ${wsUrl}/ws/chat/${sessionId}`);
       const socket = new WebSocket(`${wsUrl}/ws/chat/${sessionId}?token=${token}`);
       
       socket.onopen = () => {
+        if (isUnmounted) {
+          socket.close();
+          return;
+        }
         setIsConnected(true);
         console.log('Connected to Ticket Chat');
         
@@ -131,35 +148,53 @@ export default function TicketChat({ sessionId, initialMessage, initialAttachmen
             }
             return [...prev, data];
           });
+
           // Clear unread flag if receiving message while chat is open
-          supabase.from('tickets').update({ has_unread: false }).eq('id', sessionId).then();
+          const ticketNum = parseInt(sessionId);
+          if (!isNaN(ticketNum)) {
+            supabase.from('tickets').update({ has_unread: false }).eq('ticket_number', ticketNum).then();
+          }
         } catch (e) {
           console.error("Error parsing message", e);
         }
       };
       
-      socket.onclose = () => {
+      socket.onclose = (event) => {
+        console.log('Ticket Chat WS closed', event.code, event.reason);
         if (ws.current === socket) {
           setIsConnected(false);
           ws.current = null;
         }
+        // Auto-reconnect after 3 seconds if not unmounted and ticket is still open
+        if (!isUnmounted && !isTicketClosed) {
+          reconnectTimeout = setTimeout(connectWs, 3000);
+        }
+      };
+
+      socket.onerror = (err) => {
+        console.error('Ticket Chat WS error:', err);
       };
       
       ws.current = socket;
       
       // Clear unread flag on open
-      supabase.from('tickets').update({ has_unread: false }).eq('id', sessionId).then();
+      const ticketNum = parseInt(sessionId);
+      if (!isNaN(ticketNum)) {
+        supabase.from('tickets').update({ has_unread: false }).eq('ticket_number', ticketNum).then();
+      }
     };
 
     connectWs();
 
     return () => {
+      isUnmounted = true;
+      if (reconnectTimeout) clearTimeout(reconnectTimeout);
       if (ws.current) {
         ws.current.close();
         ws.current = null;
       }
     };
-  }, [sessionId, initialMessage]); // Only run once or when sessionId changes
+  }, [sessionId, isTicketClosed]);
 
   const scrollToBottom = () => {
     if (scrollContainerRef.current) {

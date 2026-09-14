@@ -28,8 +28,13 @@ export async function GET(req: Request) {
 
     const userId = user.id;
 
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+
     // Fetch the user's affiliate code
-    const { data: code, error: codeError } = await authenticatedSupabase
+    const { data: code, error: codeError } = await supabaseAdmin
       .from("affiliate_codes")
       .select("*")
       .eq("owner_id", userId)
@@ -43,7 +48,7 @@ export async function GET(req: Request) {
 
     // Calculate stats
     // 1. Get users referred by this owner
-    const { data: referredProfiles } = await authenticatedSupabase
+    const { data: referredProfiles } = await supabaseAdmin
       .from("profiles")
       .select("id")
       .eq("referred_by", userId);
@@ -52,7 +57,7 @@ export async function GET(req: Request) {
     let ownerOrders: any[] = [];
     
     if (referredIds.length > 0) {
-      const { data: ord } = await authenticatedSupabase
+      const { data: ord } = await supabaseAdmin
         .from("orders")
         .select("user_id, total_price, quantity")
         .eq("status", "completed")

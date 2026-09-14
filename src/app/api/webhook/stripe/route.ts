@@ -63,7 +63,7 @@ export async function POST(req: Request) {
           });
 
           // Process affiliate commission
-          const appliedPromoCode = session.metadata?.appliedPromoCode;
+          const appliedPromoCode = session.metadata?.appliedPromoCode || session.metadata?.promoCode;
           await processAffiliateCommission(supabaseAdmin, userId, addedAmount, appliedPromoCode);
 
           // Push updated Discord metadata (total_spent, spent_10_eur) after balance top-up

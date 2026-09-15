@@ -217,7 +217,7 @@ export async function POST(req: Request) {
           
         let isStandardPromo = false;
         if (appliedPromoCode) {
-          const { data: standardCode } = await supabaseAdmin.from("promo_codes").select("*").eq("code", appliedPromoCode.toUpperCase()).single();
+          const { data: standardCode } = await supabaseAdmin.from("promo_codes").select("*").ilike("code", appliedPromoCode.trim()).maybeSingle();
           if (standardCode) {
             isStandardPromo = true;
             await supabaseAdmin.from("promo_codes").update({ current_uses: standardCode.current_uses + 1 }).eq("id", standardCode.id);
@@ -225,9 +225,9 @@ export async function POST(req: Request) {
           }
         }
         
-        // Process Standard Promo Code
-        if (isStandardPromo && promoCodeId) {
-          const { data: codeData } = await supabaseAdmin.from("promo_codes").select("current_uses").eq("id", promoCodeId).single();
+        // Process Standard Promo Code by ID if not already processed by code
+        if (!isStandardPromo && promoCodeId) {
+          const { data: codeData } = await supabaseAdmin.from("promo_codes").select("current_uses").eq("id", promoCodeId).maybeSingle();
           if (codeData) {
             await supabaseAdmin.from("promo_codes").update({ current_uses: codeData.current_uses + 1 }).eq("id", promoCodeId);
             await supabaseAdmin.from("promo_code_usages").insert({ user_id: userId, promo_code_id: promoCodeId });

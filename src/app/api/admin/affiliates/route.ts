@@ -86,7 +86,7 @@ export async function POST(req: Request) {
     const { data: existing, error: existingError } = await supabaseAdmin
       .from("affiliate_codes")
       .select("code")
-      .eq("code", cleanCode)
+      .ilike("code", cleanCode)
       .maybeSingle();
 
     if (existingError) {

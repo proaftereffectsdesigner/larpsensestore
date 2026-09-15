@@ -72,10 +72,10 @@ export async function POST(req: Request) {
     let promoCodeId = "";
 
     if (promoCode) {
-      const codeUpper = promoCode.toUpperCase();
+      const cleanCode = promoCode.trim();
       
       // 1. Check if it's a standard promo code
-      const { data: standardCode } = await supabaseAdmin.from("promo_codes").select("*").eq("code", codeUpper).single();
+      const { data: standardCode } = await supabaseAdmin.from("promo_codes").select("*").ilike("code", cleanCode).maybeSingle();
       
       if (standardCode) {
         // Validate standard promo code
@@ -92,11 +92,11 @@ export async function POST(req: Request) {
         }
         
         // Check if user already used this standard code
-        const { data: usage } = await supabaseAdmin.from("promo_code_usages").select("*").eq("user_id", userId).eq("promo_code_id", standardCode.id).single();
+        const { data: usage } = await supabaseAdmin.from("promo_code_usages").select("*").eq("user_id", userId).eq("promo_code_id", standardCode.id).maybeSingle();
         
         if (isNotExpired && hasUsesLeft && meetsMinSpent && !usage) {
           discountPct = standardCode.discount_pct;
-          appliedPromoCode = codeUpper;
+          appliedPromoCode = standardCode.code;
           isStandardPromo = true;
           promoCodeId = standardCode.id;
         }
@@ -104,7 +104,7 @@ export async function POST(req: Request) {
 
       // 2. If not standard, check if affiliate code
       if (!appliedPromoCode && profile && !profile.used_first_discount && !profile.referred_by) {
-        const { data: codeData } = await supabaseAdmin.from("affiliate_codes").select("*").eq("code", codeUpper).single();
+        const { data: codeData } = await supabaseAdmin.from("affiliate_codes").select("*").ilike("code", cleanCode).maybeSingle();
         if (codeData && codeData.owner_id !== userId) {
           discountPct = codeData.discount_pct || 10;
           appliedPromoCode = codeData.code;

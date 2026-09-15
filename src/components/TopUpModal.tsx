@@ -129,6 +129,9 @@ export default function TopUpModal() {
       if (data.ok) {
         setDiscountPct(data.discountPct);
         setPromoCodeSuccess(`Promo code applied! +${data.discountPct}% bonus added to your top-up.`);
+        if (data.code) {
+          setPromoCode(data.code);
+        }
       } else {
         setPromoCodeError(data.error || "Invalid promo code");
         setDiscountPct(0);
@@ -444,9 +447,9 @@ export default function TopUpModal() {
                   <input
                     type="text"
                     value={promoCode}
-                    onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                    onChange={(e) => setPromoCode(e.target.value)}
                     placeholder="Enter code"
-                    className="w-full bg-[#141414] border border-white/10 rounded-xl py-3 pl-4 text-white font-bold focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/50 transition-all text-sm uppercase"
+                    className="w-full bg-[#141414] border border-white/10 rounded-xl py-3 pl-4 text-white font-bold focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/50 transition-all text-sm"
                   />
                   <button
                     onClick={applyPromoCode}

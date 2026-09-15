@@ -83,13 +83,13 @@ function AccountCard({
       const data = await res.json();
       
       if (data.ok) {
-        toast.success("Account replaced successfully!");
+        toast.success("Account replaced successfully!", {
+          description: typeof data.remaining === "number" ? `Replacements remaining: ${data.remaining}` : undefined
+        });
         onReplaceSuccess();
       } else {
         toast.error("Replacement failed", {
-          description: data.raw && !data.error.includes(data.raw) 
-            ? `${data.error}\n\nNFA Output: ${data.raw.substring(0, 100)}...` 
-            : data.error
+          description: data.error || "Unable to replace account."
         });
       }
     } catch (err) {

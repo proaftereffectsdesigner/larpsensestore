@@ -91,6 +91,9 @@ export default function ProductPage() {
       if (data.ok) {
         setDiscountPct(data.discountPct);
         setPromoCodeSuccess(data.message);
+        if (data.code) {
+          setPromoCode(data.code);
+        }
       } else {
         setPromoCodeError(data.error || "Invalid promo code");
         setDiscountPct(0);
@@ -462,9 +465,9 @@ export default function ProductPage() {
               <input
                 type="text"
                 value={promoCode}
-                onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                onChange={(e) => setPromoCode(e.target.value)}
                 placeholder="Enter code"
-                className="w-full bg-[#0a0a0a]/50 border border-white/10 rounded-xl py-3 pl-4 text-white font-bold focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/50 transition-all text-sm uppercase shadow-inner"
+                className="w-full bg-[#0a0a0a]/50 border border-white/10 rounded-xl py-3 pl-4 text-white font-bold focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/50 transition-all text-sm shadow-inner"
               />
               <button
                 onClick={applyPromoCode}

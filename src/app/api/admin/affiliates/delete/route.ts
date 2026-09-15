@@ -17,7 +17,7 @@ export async function POST(req: Request) {
     const { error: deleteError } = await supabaseAdmin
       .from("affiliate_codes")
       .delete()
-      .eq("code", code);
+      .ilike("code", code.trim());
 
     if (deleteError) throw deleteError;
 

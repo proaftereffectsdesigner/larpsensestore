@@ -56,36 +56,13 @@ export async function POST(req: Request) {
     const NFA_API_KEY = process.env.NFA_API_KEY!;
     const NFA_API_URL = process.env.NFA_API_URL || "https://www.nfa.pub/api/v1";
 
-    const typeMapping: Record<string, string> = {
-      "prime": "prime-ready",
-      "premier": "premier-ready",
-      "premier-4-medals": "premier-ready-4-medals",
-      "premier-10-medals": "premier-ready-10-medals",
-      "premier-10k": "premier-ready-10k-rating",
-      "premier-15k": "premier-ready-15k-rating",
-      "premier-20k": "premier-ready-20k-rating",
-      "premier-rare": "premier-ready-knife-glove",
-      "1-99": "rust-1-99-hours",
-      "100-199": "rust-100-199-hours",
-      "200-499": "rust-200-499-hours",
-      "500-999": "rust-500-999-hours",
-      "1000-plus": "rust-1000-plus-hours",
-      "arc-0-100h": "xg-arc-0-100h",
-      "arc-100-200h": "xg-arc-100-200h",
-      "arc-200h-plus": "xg-arc-200h-plus",
-      "apex-0-100h": "xg-apex-0-100h",
-      "apex-100-200h": "xg-apex-100-200h",
-      "apex-200h-plus": "xg-apex-200h-plus",
-      "r6": "xg-r6",
-      "dayz": "xg-dayz",
-      "bf6": "xg-bf6",
-    };
-    
-    const mappedType = typeMapping[type] || type;
+    // Extract Steam ID from account string
+    // Format is typically 76561198295292480----eyAidHlw... or login:password or steamid:password
+    const steamIdMatch = accountStr.match(/^(\d{17})/);
+    const accountIdentifier = steamIdMatch ? steamIdMatch[1] : accountStr.split(/[:\-]/)[0].trim();
 
-    // 1. Zlecenie wymiany do NFA API
-    // NFA API /replace oczekuje JSONa z "order", "account", "reason"
-    const nfaRes = await fetch(`${NFA_API_URL}/replace`, {
+    // 1. Zlecenie wymiany do NFA API z ?result=json
+    const nfaRes = await fetch(`${NFA_API_URL}/replace?result=json`, {
       method: "POST",
       headers: {
         "X-Api-Key": NFA_API_KEY,
@@ -93,40 +70,64 @@ export async function POST(req: Request) {
       },
       body: JSON.stringify({
         order: orderData.nfa_order_id,
-        account: accountStr,
+        account: accountIdentifier,
         reason: "User requested replacement via dashboard"
       })
     });
 
-    let nfaData;
+    let nfaData: any;
     const rawText = await nfaRes.text();
-    
-    // Zawsze wyświetlaj przyjazny komunikat dla klienta
-    const friendlyErrorMsg = "We couldn't replace the account. It's likely still working, or your 6-hour warranty has expired.";
     
     try {
       nfaData = JSON.parse(rawText);
-    } catch(e) {
-      // NFA API sometimes returns plain text error codes like "E1601"
-      if (rawText.trim().startsWith("E")) {
-        return NextResponse.json({ error: friendlyErrorMsg, raw: rawText.trim() }, { status: 400 });
-      }
-      return NextResponse.json({ error: friendlyErrorMsg, raw: rawText }, { status: 400 });
+    } catch (e) {
+      console.error("NFA Replace parse error:", rawText);
+      return NextResponse.json({ error: "Replacement service returned an invalid response. Please contact support." }, { status: 502 });
     }
 
     if (!nfaRes.ok || !nfaData.ok) {
-      return NextResponse.json({ error: friendlyErrorMsg, raw: nfaData.error || nfaData.code || "Replacement failed" }, { status: 400 });
+      const code = nfaData.code || (rawText.trim().startsWith("E") ? rawText.trim() : null);
+
+      const errorMessages: Record<string, string> = {
+        "E1601": "Replacement access is not enabled on this API key. Please contact support.",
+        "E1602": "Order reference not found in supplier records.",
+        "E1603": "Order reference does not match supplier account.",
+        "E1604": "This order has not been delivered yet.",
+        "E1605": "Your 6-hour warranty window for this order has expired.",
+        "E1606": "Account identifier was not found on this order.",
+        "E1607": "This account was already replaced once.",
+        "E1608": "You have reached the maximum limit of 3 replacements for this order.",
+        "E1609": "No replacement stock available right now. Please try again in a few minutes.",
+        "E1610": "The account is still working. Our automated checker verified that login works.",
+        "E1611": "The automated checker could not reach Steam. Please try again in a few seconds.",
+      };
+
+      const errorMsg = (code && errorMessages[code]) || nfaData.error || "We couldn't replace the account. It's likely still working or the warranty expired.";
+      return NextResponse.json({ error: errorMsg, code, raw: rawText }, { status: 400 });
     }
 
     // Nowe dane konta
     const newAccountStr = nfaData.account;
 
     // 2. Aktualizacja w bazie danych (Supabase)
-    // Posiadamy już orderData z początku pliku, wystarczy je zmodyfikować.
-
-    // Replace the exact account string to avoid index mismatch
-    // caused by UI filtering out empty/metadata lines.
-    const newAccountsData = orderData.accounts_data.replace(accountStr, newAccountStr);
+    let newAccountsData = orderData.accounts_data || "";
+    if (newAccountsData.includes(accountStr)) {
+      newAccountsData = newAccountsData.replace(accountStr, newAccountStr);
+    } else if (newAccountsData.includes(accountStr.trim())) {
+      newAccountsData = newAccountsData.replace(accountStr.trim(), newAccountStr);
+    } else {
+      // Fallback: match by line containing the steam ID or account string
+      const lines = newAccountsData.split("\n");
+      const matchedIdx = lines.findIndex((line: string) => 
+        line.trim() === accountStr.trim() || (steamIdMatch && line.includes(steamIdMatch[1]))
+      );
+      if (matchedIdx !== -1) {
+        lines[matchedIdx] = newAccountStr;
+        newAccountsData = lines.join("\n");
+      } else {
+        newAccountsData = `${newAccountsData}\n${newAccountStr}`.trim();
+      }
+    }
 
     const { error: updateError } = await supabase
       .from("orders")
@@ -138,8 +139,14 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Failed to save new account to database" }, { status: 500 });
     }
 
-    return NextResponse.json({ ok: true, newAccount: newAccountStr });
+    return NextResponse.json({ 
+      ok: true, 
+      newAccount: newAccountStr,
+      replaced: nfaData.replaced,
+      remaining: nfaData.remaining 
+    });
   } catch (err) {
+    console.error("Replace route error:", err);
     return NextResponse.json({ error: "Internal error" }, { status: 500 });
   }
 }

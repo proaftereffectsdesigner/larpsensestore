@@ -31,8 +31,8 @@ export async function processAffiliateCommission(
       const { data: codeData } = await supabaseAdmin
         .from("affiliate_codes")
         .select("*")
-        .eq("code", appliedPromoCode.toUpperCase())
-        .single();
+        .ilike("code", appliedPromoCode.trim())
+        .maybeSingle();
 
       if (codeData && codeData.owner_id && codeData.owner_id !== userId) {
         affiliateOwnerId = codeData.owner_id;

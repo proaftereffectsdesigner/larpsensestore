@@ -14,19 +14,21 @@ export async function POST(request: Request) {
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
-    // 1. Get the promo code (check affiliate_codes first)
+    const cleanCode = promoCode.trim();
+
+    // 1. Get the promo code (check affiliate_codes first, case-insensitively)
     const { data: codeData } = await supabaseAdmin
       .from("affiliate_codes")
       .select("*")
-      .eq("code", promoCode.toUpperCase())
+      .ilike("code", cleanCode)
       .maybeSingle();
 
     if (!codeData) {
-      // Check standard promo_codes
+      // Check standard promo_codes (case-insensitively)
       const { data: standardCode } = await supabaseAdmin
         .from("promo_codes")
         .select("*")
-        .eq("code", promoCode.toUpperCase())
+        .ilike("code", cleanCode)
         .maybeSingle();
 
       if (!standardCode) {

@@ -346,6 +346,12 @@ export default function ProductPage() {
                   <span><strong>Premier Elite Medals:</strong> Premier-ready access equipped with 10 or more in-game service medals.</span>
                 </li>
               )}
+              {id === "premier-inactive" && (
+                <li className="flex items-start gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-green-400 mt-0.5 shrink-0" />
+                  <span><strong>14+ Days Inactive:</strong> Dormant account with over 14 days of complete inactivity for maximum longevity.</span>
+                </li>
+              )}
               {id === "premier-10k" && (
                 <li className="flex items-start gap-2">
                   <CheckCircle2 className="w-4 h-4 text-green-400 mt-0.5 shrink-0" />

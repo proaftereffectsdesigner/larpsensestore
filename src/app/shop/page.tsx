@@ -82,6 +82,7 @@ function ShopContent() {
         case "premier": return "Standard NFA accounts ready for Premier mode. Blank slate for your journey.";
         case "premier-4-medals": return "Premier NFA accounts loaded with 4+ service medals. Show off your veteran status.";
         case "premier-10-medals": return "Premier NFA accounts loaded with 10+ service medals. Show off your veteran status.";
+        case "premier-inactive": return "Premier NFA accounts with 14+ days of complete inactivity. Maximum longevity & low recovery risk.";
         case "premier-10k": return "Jump straight into high Elo with 10.000 CS Rating.";
         case "premier-15k": return "Jump straight into high Elo with 15.000 CS Rating.";
         case "premier-20k": return "Jump straight into high Elo with 20.000 CS Rating.";

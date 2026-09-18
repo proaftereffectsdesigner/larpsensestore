@@ -57,6 +57,17 @@ export const products: Product[] = [
     image: "/gra-cs2.webp",
   },
   {
+    id: "premier-inactive",
+    name: "Premier Ready (Inactive 14d)",
+    type: "premier-inactive",
+    endpoint: "cs2",
+    category: "cs2",
+    price: 1.99,
+    cost: 0.90,
+    popularity: 65,
+    image: "/gra-cs2.webp",
+  },
+  {
     id: "premier-10k",
     name: "Premier Ready (10.000 Rating)",
     type: "premier-10k",

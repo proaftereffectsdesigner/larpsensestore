@@ -1,5 +1,14 @@
+import { Metadata } from "next";
 import FAQ from "@/components/FAQ";
 import ParticlesBackground from "@/components/ParticlesBackground";
+
+export const metadata: Metadata = {
+  title: "Frequently Asked Questions | LarpSense Store",
+  description: "Learn everything about our verified CS2 NFA accounts, instant delivery, 6-hour replacement warranty, and client authentication tool.",
+  alternates: {
+    canonical: "https://www.larpsensestore.com/faq",
+  },
+};
 
 export default function FAQPage() {
   return (

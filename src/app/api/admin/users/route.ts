@@ -23,7 +23,7 @@ export async function GET(req: Request) {
     // Fetch all orders to compute total spent manually (avoids schema cache issues)
     const { data: orders, error: ordersError } = await supabaseAdmin
       .from("orders")
-      .select("user_id, total_price, status");
+      .select("user_id, total_price, status, product_id, accounts_data");
 
     if (ordersError) throw ordersError;
 
@@ -53,7 +53,14 @@ export async function GET(req: Request) {
     const usersWithStats = profiles?.map((p) => {
       const userOrders = ordersByUser[p.id] || [];
       const completedOrders = userOrders.filter((o: any) => o.status === 'completed');
-      const totalSpent = completedOrders.reduce((sum: number, o: any) => sum + Number(o.total_price || 0), 0);
+      const totalSpent = completedOrders.reduce((sum: number, o: any) => {
+        const isTopup = o.product_id === 'topup';
+
+        // Skip topups to avoid double-counting. We recognize total spent only when products are bought.
+        if (isTopup) return sum;
+        
+        return sum + Number(o.total_price || 0);
+      }, 0);
       
       const authInfo = authMap[p.id] || {};
 

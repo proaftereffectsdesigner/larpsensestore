@@ -20,6 +20,18 @@ export async function middleware(req: NextRequest, event: NextFetchEvent) {
   // Build response immediately — never block the user
   const response = NextResponse.next();
 
+  // Prevent search engine indexing of private or admin routes without exposing secret paths in robots.txt
+  if (
+    pathname.startsWith("/7evenejoyer") ||
+    pathname.startsWith("/order") ||
+    pathname.startsWith("/dashboard") ||
+    pathname.startsWith("/banned-ip") ||
+    pathname.startsWith("/desktop-auth") ||
+    pathname.startsWith("/crypto-mock")
+  ) {
+    response.headers.set("X-Robots-Tag", "noindex, nofollow, noarchive");
+  }
+
   // Analytics Tracking (non-blocking)
   const userAgent = req.headers.get("user-agent") || "";
   let deviceType = "Desktop";

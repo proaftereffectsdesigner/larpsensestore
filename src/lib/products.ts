@@ -4,7 +4,6 @@ export type Product = {
   type: string;
   endpoint: string;
   price: number; // in euros
-  cost?: number; // wholesale cost in euros
   category: string;
   popularity: number; // Higher number = more popular
   image?: string;
@@ -19,7 +18,6 @@ export const products: Product[] = [
     endpoint: "cs2",
     category: "cs2",
     price: 0.79,
-    cost: 0.40,
     popularity: 100,
     image: "/gra-cs2.webp",
   },
@@ -30,7 +28,6 @@ export const products: Product[] = [
     endpoint: "cs2",
     category: "cs2",
     price: 0.99,
-    cost: 0.50,
     popularity: 90,
     image: "/gra-cs2.webp",
   },
@@ -41,7 +38,6 @@ export const products: Product[] = [
     endpoint: "cs2",
     category: "cs2",
     price: 1.49,
-    cost: 0.80,
     popularity: 70,
     image: "/gra-cs2.webp",
   },
@@ -52,7 +48,6 @@ export const products: Product[] = [
     endpoint: "cs2",
     category: "cs2",
     price: 1.79,
-    cost: 1.00,
     popularity: 50,
     image: "/gra-cs2.webp",
   },
@@ -63,7 +58,6 @@ export const products: Product[] = [
     endpoint: "cs2",
     category: "cs2",
     price: 1.99,
-    cost: 0.90,
     popularity: 65,
     image: "/gra-cs2.webp",
   },
@@ -74,7 +68,6 @@ export const products: Product[] = [
     endpoint: "cs2",
     category: "cs2",
     price: 1.99,
-    cost: 1.10,
     popularity: 45,
     image: "/gra-cs2.webp",
   },
@@ -85,7 +78,6 @@ export const products: Product[] = [
     endpoint: "cs2",
     category: "cs2",
     price: 2.99,
-    cost: 1.50,
     popularity: 40,
     image: "/gra-cs2.webp",
   },
@@ -96,7 +88,6 @@ export const products: Product[] = [
     endpoint: "cs2",
     category: "cs2",
     price: 4.49,
-    cost: 2.50,
     popularity: 35,
     image: "/gra-cs2.webp",
   },
@@ -107,7 +98,6 @@ export const products: Product[] = [
     endpoint: "cs2",
     category: "cs2",
     price: 4.99,
-    cost: 2.80,
     popularity: 30,
     image: "/gra-cs2.webp",
   },
@@ -120,7 +110,6 @@ export const products: Product[] = [
     endpoint: "rust",
     category: "rust",
     price: 1.81,
-    cost: 0.90,
     popularity: 85,
     image: "/gra-rust.webp",
   },
@@ -131,7 +120,6 @@ export const products: Product[] = [
     endpoint: "rust",
     category: "rust",
     price: 1.97,
-    cost: 1.00,
     popularity: 75,
     image: "/gra-rust.webp",
   },
@@ -142,7 +130,6 @@ export const products: Product[] = [
     endpoint: "rust",
     category: "rust",
     price: 2.15,
-    cost: 1.10,
     popularity: 65,
     image: "/gra-rust.webp",
   },
@@ -153,7 +140,6 @@ export const products: Product[] = [
     endpoint: "rust",
     category: "rust",
     price: 2.45,
-    cost: 1.25,
     popularity: 55,
     image: "/gra-rust.webp",
   },
@@ -164,7 +150,6 @@ export const products: Product[] = [
     endpoint: "rust",
     category: "rust",
     price: 2.85,
-    cost: 1.50,
     popularity: 45,
     image: "/gra-rust.webp",
   },
@@ -177,7 +162,6 @@ export const products: Product[] = [
     endpoint: "extra",
     category: "extra",
     price: 1.40,
-    cost: 0.70,
     popularity: 60,
     image: "/gra-rainbow-six-siege.webp",
   },
@@ -188,7 +172,6 @@ export const products: Product[] = [
     endpoint: "extra",
     category: "extra",
     price: 1.40,
-    cost: 0.70,
     popularity: 60,
     image: "/gra-dayz.webp",
   },
@@ -199,7 +182,6 @@ export const products: Product[] = [
     endpoint: "extra",
     category: "extra",
     price: 1.40,
-    cost: 0.70,
     popularity: 60,
     image: "/gra-battlefield-6.webp",
   }
@@ -228,4 +210,3 @@ export function getGameName(endpoint?: string, productId?: string): string {
   if (productId === "bf6") return "Battlefield 6";
   return "Counter Strike 2";
 }
-

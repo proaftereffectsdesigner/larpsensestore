@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { createClient } from "@supabase/supabase-js";
 import { processAffiliateCommission } from "@/lib/affiliate";
-import { sendOrderNotification } from "@/lib/discord";
+import { sendOrderNotification, sendTopUpNotification } from "@/lib/discord";
 
 export async function POST(req: Request) {
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'dummy_key_for_build', {
@@ -53,14 +53,24 @@ export async function POST(req: Request) {
           console.error("Error updating balance in webhook:", error);
         } else {
           // Record top-up in orders table so it shows up in dashboard
-          await supabaseAdmin.from("orders").insert({
+          const { data: topupOrder } = await supabaseAdmin.from("orders").insert({
             user_id: userId,
             product_id: "topup",
             quantity: 1,
             total_price: addedAmount,
             status: "completed",
             accounts_data: `Balance Top-up (Stripe) [${session.id}]`
-          });
+          }).select("id").single();
+
+          // Send Discord notification for wallet top-up
+          await sendTopUpNotification(
+            supabaseAdmin,
+            userId,
+            addedAmount,
+            newBalance,
+            "Stripe",
+            topupOrder?.id || session.id
+          );
 
           // Process affiliate commission
           const appliedPromoCode = session.metadata?.appliedPromoCode || session.metadata?.promoCode;

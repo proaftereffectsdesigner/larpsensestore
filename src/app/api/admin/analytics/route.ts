@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/auth';
-import { products } from '@/lib/products';
+import { getProductCost } from '@/lib/server/productCosts';
+import { products, Product } from '@/lib/products';
 
 export const dynamic = 'force-dynamic';
 
@@ -49,8 +50,14 @@ export async function GET(request: Request) {
     const startISO = startDate.toISOString();
     const endISO = endDate.toISOString();
 
-    // 1. Fetch Orders (Revenue, Top Products, Conversion)
-    const { data: ordersData, error: ordersError } = await supabaseAdmin.from('orders').select('user_id, created_at, total_price, product_id, status, quantity').gte('created_at', startISO).lte('created_at', endISO).limit(100000);
+    // 1. Fetch Orders (Revenue, Top Products, Conversion, Detailed Orders)
+    const { data: ordersData, error: ordersError } = await supabaseAdmin
+      .from('orders')
+      .select('id, user_id, created_at, total_price, product_id, status, quantity, accounts_data, nfa_order_id')
+      .gte('created_at', startISO)
+      .lte('created_at', endISO)
+      .order('created_at', { ascending: false })
+      .limit(100000);
     if (ordersError) return NextResponse.json({ success: false, error: `Orders Error: ${ordersError.message}` });
     
     // 2. Fetch Traffic (Page Views, Unique Users, Devices, Top Pages, Traffic Chart)
@@ -69,7 +76,7 @@ export async function GET(request: Request) {
     // AGGREGATION LOGIC
     // ==========================================
 
-    const { data: allProfiles } = await supabaseAdmin.from('profiles').select('id, email, is_admin');
+    const { data: allProfiles } = await supabaseAdmin.from('profiles').select('id, email, is_admin, display_name');
     const adminProfiles = allProfiles?.filter(p => p.is_admin) || [];
     
     // Create map for easy lookup
@@ -101,16 +108,64 @@ export async function GET(request: Request) {
     let totalRevenue = 0;
     let totalCost = 0;
     completedOrders.forEach(o => {
-      totalRevenue += Number(o.total_price);
-      const product = products.find(p => p.id === o.product_id);
-      if (product && product.cost) {
-        totalCost += (product.cost * Number(o.quantity || 1));
+      const isTopup = o.product_id === 'topup';
+
+      const unitCost = isTopup ? 0 : getProductCost(o.product_id);
+      if (unitCost > 0) {
+        totalCost += (unitCost * Number(o.quantity || 1));
+      }
+      
+      // Top-ups are deferred revenue; only actual product sales count as revenue
+      if (!isTopup) {
+        totalRevenue += Number(o.total_price);
       }
     });
     
     const totalProfit = totalRevenue - totalCost;
     const totalOrders = completedOrders.length;
     const averageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
+
+    // Detailed Orders list for Admin Orders tab
+    const ordersList = orders.map((o: any) => {
+      const isTopup = o.product_id === 'topup';
+      const isDirectStripe = o.accounts_data?.includes('Stripe');
+      const isDirectCrypto = o.accounts_data?.includes('Crypto');
+      const paymentMethod = isTopup 
+        ? (isDirectCrypto ? 'Crypto Top-Up' : 'Stripe Top-Up')
+        : (isDirectStripe ? 'Stripe Direct' : isDirectCrypto ? 'Crypto Direct' : 'Balance');
+
+      const product = products.find((p: Product) => p.id === o.product_id);
+      const unitCost = isTopup ? 0 : getProductCost(o.product_id);
+      const quantity = Number(o.quantity || 1);
+      const totalCost = unitCost * quantity;
+      const displayPrice = Number(o.total_price || 0);
+      
+      // Profit is only recognized when a product is sold, not when wallet is topped up
+      const effectiveRevenue = isTopup ? 0 : displayPrice;
+      const profit = effectiveRevenue - totalCost;
+      const userProfile = allProfiles?.find(p => p.id === o.user_id);
+
+      return {
+        id: o.id,
+        user_id: o.user_id,
+        email: emailMap[o.user_id] || userProfile?.email || 'Unknown Customer',
+        display_name: userProfile?.display_name || null,
+        product_id: o.product_id,
+        product_name: isTopup ? 'Wallet Top-Up' : (product?.name || o.product_id),
+        game: isTopup ? 'WALLET' : (product?.category || 'cs2'),
+        quantity: quantity,
+        total_price: displayPrice,
+        unit_cost: unitCost,
+        total_cost: parseFloat(totalCost.toFixed(2)),
+        profit: parseFloat(profit.toFixed(2)),
+        status: o.status || 'completed',
+        created_at: o.created_at,
+        accounts_data: o.accounts_data || null,
+        nfa_order_id: o.nfa_order_id || null,
+        payment_method: paymentMethod,
+        is_topup: isTopup,
+      };
+    });
 
     // Traffic KPI
     const uniqueSessions = new Set(traffic.map(t => t.session_id));
@@ -164,12 +219,13 @@ export async function GET(request: Request) {
       .slice(0, 5)
       .map(([path, views]) => ({ path, views }));
 
-    // Top Products
+    // Top Products (exclude top-up wallet deposits)
     const productCounts: Record<string, { revenue: number, units: number }> = {};
     completedOrders.forEach(o => {
+      if (o.product_id === 'topup') return;
       if (!productCounts[o.product_id]) productCounts[o.product_id] = { revenue: 0, units: 0 };
       productCounts[o.product_id].revenue += Number(o.total_price);
-      productCounts[o.product_id].units += 1;
+      productCounts[o.product_id].units += (Number(o.quantity) || 1);
     });
     let topProducts = Object.entries(productCounts)
       .sort((a, b) => b[1].revenue - a[1].revenue)
@@ -199,9 +255,9 @@ export async function GET(request: Request) {
 
     // Build Charts (Group by Day or Hour)
     const diffDays = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
-    let chartInterval: 'hour' | '4hour' | '12hour' | 'day' | 'month' = 'day';
+    let chartInterval: 'hour' | '4hour' | '12hour' | 'day' | 'week' | 'month' = 'day';
     
-    if (daysParam === 'all') chartInterval = 'month';
+    if (daysParam === 'all') chartInterval = 'week';
     else if (diffDays <= 1) chartInterval = 'hour';
     else if (diffDays <= 3) chartInterval = '4hour';
     else if (diffDays <= 7) chartInterval = '12hour';
@@ -221,17 +277,34 @@ export async function GET(request: Request) {
         d.setHours(Math.floor(d.getHours() / 12) * 12, 0, 0, 0);
         return `${d.getDate()}/${d.getMonth()+1} ${d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}`;
       }
+      if (interval === 'week') {
+        const day = d.getDay();
+        const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+        const startOfWeek = new Date(d);
+        startOfWeek.setDate(diff);
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        return `${startOfWeek.getDate()} ${months[startOfWeek.getMonth()]}`;
+      }
       if (interval === 'month') {
         const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
         return `${months[d.getMonth()]} ${d.getFullYear()}`;
       }
-      return d.toISOString().split('T')[0];
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
     }
 
     const chartMap: Record<string, { pageviews: number, uniques: Set<string>, orders: number, revenue: number, rawOrders: any[] }> = {};
     
     let iterator = new Date(startDate);
-    if (['hour', '4hour', '12hour'].includes(chartInterval)) iterator.setMinutes(0, 0, 0);
+    if (['hour', '4hour', '12hour'].includes(chartInterval)) {
+      iterator.setMinutes(0, 0, 0);
+    } else if (chartInterval === 'day') {
+      iterator.setHours(0, 0, 0, 0);
+    } else if (chartInterval === 'week') {
+      const day = iterator.getDay();
+      const diff = iterator.getDate() - day + (day === 0 ? -6 : 1);
+      iterator.setDate(diff);
+      iterator.setHours(0, 0, 0, 0);
+    }
     
     while (iterator <= endDate) {
       const key = getChartKey(iterator, chartInterval);
@@ -240,7 +313,7 @@ export async function GET(request: Request) {
       if (chartInterval === 'hour') iterator.setHours(iterator.getHours() + 1);
       else if (chartInterval === '4hour') iterator.setHours(iterator.getHours() + 4);
       else if (chartInterval === '12hour') iterator.setHours(iterator.getHours() + 12);
-      else if (chartInterval === 'month') iterator.setMonth(iterator.getMonth() + 1);
+      else if (chartInterval === 'week') iterator.setDate(iterator.getDate() + 7);
       else iterator.setDate(iterator.getDate() + 1);
     }
 
@@ -260,14 +333,19 @@ export async function GET(request: Request) {
       const key = getChartKey(dStr, chartInterval);
       if (chartMap[key]) {
         chartMap[key].orders++;
-        chartMap[key].revenue += Number(o.total_price);
+        
+        const isTopup = o.product_id === 'topup';
+        
+        if (!isTopup) {
+          chartMap[key].revenue += Number(o.total_price);
+        }
         
         const email = emailMap[o.user_id] || 'Nieznany Gość';
         chartMap[key].rawOrders.push({
            time: new Date(dStr).toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' }),
            email,
-           method: 'Stripe / NFA',
-           product: o.product_id,
+           method: o.product_id === 'topup' ? 'Top-Up' : (o.accounts_data?.includes('Stripe') ? 'Stripe Direct' : o.accounts_data?.includes('Crypto') ? 'Crypto Direct' : 'Balance'),
+           product: o.product_id === 'topup' ? 'Wallet Top-Up' : o.product_id,
            price: Number(o.total_price)
         });
       }
@@ -358,6 +436,7 @@ export async function GET(request: Request) {
           decryptionErrors: 0
         },
         recentActivity,
+        orders: ordersList,
         logs: []
       }
     };

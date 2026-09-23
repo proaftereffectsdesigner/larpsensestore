@@ -87,7 +87,7 @@ export default function Hero() {
 
           {/* Sub-headline */}
           <p className={`text-lg md:text-xl text-gray-400 mb-10 leading-relaxed max-w-2xl transition-all duration-700 delay-300 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-            Enterprise-grade NFA accounts paired with a proprietary client. Experience secure, automated delivery and seamless authentication without compromising privacy.
+            Buy cheap CS2 NFA accounts, Premier ready, Rust and gaming accounts paired with our proprietary session switcher. Enjoy automated instant delivery, 6h warranty and seamless authentication.
           </p>
 
           {/* Action Button */}

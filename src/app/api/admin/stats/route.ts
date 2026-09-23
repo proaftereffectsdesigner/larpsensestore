@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from '@/lib/auth';
-import { products } from '@/lib/products';
+import { getProductCost } from '@/lib/server/productCosts';
 
 export async function GET(req: Request) {
   try {
@@ -26,11 +26,15 @@ export async function GET(req: Request) {
 
     if (orders) {
       orders.forEach((o: any) => {
-        totalEarned += Number(o.total_price || 0);
+        const isTopup = o.product_id === 'topup';
+
+        if (!isTopup) {
+          totalEarned += Number(o.total_price || 0);
+        }
         
-        const product = products.find(p => p.id === o.product_id);
-        if (product && product.cost) {
-          totalCost += (product.cost * Number(o.quantity || 1));
+        const unitCost = isTopup ? 0 : getProductCost(o.product_id);
+        if (unitCost > 0) {
+          totalCost += (unitCost * Number(o.quantity || 1));
         }
       });
     }

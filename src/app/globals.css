@@ -47,6 +47,15 @@ html {
   background-color: rgba(255, 255, 255, 0.2);
 }
 
+/* Klasa do całkowitego ukrycia paska przewijania */
+.hide-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+.hide-scrollbar::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
  /* Ukrycie natywnych strzalek w input type="number" */
 input[type="number"]::-webkit-inner-spin-button,
 input[type="number"]::-webkit-outer-spin-button {

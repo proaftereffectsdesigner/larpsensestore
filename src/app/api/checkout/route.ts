@@ -4,6 +4,7 @@ import { createClient } from "@supabase/supabase-js";
 import { rateLimit, getClientIp } from "@/lib/rate-limit";
 import { convertToCurrency } from "@/lib/exchangeRates";
 import { processAffiliateCommission } from "@/lib/affiliate";
+import { sendOrderNotification } from "@/lib/discord";
 
 export async function POST(req: Request) {
   try {
@@ -252,6 +253,17 @@ export async function POST(req: Request) {
         url: `/order/error?accounts=${encodeURIComponent(accountsStr)}` 
       });
     }
+
+    // Send Discord order notification for Balance purchase
+    await sendOrderNotification(
+      supabaseAdmin,
+      userId,
+      product.id,
+      quantity,
+      totalPrice,
+      "Balance",
+      orderData?.id
+    );
 
     // Push updated metadata to Discord if user is linked
     fetch(new URL('/api/discord/update-metadata', req.url).toString(), {

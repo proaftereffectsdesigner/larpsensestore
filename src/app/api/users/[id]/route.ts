@@ -39,6 +39,24 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     const is_private = profileRow?.is_private || false;
     let profileData = Array.isArray(data) ? data[0] : data;
 
+    // Recalculate total_spent properly (avoiding double-counting balance purchases)
+    if (profileData) {
+      const { data: ordersData } = await supabaseAdmin
+        .from('orders')
+        .select('total_price, product_id, accounts_data')
+        .eq('user_id', userId)
+        .eq('status', 'completed');
+        
+      if (ordersData) {
+        profileData.total_spent = ordersData.reduce((sum, o) => {
+          const isTopup = o.product_id === 'topup';
+          
+          if (isTopup) return sum;
+          return sum + Number(o.total_price || 0);
+        }, 0);
+      }
+    }
+
     // Mask private profiles from public view
     if (is_private) {
       const token = req.headers.get("authorization")?.replace("Bearer ", "");

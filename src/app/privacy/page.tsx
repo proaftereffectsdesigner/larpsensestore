@@ -1,5 +1,18 @@
+import { Metadata } from "next";
 import ParticlesBackground from "@/components/ParticlesBackground";
 import { ShieldCheck, Database, Lock, Eye } from "lucide-react";
+
+export const metadata: Metadata = {
+  title: "Privacy Policy | LarpSense Store",
+  description: "Privacy Policy explaining data protection, customer privacy, and security practices at LarpSense Store.",
+  alternates: {
+    canonical: "/privacy",
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+};
 
 export default function PrivacyPage() {
   return (

@@ -1,5 +1,18 @@
+import { Metadata } from "next";
 import ParticlesBackground from "@/components/ParticlesBackground";
 import { FileText, Shield, AlertCircle, RefreshCw } from "lucide-react";
+
+export const metadata: Metadata = {
+  title: "Terms of Service | LarpSense Store",
+  description: "Terms of Service and legal agreements for purchasing digital gaming accounts and using services at LarpSense Store.",
+  alternates: {
+    canonical: "/terms",
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+};
 
 export default function TermsPage() {
   return (

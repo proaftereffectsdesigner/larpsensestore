@@ -5,8 +5,8 @@ import { supabase } from "@/lib/supabase-client";
 import { 
   Euro, CreditCard, TrendingUp, Calendar, AlertCircle, 
   Users, MousePointerClick, Timer, MonitorSmartphone, 
-  Activity, Download, ArrowUpRight, ArrowDownRight, Globe,
-  Loader2, CheckCircle2, ChevronDown
+  Activity, ArrowUpRight, ArrowDownRight, Globe,
+  ChevronDown, ShoppingBag
 } from "lucide-react";
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer,
@@ -16,6 +16,7 @@ import EcommerceKPIs from "@/components/admin/EcommerceKPIs";
 import TokenGuardStats from "@/components/admin/TokenGuardStats";
 import CountryStats from "@/components/admin/CountryStats";
 import RecentActivityList from "@/components/admin/RecentActivityList";
+import OrdersTable from "@/components/admin/OrdersTable";
 import { DateRangePicker } from "@/components/admin/DateRangePicker";
 import { DateRange } from "react-day-picker";
 import { format } from "date-fns";
@@ -39,18 +40,17 @@ export default function AnalyticsDashboard() {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [timeRanges, setTimeRanges] = useState<{sales: string, traffic: string, system: string}>({
-    sales: '30', traffic: '30', system: '30'
+  const [timeRanges, setTimeRanges] = useState<{sales: string, orders: string, traffic: string, system: string}>({
+    sales: '30', orders: 'all', traffic: '30', system: '30'
   });
-  const [customDateRanges, setCustomDateRanges] = useState<{sales: DateRange | undefined, traffic: DateRange | undefined, system: DateRange | undefined}>({
+  const [customDateRanges, setCustomDateRanges] = useState<{sales: DateRange | undefined, orders: DateRange | undefined, traffic: DateRange | undefined, system: DateRange | undefined}>({
     sales: undefined,
+    orders: undefined,
     traffic: undefined,
     system: undefined
   });
-  const [activeTab, setActiveTab] = useState<'sales' | 'traffic' | 'system'>('sales');
+  const [activeTab, setActiveTab] = useState<'sales' | 'orders' | 'traffic' | 'system'>('sales');
   const [realtimeUsers, setRealtimeUsers] = useState<number>(0);
-  const [isExporting, setIsExporting] = useState(false);
-  const [exportSuccess, setExportSuccess] = useState(false);
   const [selectedOrders, setSelectedOrders] = useState<any[] | null>(null);
   const [selectedDateLabel, setSelectedDateLabel] = useState<string>("");
   const { convert, currency, isSuffix } = useCurrency();
@@ -103,51 +103,6 @@ export default function AnalyticsDashboard() {
   }, [activeTab, timeRanges, customDateRanges]);
 
 
-  const handleExportCSV = async () => {
-    if (!data) return;
-    
-    setIsExporting(true);
-    setExportSuccess(false);
-
-    // Simulate small processing delay for UX
-    await new Promise(resolve => setTimeout(resolve, 1500));
-
-    let headers = [];
-    let rows = [];
-    let prefix = '';
-
-    if (activeTab === 'sales') {
-      headers = ['Date', 'Orders', `Revenue (${currency.toUpperCase()})`];
-      rows = data.advanced.revenueChart.map((row: any) => [row.date, row.orders, row.revenue]);
-      prefix = 'sales';
-    } else if (activeTab === 'traffic') {
-      headers = ['Date', 'Pageviews', 'Unique Users'];
-      rows = data.advanced.trafficChart.map((row: any) => [row.date, row.pageviews, row.uniques]);
-      prefix = 'traffic';
-    } else {
-      headers = ['Time', 'Type', 'Message'];
-      rows = data.advanced.logs.map((log: any) => [log.time, log.type, `"${log.message.replace(/"/g, '""')}"`]);
-      prefix = 'system_logs';
-    }
-    
-    const csvContent = [
-      headers.join(','),
-      ...rows.map((row: any[]) => row.join(','))
-    ].join('\n');
-    
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', `${prefix}_export_${timeRanges[activeTab]}d.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-
-    setIsExporting(false);
-    setExportSuccess(true);
-    setTimeout(() => setExportSuccess(false), 3000);
-  };
 
   const TrendIndicator = ({ trend }: { trend: string }) => {
     const isPositive = trend.startsWith('+');
@@ -211,6 +166,7 @@ export default function AnalyticsDashboard() {
         <div className="flex items-center gap-2 bg-[#111] border border-white/10 p-2 rounded-2xl overflow-x-auto hide-scrollbar">
           {[
             { id: 'sales', label: 'Sales & Overview', icon: <Euro className="w-4 h-4" /> },
+            { id: 'orders', label: 'Orders', icon: <ShoppingBag className="w-4 h-4" /> },
             { id: 'traffic', label: 'Traffic & Audience', icon: <Users className="w-4 h-4" /> },
             { id: 'system', label: 'System & Health (NFA Tool)', icon: <Activity className="w-4 h-4" /> }
           ].map((tab) => (
@@ -262,21 +218,6 @@ export default function AnalyticsDashboard() {
               </div>
             </div>
           </div>
-          <button 
-            type="button"
-            onClick={handleExportCSV}
-            disabled={!data || isExporting || exportSuccess}
-            className={`flex items-center justify-center min-w-[140px] gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all disabled:opacity-50
-              ${exportSuccess ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border border-blue-500/20'}`}
-          >
-            {isExporting ? (
-              <><Loader2 className="w-4 h-4 animate-spin" /> Exporting...</>
-            ) : exportSuccess ? (
-              <><CheckCircle2 className="w-4 h-4" /> Exported!</>
-            ) : (
-              <><Download className="w-4 h-4" /> Export CSV</>
-            )}
-          </button>
         </div>
       </div>
 
@@ -482,6 +423,15 @@ export default function AnalyticsDashboard() {
                   </div>
                 </div>
               </div>
+            </div>
+          )}
+
+          {/* =========================================
+              TAB: ORDERS
+             ========================================= */}
+          {activeTab === 'orders' && (
+            <div className="space-y-6 animate-in fade-in zoom-in-95 duration-300">
+              <OrdersTable orders={data.advanced?.orders || []} />
             </div>
           )}
 

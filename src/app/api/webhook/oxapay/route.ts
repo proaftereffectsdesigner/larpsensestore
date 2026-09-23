@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { processAffiliateCommission } from "@/lib/affiliate";
 import { rateLimit, getClientIp } from "@/lib/rate-limit";
-import { sendOrderNotification } from "@/lib/discord";
+import { sendOrderNotification, sendTopUpNotification } from "@/lib/discord";
 import crypto from "crypto";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -175,6 +175,16 @@ export async function POST(req: Request) {
           .eq("id", orderNumber);
           
         await processAffiliateCommission(supabaseAdmin, userId, amountPaid, appliedPromoCode);
+
+        // Send Discord notification for crypto top-up
+        await sendTopUpNotification(
+          supabaseAdmin,
+          userId,
+          finalAmountToAdd,
+          newBalance,
+          "Crypto",
+          orderNumber
+        );
       }
     } else if (type === "PROD") {
       const { products } = await import("@/lib/products");

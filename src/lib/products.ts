@@ -3,21 +3,23 @@ export type Product = {
   name: string;
   type: string;
   endpoint: string;
-  price: number; // in euros
+  price: number; // in euros (discounted for Halloween)
+  originalPrice?: number; // original price in euros
   category: string;
   popularity: number; // Higher number = more popular
   image?: string;
 };
 
 export const products: Product[] = [
-  // CS2 Products
+  // CS2 Products (15% OFF for Halloween)
   {
     id: "prime",
     name: "Prime Ready",
     type: "prime",
     endpoint: "cs2",
     category: "cs2",
-    price: 0.79,
+    price: 0.67,
+    originalPrice: 0.79,
     popularity: 100,
     image: "/gra-cs2.webp",
   },
@@ -27,7 +29,8 @@ export const products: Product[] = [
     type: "premier",
     endpoint: "cs2",
     category: "cs2",
-    price: 0.99,
+    price: 0.84,
+    originalPrice: 0.99,
     popularity: 90,
     image: "/gra-cs2.webp",
   },
@@ -37,7 +40,8 @@ export const products: Product[] = [
     type: "premier-4-medals",
     endpoint: "cs2",
     category: "cs2",
-    price: 1.49,
+    price: 1.27,
+    originalPrice: 1.49,
     popularity: 70,
     image: "/gra-cs2.webp",
   },
@@ -47,7 +51,8 @@ export const products: Product[] = [
     type: "premier-10-medals",
     endpoint: "cs2",
     category: "cs2",
-    price: 1.79,
+    price: 1.52,
+    originalPrice: 1.79,
     popularity: 50,
     image: "/gra-cs2.webp",
   },
@@ -57,7 +62,8 @@ export const products: Product[] = [
     type: "premier-inactive",
     endpoint: "cs2",
     category: "cs2",
-    price: 1.99,
+    price: 1.69,
+    originalPrice: 1.99,
     popularity: 65,
     image: "/gra-cs2.webp",
   },
@@ -67,7 +73,8 @@ export const products: Product[] = [
     type: "premier-10k",
     endpoint: "cs2",
     category: "cs2",
-    price: 1.99,
+    price: 1.69,
+    originalPrice: 1.99,
     popularity: 45,
     image: "/gra-cs2.webp",
   },
@@ -77,7 +84,8 @@ export const products: Product[] = [
     type: "premier-15k",
     endpoint: "cs2",
     category: "cs2",
-    price: 2.99,
+    price: 2.54,
+    originalPrice: 2.99,
     popularity: 40,
     image: "/gra-cs2.webp",
   },
@@ -87,7 +95,8 @@ export const products: Product[] = [
     type: "premier-20k",
     endpoint: "cs2",
     category: "cs2",
-    price: 4.49,
+    price: 3.82,
+    originalPrice: 4.49,
     popularity: 35,
     image: "/gra-cs2.webp",
   },
@@ -97,19 +106,21 @@ export const products: Product[] = [
     type: "premier-rare",
     endpoint: "cs2",
     category: "cs2",
-    price: 4.99,
+    price: 4.24,
+    originalPrice: 4.99,
     popularity: 30,
     image: "/gra-cs2.webp",
   },
   
-  // Rust Products
+  // Rust Products (15% OFF for Halloween)
   {
     id: "rust-1-99",
     name: "Rust 1-100 Hours",
     type: "1-99",
     endpoint: "rust",
     category: "rust",
-    price: 1.81,
+    price: 1.54,
+    originalPrice: 1.81,
     popularity: 85,
     image: "/gra-rust.webp",
   },
@@ -119,7 +130,8 @@ export const products: Product[] = [
     type: "100-199",
     endpoint: "rust",
     category: "rust",
-    price: 1.97,
+    price: 1.67,
+    originalPrice: 1.97,
     popularity: 75,
     image: "/gra-rust.webp",
   },
@@ -129,7 +141,8 @@ export const products: Product[] = [
     type: "200-499",
     endpoint: "rust",
     category: "rust",
-    price: 2.15,
+    price: 1.83,
+    originalPrice: 2.15,
     popularity: 65,
     image: "/gra-rust.webp",
   },
@@ -139,7 +152,8 @@ export const products: Product[] = [
     type: "500-999",
     endpoint: "rust",
     category: "rust",
-    price: 2.45,
+    price: 2.08,
+    originalPrice: 2.45,
     popularity: 55,
     image: "/gra-rust.webp",
   },
@@ -149,19 +163,21 @@ export const products: Product[] = [
     type: "1000-plus",
     endpoint: "rust",
     category: "rust",
-    price: 2.85,
+    price: 2.42,
+    originalPrice: 2.85,
     popularity: 45,
     image: "/gra-rust.webp",
   },
 
-  // Extra Products (R6, DayZ, Battlefield)
+  // Extra Products (R6, DayZ, Battlefield - 15% OFF for Halloween)
   {
     id: "r6",
     name: "Rainbow Six Siege",
     type: "r6",
     endpoint: "extra",
     category: "extra",
-    price: 1.40,
+    price: 1.19,
+    originalPrice: 1.40,
     popularity: 60,
     image: "/gra-rainbow-six-siege.webp",
   },
@@ -171,7 +187,8 @@ export const products: Product[] = [
     type: "dayz",
     endpoint: "extra",
     category: "extra",
-    price: 1.40,
+    price: 1.19,
+    originalPrice: 1.40,
     popularity: 60,
     image: "/gra-dayz.webp",
   },
@@ -181,7 +198,8 @@ export const products: Product[] = [
     type: "bf6",
     endpoint: "extra",
     category: "extra",
-    price: 1.40,
+    price: 1.19,
+    originalPrice: 1.40,
     popularity: 60,
     image: "/gra-battlefield-6.webp",
   }

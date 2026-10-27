@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import TopUpModal from "@/components/TopUpModal";
@@ -10,9 +10,9 @@ import GlobalBanGuard from "@/components/GlobalBanGuard";
 import { Toaster } from 'sonner';
 import { AlertTriangle } from 'lucide-react';
 import { CurrencyProvider } from '@/lib/CurrencyContext';
+import HalloweenEvent from "@/components/halloween/HalloweenEvent";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const inter = Inter({
   subsets: ["latin"],
 });
 
@@ -23,6 +23,13 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.larpsensestore.com"),
+  icons: {
+    icon: [
+      { url: "/logo.png?v=2", type: "image/png" },
+    ],
+    shortcut: "/logo.png?v=2",
+    apple: "/logo.png?v=2",
+  },
   title: {
     default: "LarpSense Store | Cheap CS2 NFA Accounts & Premier Ready Smurfs",
     template: "%s | LarpSense Store",
@@ -110,17 +117,21 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
       <head>
+        <link rel="icon" type="image/png" href="/logo.png?v=2" />
+        <link rel="shortcut icon" href="/logo.png?v=2" />
+        <link rel="apple-touch-icon" href="/logo.png?v=2" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
         />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[#0a0a0a] text-[#ededed] min-h-screen flex flex-col`}
+        className={`${inter.className} antialiased bg-[#0a0a0a] text-[#ededed] min-h-screen flex flex-col`}
         suppressHydrationWarning
       >
         <CurrencyProvider>
           <PresenceTracker>
+            <HalloweenEvent />
             <Navbar />
           <main className="flex-1 flex flex-col">
             {children}
@@ -128,7 +139,21 @@ export default function RootLayout({
           <Footer />
           <TopUpModal />
           <AuthModal />
-            <Toaster theme="dark" position="bottom-right" richColors />
+            <Toaster 
+              theme="dark" 
+              position="bottom-right" 
+              toastOptions={{
+                style: {
+                  background: '#141414',
+                  border: '1px solid #262626',
+                  color: '#f5f5f7',
+                  borderRadius: '12px',
+                  boxShadow: '0 4px 24px rgba(0,0,0,0.4)',
+                  fontSize: '13px',
+                  fontWeight: '500'
+                }
+              }}
+            />
           </PresenceTracker>
         </CurrencyProvider>
       </body>

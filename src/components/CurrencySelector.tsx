@@ -59,31 +59,34 @@ export default function CurrencySelector() {
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-1.5 h-10 px-3 bg-[#141414]/80 hover:bg-[#1f1f1f]/80 backdrop-blur-md border border-white/10 rounded-full transition-colors"
+        className="flex items-center gap-1.5 h-8 px-2 hover:bg-white/5 rounded transition-colors text-gray-400 hover:text-white group"
       >
-        <span className="text-sm font-bold text-white">{current.code}</span>
-        <span className="text-xs text-gray-400">{current.symbol}</span>
-        <ChevronDown className={`w-3 h-3 text-gray-400 transition-transform ${isOpen ? "rotate-180" : ""}`} />
+        <span className="text-sm font-medium transition-colors">{current.code}</span>
+        <span className="text-xs transition-colors">{current.symbol}</span>
+        <ChevronDown className={`w-3 h-3 transition-transform ${isOpen ? "rotate-180" : "group-hover:text-white"}`} />
       </button>
 
       {isOpen && (
-        <div className="absolute top-full right-0 mt-2 w-48 bg-[#141414] border border-white/10 rounded-2xl p-2 shadow-2xl animate-in fade-in zoom-in-95 origin-top-right z-50">
-          <div className="px-2 pb-2 border-b border-white/10 mb-2">
+        <div className="absolute top-full right-0 mt-3 w-56 bg-[#111] border border-white/10 rounded-[16px] shadow-2xl animate-in fade-in zoom-in-95 origin-top-right z-50 overflow-hidden">
+          
+          {/* Seamless Search Bar */}
+          <div className="flex items-center px-3 py-2 border-b border-white/5 bg-[#111]">
+            <svg className="w-4 h-4 text-white/40 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
             <input 
               type="text" 
               placeholder="Search..." 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-[#1f1f1f] border border-white/10 rounded-lg px-3 py-1.5 text-sm text-white placeholder:text-gray-500 focus:outline-none focus:border-white/20 transition-colors"
+              className="w-full bg-transparent border-none p-0 text-[13px] text-white placeholder:text-white/40 focus:ring-0 focus:outline-none"
               autoFocus
             />
           </div>
-          <div className="max-h-[280px] overflow-y-auto custom-scrollbar pr-1">
-            <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest px-3 py-1 mb-1">
-              Currency
-            </div>
+
+          <div className="max-h-[260px] overflow-y-auto overscroll-contain custom-scrollbar p-1.5">
             {filteredCurrencies.length === 0 ? (
-              <div className="text-sm text-gray-500 text-center py-4">No results found</div>
+              <div className="text-[13px] text-white/40 text-center py-6">No results</div>
             ) : (
               filteredCurrencies.map(c => (
                 <button
@@ -93,17 +96,21 @@ export default function CurrencySelector() {
                     setIsOpen(false);
                     setSearchTerm("");
                   }}
-                  className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-sm font-medium transition-colors ${
+                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-[10px] transition-colors ${
                     currency === c.code 
-                      ? "bg-accent/20 text-accent" 
-                      : "text-gray-300 hover:bg-white/5 hover:text-white"
+                      ? "bg-white/10 text-white" 
+                      : "text-white/60 hover:bg-white/5 hover:text-white"
                   }`}
                 >
-                  <div className="flex flex-col items-start leading-tight">
-                    <span>{c.code}</span>
-                    <span className="text-[10px] text-gray-500 font-normal">{c.label}</span>
+                  <div className="flex items-center gap-3">
+                    <span className="text-[14px] font-medium w-8 text-left">{c.code}</span>
+                    <span className="text-[13px] text-white/40 font-normal">{c.label}</span>
                   </div>
-                  <span className="text-xs text-gray-500">{c.symbol}</span>
+                  {currency === c.code && (
+                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  )}
                 </button>
               ))
             )}

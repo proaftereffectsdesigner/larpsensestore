@@ -1,13 +1,85 @@
 "use client";
 
-import { products } from "@/lib/products";
-import { CheckCircle2, ChevronRight, Gamepad2 } from "lucide-react";
+import { ShieldCheck, Zap } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState, useRef } from "react";
-
-import ParticlesBackground from "@/components/ParticlesBackground";
 import Image from "next/image";
 import { useCurrency } from "@/lib/CurrencyContext";
+import MiniPumpkin from "./halloween/MiniPumpkin";
+import { HALLOWEEN_EVENT_ENABLED } from "./halloween/HalloweenConfig";
+
+const CategoryCard = ({ category, inStock, convert }: any) => {
+  return (
+    <Link href={`/shop?category=${category.id}`} className="block h-full">
+      <div className="relative group cursor-pointer h-full">
+        {/* Card Body - Minimalist, sleek, grounded in row, zero clipping */}
+        <div className="w-full h-full bg-[#111113] border border-white/10 group-hover:border-white/25 rounded-[28px] overflow-hidden relative z-10 flex flex-col items-center select-none transition-all duration-300 ease-out">
+          
+          {/* Badge: Stock - Exact Shop Style, no live dot */}
+          <div className="absolute top-5 left-5 z-20">
+            {inStock ? (
+              <span className="bg-[#111] border border-white/5 text-emerald-500 px-2.5 py-1 rounded text-[9px] font-bold uppercase tracking-widest">
+                In Stock
+              </span>
+            ) : (
+              <span className="bg-[#111] border border-white/5 text-red-500 px-2.5 py-1 rounded text-[9px] font-bold uppercase tracking-widest">
+                Out of Stock
+              </span>
+            )}
+          </div>
+
+          {/* Graphic Image */}
+          <div className="w-full aspect-[16/9] relative mt-6 px-6 flex justify-center items-center">
+            <div className="w-full h-full relative">
+              <Image 
+                src={category.image} 
+                alt={category.name} 
+                fill 
+                className="object-contain transition-transform duration-500 ease-out group-hover:scale-105" 
+              />
+            </div>
+          </div>
+
+          {/* Details */}
+          <div className="mt-auto w-full p-7 pt-4 flex flex-col items-center text-center">
+            {/* Trust Badges */}
+            <div className="flex gap-2 mb-3">
+              <div className="flex items-center gap-1 text-[10px] text-white/50 bg-white/5 px-2 py-0.5 rounded font-medium">
+                <ShieldCheck className="w-3 h-3 text-[#48c931]" />
+                <span>VERIFIED</span>
+              </div>
+              <div className="flex items-center gap-1 text-[10px] text-white/50 bg-white/5 px-2 py-0.5 rounded font-medium">
+                <Zap className="w-3 h-3 text-[#48c931]" />
+                <span>INSTANT</span>
+              </div>
+            </div>
+            
+            <h3 className="text-xl md:text-2xl font-bold text-white tracking-tight mb-1.5 leading-tight">
+              {category.name}
+            </h3>
+            <p className="text-xs md:text-sm text-neutral-400 mb-6 font-normal line-clamp-2 max-w-xs">
+              {category.desc}
+            </p>
+            
+            <div className="w-full py-3 rounded-full bg-white text-black font-semibold text-sm group-hover:bg-neutral-200 transition-colors duration-200 flex justify-center items-center gap-2">
+              {category.originalPrice && (
+                <span className="line-through text-neutral-400 text-xs font-normal">
+                  {convert(category.originalPrice).formatted}
+                </span>
+              )}
+              <span>Buy from {convert(category.price).formatted}</span>
+              {HALLOWEEN_EVENT_ENABLED && (
+                <span className="bg-orange-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full ml-0.5">
+                  -15%
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </Link>
+  );
+};
 
 export default function ProductCards() {
   const [stockData, setStockData] = useState<any>(null);
@@ -16,7 +88,6 @@ export default function ProductCards() {
   const { convert } = useCurrency();
 
   useEffect(() => {
-    // Intersection Observer to trigger animation when scrolled into view
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
@@ -27,10 +98,7 @@ export default function ProductCards() {
       { threshold: 0.1, rootMargin: '0px 0px -50px 0px' }
     );
 
-    if (containerRef.current) {
-      observer.observe(containerRef.current);
-    }
-
+    if (containerRef.current) observer.observe(containerRef.current);
     return () => observer.disconnect();
   }, []);
 
@@ -38,105 +106,93 @@ export default function ProductCards() {
     fetch("/api/stock")
       .then((res) => res.json())
       .then((data) => {
-        if (data.ok && data.stock) {
-          setStockData(data.stock);
-        } else {
-          setStockData({});
-        }
+        if (data.ok && data.stock) setStockData(data.stock);
       })
-      .catch((err) => {
-        console.error(err);
-        setStockData({});
-      });
+      .catch(() => setStockData({}));
   }, []);
 
-  const displayCategories = [
-    { id: "cs2", name: "Counter Strike 2 Accounts", image: "/kategoria-cs2.webp", desc: "Premium CS2 NFA accounts with varying ratings and medals." },
-    { id: "rust", name: "Rust Accounts", image: "/kategoria-rust.webp", desc: "Rust NFA accounts with different playtime hours. Build your base immediately." },
-    { id: "extra", name: "Extra Accounts", image: "/kategoria-extra.webp", desc: "Additional games: Rainbow Six Siege, DayZ, Battlefield 6." },
+  const categories = [
+    {
+      id: "cs2",
+      name: "CS2 Accounts",
+      image: "/kategoria-cs2.webp",
+      desc: "Prime status, Premier ready & ranked accounts delivered instantly.",
+      price: 0.67,
+      originalPrice: 0.79,
+    },
+    {
+      id: "rust",
+      name: "Rust Accounts",
+      image: "/kategoria-rust.webp",
+      desc: "Fresh NFA to high-hour wipe ready survivor accounts.",
+      price: 1.54,
+      originalPrice: 1.81,
+    },
+    {
+      id: "extra",
+      name: "Extra Accounts",
+      image: "/kategoria-extra.webp",
+      desc: "Tactical & survival accounts: Rainbow Six Siege, DayZ & Battlefield 6.",
+      price: 1.19,
+      originalPrice: 1.40,
+    }
   ];
 
-  const getPriceRange = (categoryId: string) => {
-    const catProducts = products.filter(p => p.category === categoryId);
-    if (catProducts.length === 0) return { min: 0, max: 0 };
-    const prices = catProducts.map(p => p.price);
-    return { min: Math.min(...prices), max: Math.max(...prices) };
-  };
-
   const isCategoryInStock = (categoryId: string) => {
-    if (!stockData) return null;
-    const catProducts = products.filter(p => p.category === categoryId);
-    for (const product of catProducts) {
-      const stock = stockData[product.endpoint]?.[product.type]?.available || 0;
-      if (stock > 0) return true;
+    if (!stockData) return true;
+    if (categoryId === "cs2") {
+      return (
+        (stockData["cs2"]?.["prime"]?.available || 0) > 0 ||
+        (stockData["cs2"]?.["premier"]?.available || 0) > 0
+      );
     }
-    return false;
+    if (categoryId === "rust") {
+      return (
+        (stockData["rust"]?.["1-99"]?.available || 0) > 0 ||
+        (stockData["rust"]?.["100-199"]?.available || 0) > 0
+      );
+    }
+    if (categoryId === "extra") {
+      return (
+        (stockData["extra"]?.["r6"]?.available || 0) > 0 ||
+        (stockData["extra"]?.["dayz"]?.available || 0) > 0 ||
+        (stockData["extra"]?.["bf6"]?.available || 0) > 0
+      );
+    }
+    return true;
   };
 
   return (
-    <div className="w-full max-w-7xl mx-auto p-6 relative z-10" id="products" ref={containerRef}>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-full mx-auto">
-        {displayCategories.map((category, index) => {
+    <div className="w-full max-w-7xl mx-auto py-20 px-4 sm:px-8 relative z-10" ref={containerRef}>
+      
+      {/* Header with Title */}
+      <div className={`mb-12 transition-all duration-700 ease-out ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'}`}>
+        <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white tracking-tight leading-tight flex items-center gap-3">
+          <span>Premium Selection.</span>
+          {HALLOWEEN_EVENT_ENABLED && (
+            <span className="inline-flex hover:rotate-12 transition-transform duration-300">
+              <MiniPumpkin className="w-7 h-7 md:w-8 md:h-8" />
+            </span>
+          )}
+        </h2>
+        <p className="text-[#f5f5f7]/60 text-base md:text-lg mt-2.5 max-w-xl font-normal">
+          Our highest quality accounts, hand-verified and ready for instant delivery. Take your pick.
+        </p>
+      </div>
+
+      {/* 3 Categories Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+        {categories.map((category, index) => {
           const inStock = isCategoryInStock(category.id);
-          const { min, max } = getPriceRange(category.id);
 
           return (
-            <Link 
+            <div 
               key={category.id} 
-              href={`/shop?category=${category.id}`}
-              className={`transition-all duration-1000 ease-out block ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-20'} ${index % 3 === 1 ? 'delay-200' : index % 3 === 2 ? 'delay-300' : 'delay-100'}`}
+              className={`transition-all duration-700 ease-out ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'}`}
+              style={{ transitionDelay: `${index * 100}ms` }}
             >
-              <div className="group bg-[#1a1a1a] border border-white/5 rounded-[2rem] overflow-hidden shadow-2xl transition-all hover:border-white/10 hover:-translate-y-1 flex flex-col h-full cursor-pointer">
-                {/* Obrazek (16:9 Graphic) */}
-                <div className="w-full aspect-video relative flex flex-col items-center justify-center overflow-hidden">
-                  <Image 
-                    src={category.image} 
-                    alt={category.name} 
-                    fill 
-                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                    className="object-cover transition-transform duration-500 scale-100 group-hover:scale-105" 
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#1a1a1a] via-transparent to-transparent z-10 pointer-events-none" />
-                  
-                  <div className="absolute top-4 right-4 z-20">
-                    {inStock === null ? (
-                      <span className="inline-flex items-center gap-1.5 bg-black/50 text-gray-400 px-3 py-1 rounded-full text-[11px] font-medium backdrop-blur-md border border-white/10 animate-pulse">
-                        Checking...
-                      </span>
-                    ) : inStock ? (
-                      <span className="inline-flex items-center gap-1.5 bg-green-500/20 text-green-400 px-3 py-1 rounded-full text-[11px] font-medium backdrop-blur-md border border-green-500/30 shadow-[0_0_10px_rgba(34,197,94,0.2)]">
-                        <CheckCircle2 className="w-3 h-3" />
-                        In Stock
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1.5 bg-red-500/20 text-red-400 px-3 py-1 rounded-full text-[11px] font-medium backdrop-blur-md border border-red-500/30">
-                        Out of Stock
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                {/* Dolna sekcja z opisem */}
-                <div className="px-6 pb-6 pt-2 md:px-8 md:pb-8 flex flex-col flex-1 bg-[#1a1a1a] relative z-20">
-                  <h2 className="text-2xl font-bold text-white group-hover:text-white transition-colors">{category.name}</h2>
-                  <p className="text-sm text-gray-400 mt-2 mb-6 line-clamp-2">
-                    {category.desc}
-                  </p>
-                  
-                  <div className="mt-8 flex items-center justify-between border-t border-white/5 pt-6">
-                    <div>
-                      <div className="text-[11px] text-gray-500 mb-1">Price Range</div>
-                      <div className="font-mono text-xl font-bold text-white tracking-tight">
-                        {min === max ? convert(min).formatted : `${convert(min).formatted} - ${convert(max).formatted}`}
-                      </div>
-                    </div>
-                    <div className="bg-white/5 p-3.5 rounded-full group-hover:bg-white/10 transition-colors text-white border border-white/5 group-hover:border-white/10">
-                      <ChevronRight className="w-4 h-4" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </Link>
+              <CategoryCard category={category} inStock={inStock} convert={convert} />
+            </div>
           );
         })}
       </div>

@@ -83,7 +83,21 @@ export async function POST(req: Request) {
         const isExpired = standardCode.expires_at && new Date(standardCode.expires_at).getTime() < Date.now();
         const isDepleted = standardCode.max_uses && standardCode.current_uses >= standardCode.max_uses;
         
-        if (!isExpired && !isDepleted) {
+        // Enforce scratch card ownership
+        let isOwner = true;
+        if (standardCode.code.startsWith("CARD") || standardCode.code.startsWith("SCRATCH")) {
+          const parts = standardCode.code.split("-");
+          if (parts.length >= 2) {
+            const userPrefix = parts[1].toUpperCase();
+            const cleanUserPrefix = userId.replace(/-/g, "").slice(0, 8).toUpperCase();
+            const dashedUserPrefix = userId.slice(0, 8).toUpperCase();
+            if (userPrefix !== cleanUserPrefix && userPrefix !== dashedUserPrefix) {
+              isOwner = false;
+            }
+          }
+        }
+
+        if (!isExpired && !isDepleted && isOwner) {
           const { data: profile } = await supabaseAdmin.from("profiles").select("total_spent").eq("id", userId).single();
           const totalSpent = profile ? Number(profile.total_spent) : 0;
           
@@ -231,6 +245,28 @@ export async function POST(req: Request) {
     if (isStandardPromo && promoCodeId && standardCodeData) {
       await supabaseAdmin.from("promo_codes").update({ current_uses: standardCodeData.current_uses + 1 }).eq("id", promoCodeId);
       await supabaseAdmin.from("promo_code_usages").insert({ user_id: userId, promo_code_id: promoCodeId });
+
+      if (standardCodeData.code.startsWith("CARD") || standardCodeData.code.startsWith("SCRATCH")) {
+        try {
+          const { data: userData } = await supabaseAdmin.auth.admin.getUserById(userId);
+          const appMeta = userData?.user?.app_metadata || {};
+          const userMeta = userData?.user?.user_metadata || {};
+          const activeCard = appMeta.active_scratch_card || userMeta.active_scratch_card;
+          if (activeCard) {
+            const updatedCard = {
+              ...activeCard,
+              status: "used",
+              used_at: new Date().toISOString()
+            };
+            await supabaseAdmin.auth.admin.updateUserById(userId, {
+              app_metadata: { ...appMeta, active_scratch_card: updatedCard },
+              user_metadata: { ...userMeta, active_scratch_card: updatedCard }
+            });
+          }
+        } catch (e) {
+          console.error("Failed to mark scratch card used in metadata:", e);
+        }
+      }
     }
 
     const { data: orderData, error: dbError } = await supabase

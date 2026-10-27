@@ -7,6 +7,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { CheckCircle2, ChevronRight, Search, SlidersHorizontal } from "lucide-react";
 import { useCurrency } from "@/lib/CurrencyContext";
+import MiniPumpkin from "@/components/halloween/MiniPumpkin";
+import { HALLOWEEN_EVENT_ENABLED } from "@/components/halloween/HalloweenConfig";
 
 const categories = [
   { id: "all", name: "All Products" },
@@ -32,6 +34,7 @@ function ShopContent() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState(initialCategory);
   const [sortBy, setSortBy] = useState(initialSortBy);
+  const [isSortOpen, setIsSortOpen] = useState(false);
   const [stockData, setStockData] = useState<any>(null);
   
   const { convert } = useCurrency();
@@ -100,30 +103,19 @@ function ShopContent() {
   };
 
   return (
-    <div className="min-h-screen pt-8 pb-20 px-4 md:px-8">
-      <div className="max-w-7xl mx-auto flex flex-col items-center">
-        <h1 className="text-4xl font-black text-white uppercase tracking-tight mb-8">Store</h1>
+    <div className="min-h-screen pt-12 pb-24 px-4 md:px-8">
+      <div className="max-w-4xl mx-auto flex flex-col">
         
         {/* Filters & Search */}
-        <div className="w-full bg-[#141414]/80 backdrop-blur-xl border border-white/10 rounded-3xl p-4 md:p-6 mb-12 shadow-2xl flex flex-col md:flex-row gap-4 justify-between items-center z-20">
+        <div className="w-full flex flex-col md:flex-row justify-between items-end md:items-center gap-6 mb-16 pb-4 border-b border-white/10 z-20">
           
-          <div className="flex w-full md:w-1/3 relative">
-            <Search className="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-            <input 
-              type="text" 
-              placeholder="Search products..." 
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-black/40 border border-white/10 rounded-xl py-3 pl-12 pr-4 text-white text-sm focus:outline-none focus:border-white/30 transition-all"
-            />
-          </div>
-
-          <div className="flex w-full md:w-auto gap-4 flex-col sm:flex-row">
-            <div className="relative">
-              <select 
-                value={activeCategory} 
-                onChange={(e) => {
-                  const val = e.target.value;
+          {/* Invisible Tabs (Apple Style) */}
+          <div className="flex items-center gap-6 overflow-x-auto w-full md:w-auto scrollbar-hide">
+            {categories.map(cat => (
+              <button
+                key={cat.id}
+                onClick={() => {
+                  const val = cat.id;
                   setActiveCategory(val);
                   const params = new URLSearchParams(searchParams.toString());
                   if (val === "all") {
@@ -133,115 +125,170 @@ function ShopContent() {
                   }
                   router.push(`${pathname}?${params.toString()}`, { scroll: false });
                 }}
-                className="w-full sm:w-auto appearance-none bg-black/40 border border-white/10 rounded-xl py-3 pl-4 pr-10 text-white text-sm font-medium focus:outline-none focus:border-white/30 transition-all"
+                className={`text-[13px] tracking-wide whitespace-nowrap transition-colors ${activeCategory === cat.id ? 'text-white font-semibold' : 'text-gray-500 hover:text-white'}`}
               >
-                {categories.map(cat => (
-                  <option key={cat.id} value={cat.id} className="bg-[#141414]">{cat.name}</option>
-                ))}
-              </select>
-              <SlidersHorizontal className="w-4 h-4 absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                {cat.name}
+              </button>
+            ))}
+          </div>
+
+          <div className="flex items-center gap-6 w-full md:w-auto">
+            <div className="relative flex items-center w-full md:w-auto">
+              <Search className={`w-4 h-4 absolute left-0 ${HALLOWEEN_EVENT_ENABLED ? 'text-orange-400/60' : 'text-gray-500'}`} />
+              <input 
+                type="text" 
+                placeholder={HALLOWEEN_EVENT_ENABLED ? "Search accounts or treats... 🎃" : "Search..."} 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className={`w-full md:w-36 focus:md:w-56 transition-all bg-transparent border-none py-1 pl-6 pr-0 text-white text-[13px] focus:outline-none focus:ring-0 ${HALLOWEEN_EVENT_ENABLED ? 'placeholder:text-orange-200/40' : 'placeholder:text-gray-600'}`}
+              />
             </div>
 
-            <div className="relative">
-              <select 
-                value={sortBy} 
-                onChange={(e) => {
-                  const val = e.target.value;
-                  setSortBy(val);
-                  const params = new URLSearchParams(searchParams.toString());
-                  if (val === "popular") {
-                    params.delete("sort");
-                  } else {
-                    params.set("sort", val);
-                  }
-                  router.push(`${pathname}?${params.toString()}`, { scroll: false });
-                }}
-                className="w-full sm:w-auto appearance-none bg-black/40 border border-white/10 rounded-xl py-3 pl-4 pr-10 text-white text-sm font-medium focus:outline-none focus:border-white/30 transition-all"
+            <div 
+              className="relative flex items-center" 
+              tabIndex={0} 
+              onBlur={(e) => { 
+                if (!e.currentTarget.contains(e.relatedTarget)) setIsSortOpen(false); 
+              }}
+            >
+              <button 
+                onClick={() => setIsSortOpen(!isSortOpen)}
+                className="flex items-center gap-2 bg-transparent border-none py-1 text-gray-500 text-[13px] font-medium focus:outline-none focus:ring-0 cursor-pointer hover:text-white transition-colors"
               >
-                {sortOptions.map(opt => (
-                  <option key={opt.id} value={opt.id} className="bg-[#141414]">{opt.name}</option>
-                ))}
-              </select>
-              <SlidersHorizontal className="w-4 h-4 absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                {sortOptions.find(o => o.id === sortBy)?.name || "Sort"}
+                <SlidersHorizontal className="w-3 h-3 text-gray-500" />
+              </button>
+              
+              {isSortOpen && (
+                <div className="absolute top-full right-0 mt-2 w-48 bg-[#0a0a0a] border border-white/10 rounded-xl overflow-hidden shadow-2xl shadow-black z-50">
+                  {sortOptions.map(opt => (
+                    <button
+                      key={opt.id}
+                      onClick={() => {
+                        setSortBy(opt.id);
+                        setIsSortOpen(false);
+                        const params = new URLSearchParams(searchParams.toString());
+                        if (opt.id === "popular") {
+                          params.delete("sort");
+                        } else {
+                          params.set("sort", opt.id);
+                        }
+                        router.push(`${pathname}?${params.toString()}`, { scroll: false });
+                      }}
+                      className={`w-full text-left px-4 py-2.5 text-[13px] transition-colors ${sortBy === opt.id ? 'bg-white/10 text-white font-medium' : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}
+                    >
+                      {opt.name}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
 
+
+
         {/* Product Grid */}
-        <div className="w-full flex flex-col gap-12">
+        <div className="w-full flex flex-col gap-16">
           {categories.filter(c => c.id !== "all" && (activeCategory === "all" || activeCategory === c.id)).map(category => {
             const categoryProducts = filteredProducts.filter(p => p.category === category.id);
             
             if (categoryProducts.length === 0) return null;
 
+            // Determine top 3 most frequently bought / popular accounts in this category
+            const top3CategoryProductIds = new Set(
+              [...categoryProducts]
+                .sort((a, b) => (b.popularity || 0) - (a.popularity || 0))
+                .slice(0, 3)
+                .map(p => p.id)
+            );
+
             return (
               <div key={category.id} className="w-full flex flex-col gap-6">
-                <div className="flex items-center gap-4">
-                  <h2 className="text-2xl font-bold text-white">{category.name}</h2>
-                  <div className="h-px bg-white/10 flex-1"></div>
+                <div className="flex items-center gap-4 mb-2">
+                  <h2 className="text-2xl font-bold text-white tracking-tight flex items-center gap-2">
+                    <span>{category.name}</span>
+                    {HALLOWEEN_EVENT_ENABLED && <MiniPumpkin className="w-5 h-5 -mt-0.5" />}
+                  </h2>
+                  <div className={`h-px flex-1 ${HALLOWEEN_EVENT_ENABLED ? 'bg-gradient-to-r from-orange-500/25 via-purple-500/20 to-transparent' : 'bg-white/10'}`}></div>
                 </div>
                 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                   {categoryProducts.map((product) => {
                     const totalStock = stockData ? (stockData[product.endpoint]?.[product.type]?.available || 0) : 0;
                     const img = product.image || getProductImage(product.id, product.category);
                     const desc = getDescription(product.id);
-                    const gameTag = getGameName(product.endpoint, product.id);
 
                     return (
                       <Link 
                         key={product.id} 
                         href={`/product/${product.id}`}
-                        className="group bg-[#1a1a1a] border border-white/5 rounded-3xl overflow-hidden shadow-2xl transition-all hover:border-white/10 hover:-translate-y-1 flex flex-col h-full cursor-pointer"
+                        className={`group relative flex flex-col bg-[#0a0a0a] rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-1 ${
+                          HALLOWEEN_EVENT_ENABLED 
+                            ? 'border border-white/5 hover:border-orange-500/40' 
+                            : 'border border-white/5 hover:border-white/10'
+                        }`}
                       >
-                        <div className="w-full aspect-video relative flex flex-col items-center justify-center overflow-hidden">
+                        {/* Header Banner Image */}
+                        <div className="w-full h-32 relative overflow-hidden bg-[#111]">
                           <Image 
                             src={img} 
                             alt={product.name} 
                             fill 
-                            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                            className="object-cover transition-transform duration-500 scale-100 group-hover:scale-105" 
+                            className="object-cover opacity-60 group-hover:opacity-100 transition-opacity duration-700 scale-100 group-hover:scale-105" 
                           />
-                          <div className="absolute inset-0 bg-gradient-to-t from-[#1a1a1a] via-transparent to-transparent z-10 pointer-events-none" />
+                          <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-[#0a0a0a]/50 to-transparent" />
                           
+                          {/* Halloween Spooky Pick Badge for Top 3 Most Bought Items */}
+                          {HALLOWEEN_EVENT_ENABLED && top3CategoryProductIds.has(product.id) && (
+                            <div className="absolute top-3 left-3 z-20">
+                              <span className="bg-[#111] border border-orange-500/30 text-orange-400 px-2 py-0.5 rounded text-[9px] font-bold tracking-wider uppercase flex items-center gap-1">
+                                🎃 Spooky Pick
+                              </span>
+                            </div>
+                          )}
+
                           <div className="absolute top-3 right-3 z-20">
                             {stockData === null ? (
-                              <span className="inline-flex items-center gap-1.5 bg-black/60 text-gray-400 px-2 py-1 rounded-md text-[9px] font-bold backdrop-blur-md border border-white/10 uppercase animate-pulse">
+                              <span className="bg-[#111] border border-white/5 text-gray-500 px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-widest">
                                 Checking
                               </span>
                             ) : totalStock > 0 ? (
-                              <span className="inline-flex items-center gap-1.5 bg-green-500/20 text-green-400 px-2 py-1 rounded-md text-[9px] font-bold backdrop-blur-md border border-green-500/30 uppercase shadow-[0_0_10px_rgba(34,197,94,0.2)]">
-                                <CheckCircle2 className="w-3 h-3" />
+                              <span className="bg-[#111] border border-white/5 text-emerald-500 px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-widest">
                                 In Stock
                               </span>
                             ) : (
-                              <span className="inline-flex items-center gap-1.5 bg-red-500/20 text-red-400 px-2 py-1 rounded-md text-[9px] font-bold backdrop-blur-md border border-red-500/30 uppercase">
+                              <span className="bg-[#111] border border-white/5 text-red-500 px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-widest">
                                 Out of Stock
                               </span>
                             )}
                           </div>
                         </div>
 
-                        <div className="px-5 pb-5 pt-3.5 flex flex-col flex-1 bg-[#1a1a1a] relative z-20">
-                          <div className="flex items-center gap-2 mb-1.5">
-                            <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400/90 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
-                              {gameTag}
-                            </span>
-                          </div>
-                          <h2 className="text-xl font-bold text-white group-hover:text-white transition-colors truncate">{product.name}</h2>
-                          <p className="text-xs text-gray-400 mt-1.5 mb-4 line-clamp-2 leading-relaxed">
-                            {desc}
-                          </p>
+                        {/* Content */}
+                        <div className="flex flex-col flex-1 p-6 pt-2 relative z-10">
+                          <h3 className="text-lg font-bold text-white mb-2 leading-tight">{product.name}</h3>
+                          <p className="text-[13px] text-gray-400 line-clamp-2 leading-relaxed mb-8">{desc}</p>
                           
-                          <div className="mt-auto flex items-center justify-between border-t border-white/5 pt-4">
+                          <div className="mt-auto flex items-end justify-between">
                             <div>
-                              <div className="text-[10px] uppercase tracking-widest font-bold text-gray-500 mb-0.5">Price</div>
-                              <div className="font-mono text-lg font-bold text-white tracking-tight">
-                                {convert(product.price).formatted}
+                              <span className="text-[10px] text-gray-500 uppercase tracking-widest font-bold block mb-1">Price</span>
+                              <div className="flex items-baseline gap-2">
+                                {product.originalPrice && (
+                                  <span className="text-xs line-through text-gray-500">
+                                    {convert(product.originalPrice).formatted}
+                                  </span>
+                                )}
+                                <span className="text-xl font-bold text-white tracking-tight">{convert(product.price).formatted}</span>
+                                {HALLOWEEN_EVENT_ENABLED && (
+                                  <span className="text-[10px] font-bold text-orange-400 bg-orange-500/10 border border-orange-500/20 px-1.5 py-0.5 rounded-full">
+                                    -15%
+                                  </span>
+                                )}
                               </div>
                             </div>
-                            <div className="bg-white/5 p-2 rounded-xl group-hover:bg-white/10 transition-colors text-white border border-white/5 group-hover:border-white/10">
-                              <ChevronRight className="w-4 h-4" />
+                            <div className="h-10 w-10 rounded-xl bg-white/5 border border-white/5 flex items-center justify-center text-white group-hover:bg-white group-hover:text-black transition-all duration-300">
+                              <ChevronRight className="w-5 h-5" />
                             </div>
                           </div>
                         </div>
@@ -254,7 +301,7 @@ function ShopContent() {
           })}
 
           {filteredProducts.length === 0 && (
-            <div className="py-20 text-center text-gray-500 font-medium">
+            <div className="py-20 text-center text-gray-500 text-[13px]">
               No products found matching your criteria.
             </div>
           )}

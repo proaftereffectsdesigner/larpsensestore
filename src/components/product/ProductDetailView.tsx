@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { products, getProductImage } from "@/lib/products";
 import { supabase } from "@/lib/supabase-client";
 import { User } from "@supabase/supabase-js";
-import { CheckCircle2, CreditCard, Wallet, ChevronDown, ChevronRight, ChevronLeft, Minus, Plus, ShieldCheck, Gamepad2, Info, Zap, Lock, RefreshCcw, ShieldAlert, Star, CircleDollarSign } from "lucide-react";
+import { CheckCircle2, CreditCard, Wallet, ChevronDown, ChevronRight, ChevronLeft, Minus, Plus, ShieldCheck, Gamepad2, Info, Zap, Lock, RefreshCcw, ShieldAlert, Star, CircleDollarSign, Timer, Key, Shield, Award, Crown, Medal } from "lucide-react";
 import { SiStripe, SiSolana, SiLitecoin, SiTether, SiBitcoin, SiEthereum } from "react-icons/si";
 import { CryptoPaymentModal } from "@/components/dashboard/CryptoPaymentModal";
 import { toast } from "sonner";
@@ -15,6 +15,8 @@ import ParticlesBackground from "@/components/ParticlesBackground";
 import Image from "next/image";
 import Link from "next/link";
 import { UserIcon } from "lucide-react";
+import MiniPumpkin from "@/components/halloween/MiniPumpkin";
+import { HALLOWEEN_EVENT_ENABLED } from "@/components/halloween/HalloweenConfig";
 
 export default function ProductDetailView() {
   const { id } = useParams();
@@ -54,6 +56,13 @@ export default function ProductDetailView() {
   const [reviewsLoading, setReviewsLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [sortBy, setSortBy] = useState<"newest" | "oldest" | "best" | "worst">("newest");
+  const [isSortDropdownOpen, setIsSortDropdownOpen] = useState(false);
+  const sortOptions = {
+    newest: "Most Recent",
+    oldest: "Oldest",
+    best: "Highest Rated",
+    worst: "Lowest Rated"
+  };
   const reviewsPerPage = 8;
   const [expandedReviews, setExpandedReviews] = useState<Set<number>>(new Set());
 
@@ -291,448 +300,468 @@ export default function ProductDetailView() {
   return (
     <>
     <div className="flex flex-col items-center py-12 px-4 relative z-10 min-h-[calc(100vh-80px)] mt-8">
-      <div className="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+      {/* Back Button */}
+      <div className="w-full max-w-6xl flex justify-start mb-6">
+        <button 
+          onClick={() => router.back()} 
+          className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors font-medium group"
+        >
+          <ChevronLeft className="w-5 h-5 transition-transform group-hover:-translate-x-1" />
+          Back
+        </button>
+      </div>
+      
+      <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-12 gap-12 xl:gap-20 items-start">
         
-        {/* Lewa kolumna: Grafika i Opis */}
-        <div className="flex flex-col gap-6">
-          {/* Obrazek (16:9 Graphic) */}
-          <div className="w-full aspect-video relative flex flex-col items-center justify-center overflow-hidden rounded-3xl border border-white/10 shadow-[0_0_40px_rgba(0,0,0,0.5)] group transition-all">
+        {/* Left column: Image & Features */}
+        <div className="lg:col-span-7 flex flex-col gap-12">
+          {/* Image */}
+          <div className="w-full aspect-[4/3] relative rounded-3xl overflow-hidden bg-[#111] border border-white/5 group">
             <Image 
               src={selectedProduct?.image || getProductImage(selectedProduct?.id || (typeof id === 'string' ? id : ''), selectedProduct?.category)} 
               alt={selectedProduct?.name || "Product"} 
               fill 
-              sizes="(max-width: 1024px) 100vw, 50vw"
+              sizes="(max-width: 1024px) 100vw, 60vw"
               className="object-cover transition-transform duration-500 scale-100 group-hover:scale-105" 
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#141414]/60 via-transparent to-transparent z-10 pointer-events-none" />
           </div>
-
-          {/* Opis Produktu */}
-          <div className="bg-[#141414]/60 backdrop-blur-xl border border-white/10 rounded-3xl p-6 md:p-8 shadow-2xl text-gray-300">
-            <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-              <Info className="w-5 h-5 text-accent" />
-              Product Details
-            </h3>
-            <ul className="space-y-3 text-sm leading-relaxed">
-              <li className="flex items-start gap-2">
-                <Zap className="w-4 h-4 text-green-400 mt-0.5 shrink-0" />
-                <span><strong>Instant Delivery:</strong> Secure account file available in your dashboard immediately after purchase.</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <Lock className="w-4 h-4 text-green-400 mt-0.5 shrink-0" />
-                <span><strong>NFA Account:</strong> Connect seamlessly using our LarpSense NFA Tool.</span>
-              </li>
+          
+          {/* Clean Description */}
+          <div className="flex flex-col gap-6">
+            <h2 className="text-3xl font-semibold text-white tracking-tight">The essentials.</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-8 gap-x-6">
+              <div className="flex flex-col gap-2">
+                <div className="text-white font-medium flex items-center gap-2.5">
+                  <Timer className="w-5 h-5 text-[#47c92f]" />
+                  Instant Delivery
+                </div>
+                <div className="text-gray-400 text-sm leading-relaxed">Get your account immediately after payment. No waiting.</div>
+              </div>
+              <div className="flex flex-col gap-2">
+                <div className="text-white font-medium flex items-center gap-2.5">
+                  <Key className="w-5 h-5 text-[#47c92f]" />
+                  NFA Account
+                </div>
+                <div className="text-gray-400 text-sm leading-relaxed">Use our LarpSense NFA tool to log in with one click. Simple as that.</div>
+              </div>
+              <div className="flex flex-col gap-2">
+                <div className="text-white font-medium flex items-center gap-2.5">
+                  <Shield className="w-5 h-5 text-[#47c92f]" />
+                  One-Click Warranty
+                </div>
+                <div className="text-gray-400 text-sm leading-relaxed">Dead account? Just click "replace" on your order page within 6 hours to get a new one instantly.</div>
+              </div>
+              
               {id === "prime" && (
-                <li className="flex items-start gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-green-400 mt-0.5 shrink-0" />
-                  <span><strong>Prime Status:</strong> Upgraded for Prime matchmaking right out of the box.</span>
-                </li>
+                <div className="flex flex-col gap-2">
+                  <div className="text-white font-medium flex items-center gap-2.5">
+                    <Award className="w-5 h-5 text-[#47c92f]" />
+                    Prime Status
+                  </div>
+                  <div className="text-gray-400 text-sm leading-relaxed">Ready for Prime matchmaking as soon as you log in.</div>
+                </div>
               )}
               {id === "premier" && (
-                <li className="flex items-start gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-green-400 mt-0.5 shrink-0" />
-                  <span><strong>Premier Ready:</strong> Level 10 reached and ready to calibrate your Premier Rating.</span>
-                </li>
+                <div className="flex flex-col gap-2">
+                  <div className="text-white font-medium flex items-center gap-2.5">
+                    <Award className="w-5 h-5 text-[#47c92f]" />
+                    Premier Ready
+                  </div>
+                  <div className="text-gray-400 text-sm leading-relaxed">Level 10 unlocked. Ready to play Premier matchmaking right away.</div>
+                </div>
               )}
               {id === "premier-4-medals" && (
-                <li className="flex items-start gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-green-400 mt-0.5 shrink-0" />
-                  <span><strong>Premier with Medals:</strong> Premier-ready access equipped with at least 4 in-game service medals.</span>
-                </li>
+                <div className="flex flex-col gap-2">
+                  <div className="text-white font-medium flex items-center gap-2.5">
+                    <Medal className="w-5 h-5 text-[#47c92f]" />
+                    Premier with Medals
+                  </div>
+                  <div className="text-gray-400 text-sm leading-relaxed">Ready for Premier with at least 4 service medals on the account.</div>
+                </div>
               )}
               {id === "premier-10-medals" && (
-                <li className="flex items-start gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-green-400 mt-0.5 shrink-0" />
-                  <span><strong>Premier Elite Medals:</strong> Premier-ready access equipped with 10 or more in-game service medals.</span>
-                </li>
+                <div className="flex flex-col gap-2">
+                  <div className="text-white font-medium flex items-center gap-2.5">
+                    <Medal className="w-5 h-5 text-[#47c92f]" />
+                    Premier Elite Medals
+                  </div>
+                  <div className="text-gray-400 text-sm leading-relaxed">Ready for Premier with 10+ service medals on the account.</div>
+                </div>
               )}
               {id === "premier-inactive" && (
-                <li className="flex items-start gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-green-400 mt-0.5 shrink-0" />
-                  <span><strong>14+ Days Inactive:</strong> Dormant account with over 14 days of complete inactivity for maximum longevity.</span>
-                </li>
+                <div className="flex flex-col gap-2">
+                  <div className="text-white font-medium flex items-center gap-2.5">
+                    <Timer className="w-5 h-5 text-[#47c92f]" />
+                    14+ Days Inactive
+                  </div>
+                  <div className="text-gray-400 text-sm leading-relaxed">Account hasn't been touched in over 14 days, making it super safe to use.</div>
+                </div>
               )}
               {id === "premier-10k" && (
-                <li className="flex items-start gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-green-400 mt-0.5 shrink-0" />
-                  <span><strong>10,000+ Rating:</strong> Calibrated and secured at a guaranteed 10,000+ CS Rating.</span>
-                </li>
+                <div className="flex flex-col gap-2">
+                  <div className="text-white font-medium flex items-center gap-2.5">
+                    <Crown className="w-5 h-5 text-[#47c92f]" />
+                    10,000+ Rating
+                  </div>
+                  <div className="text-gray-400 text-sm leading-relaxed">Already calibrated with a guaranteed 10,000+ CS rating.</div>
+                </div>
               )}
               {id === "premier-15k" && (
-                <li className="flex items-start gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-green-400 mt-0.5 shrink-0" />
-                  <span><strong>15,000+ Rating:</strong> Calibrated and secured at a guaranteed 15,000+ CS Rating.</span>
-                </li>
+                <div className="flex flex-col gap-2">
+                  <div className="text-white font-medium flex items-center gap-2.5">
+                    <Crown className="w-5 h-5 text-[#47c92f]" />
+                    15,000+ Rating
+                  </div>
+                  <div className="text-gray-400 text-sm leading-relaxed">Already calibrated with a guaranteed 15,000+ CS rating.</div>
+                </div>
               )}
               {id === "premier-20k" && (
-                <li className="flex items-start gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-green-400 mt-0.5 shrink-0" />
-                  <span><strong>20,000+ Rating:</strong> High-tier calibration secured at a guaranteed 20,000+ CS Rating.</span>
-                </li>
+                <div className="flex flex-col gap-2">
+                  <div className="text-white font-medium flex items-center gap-2.5">
+                    <Crown className="w-5 h-5 text-[#47c92f]" />
+                    20,000+ Rating
+                  </div>
+                  <div className="text-gray-400 text-sm leading-relaxed">Already calibrated with a guaranteed 20,000+ CS rating.</div>
+                </div>
               )}
               {id === "premier-rare" && (
-                <li className="flex items-start gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-green-400 mt-0.5 shrink-0" />
-                  <span><strong>Rare Inventory:</strong> Equipped with premium assets, guaranteeing at least one Knife or Glove item.</span>
-                </li>
+                <div className="flex flex-col gap-2">
+                  <div className="text-white font-medium flex items-center gap-2.5">
+                    <Star className="w-5 h-5 text-[#47c92f]" />
+                    Rare Inventory
+                  </div>
+                  <div className="text-gray-400 text-sm leading-relaxed">Comes with a premium inventory, including at least one Knife or Glove.</div>
+                </div>
               )}
-              <li className="flex items-start gap-2">
-                <RefreshCcw className="w-4 h-4 text-green-400 mt-0.5 shrink-0" />
-                <span><strong>Automated Warranty:</strong> Covered by our automated 1:1 replacement system if the account expires within the 6-hour window.</span>
-              </li>
-            </ul>
+              {selectedProduct?.category === "rust" && (
+                <div className="flex flex-col gap-2">
+                  <div className="text-white font-medium flex items-center gap-2.5">
+                    <Timer className="w-5 h-5 text-[#47c92f]" />
+                    {selectedProduct.name.replace("Rust ", "")}
+                  </div>
+                  <div className="text-gray-400 text-sm leading-relaxed">Account comes with {selectedProduct.name.replace("Rust ", "").toLowerCase()} already played on record.</div>
+                </div>
+              )}
+              {selectedProduct?.category === "extra" && (
+                <div className="flex flex-col gap-2">
+                  <div className="text-white font-medium flex items-center gap-2.5">
+                    <Gamepad2 className="w-5 h-5 text-[#47c92f]" />
+                    Standard NFA
+                  </div>
+                  <div className="text-gray-400 text-sm leading-relaxed">This is a standard NFA account. The game is included and ready to play.</div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
-        {/* Prawa kolumna: Konfigurator i Płatność */}
-        <div className="bg-[#141414]/60 backdrop-blur-xl border border-white/10 rounded-3xl p-6 md:p-8 w-full shadow-[0_20px_60px_rgba(0,0,0,0.8)] relative lg:sticky lg:top-24 overflow-visible">
-          
-          <div className="flex items-center justify-between mb-8 relative z-10">
-            <h1 className="text-2xl font-bold text-white">Configure your order</h1>
-            {!reviewsLoading && totalReviews > 0 && (
-              <div className="flex items-center gap-2">
-                <div className="flex text-yellow-500">
-                  <Star className="w-4 h-4 fill-current" />
-                </div>
-                <span className="text-sm font-bold text-white">{averageRating}</span>
-                <span className="text-xs text-gray-500 font-medium">({totalReviews} reviews)</span>
+        {/* Right column: Sticky Checkout */}
+        <div className="lg:col-span-5 flex flex-col relative lg:sticky lg:top-24 gap-8">
+          <div>
+            <div className="flex items-center gap-3 mb-2">
+              <h1 className="text-4xl font-semibold text-white tracking-tight flex items-center gap-2">
+                <span>{selectedProduct.name}</span>
+                {HALLOWEEN_EVENT_ENABLED && <MiniPumpkin className="w-6 h-6 -mt-1 inline-block" />}
+              </h1>
+            </div>
+            {totalReviews > 0 && (
+              <div className="flex items-center gap-1.5 text-sm font-medium text-gray-400">
+                <Star className="w-4 h-4 text-[#47c92f] fill-[#47c92f]" />
+                <span className="text-white">{averageRating}</span>
+                <span className="mx-1">&middot;</span>
+                <a href="#reviews" className="hover:text-white hover:underline transition-all">
+                  {totalReviews} {totalReviews === 1 ? 'review' : 'reviews'}
+                </a>
               </div>
             )}
           </div>
-
-
-
-          {/* Cena */}
-          <div className="mb-6">
-            <div className="text-[10px] font-bold text-gray-500 tracking-widest uppercase mb-1 flex justify-between items-center">
-              <span>Total Price</span>
-            </div>
-            <div className="text-5xl font-medium text-white tracking-tight flex items-baseline gap-2">
-              {discountPct > 0 && <span className="text-3xl line-through text-gray-500 mr-2">{convert(rawTotalPrice + cardFee).formatted}</span>}
+          
+          <div className="flex flex-col gap-1.5">
+            <div className="text-5xl font-medium text-white tracking-tight flex items-baseline gap-3">
+              {discountPct > 0 ? (
+                <span className="text-3xl line-through text-gray-500">{convert(rawTotalPrice + cardFee).formatted}</span>
+              ) : selectedProduct.originalPrice ? (
+                <span className="text-3xl line-through text-gray-500">{convert((selectedProduct.originalPrice * quantity) + (paymentMethod === "stripe" ? cardFee : 0)).formatted}</span>
+              ) : null}
               {convert(finalAmount).formatted}
-              {quantity > 1 && <span className="text-sm text-gray-500 font-sans tracking-normal">({convert(selectedProduct.price).formatted} ea)</span>}
+              {HALLOWEEN_EVENT_ENABLED && (
+                <span className="text-xs font-bold text-orange-400 bg-orange-500/10 border border-orange-500/25 px-2 py-0.5 rounded-full self-center">
+                  -15% Halloween
+                </span>
+              )}
+              {quantity > 1 && <span className="text-lg text-gray-500 font-normal">({convert(selectedProduct.price).formatted} ea)</span>}
             </div>
             {paymentMethod === "stripe" && (
-              <div className="text-xs text-gray-500 mt-2 font-medium">
-                Includes <span className="text-indigo-400">{convert(cardFee).formatted}</span> payment gateway fee.
+              <div className="text-sm text-gray-500 font-medium">
+                Includes <span className="text-indigo-400">{convert(cardFee).formatted}</span> card processing fee
+              </div>
+            )}
+            {paymentMethod === "crypto" && (
+              <div className="text-sm text-gray-500 font-medium">
+                Includes <span className="text-amber-500">0%</span> crypto processing fee
+              </div>
+            )}
+            {paymentMethod === "balance" && (
+              <div className="text-sm text-gray-500 font-medium">
+                Includes <span className="text-emerald-500">0%</span> balance fee
               </div>
             )}
           </div>
 
-          {/* Sekcja Email */}
-          <div className="mb-6">
-            <div className="text-[10px] font-bold text-gray-500 tracking-widest uppercase mb-2">Email for your order</div>
-            <div className="w-full bg-[#0a0a0a]/50 border border-white/10 rounded-xl px-4 py-3 text-gray-300 text-sm shadow-inner">
-              {authChecked ? (user?.email || "Not logged in") : "Loading..."}
-            </div>
-          </div>
+          <div className="w-full h-px bg-[#222]" />
 
-
-
-          {/* Sekcja Ilości */}
-          <div className="mb-6 flex items-center justify-between bg-[#0a0a0a]/50 border border-white/10 p-4 rounded-xl shadow-inner">
-            <div className="text-[14px] font-bold text-white flex flex-col">
-              Quantity
-              <span className={`text-[10px] uppercase tracking-widest mt-1 ${getStockColor(stock)}`}>
-                {loadingStock ? "Checking..." : stock === 0 ? "Out of stock" : `${stock} In Stock`}
-              </span>
-            </div>
-            <div className="flex items-center bg-black/40 border border-white/5 rounded-xl overflow-hidden">
-              <button 
-                onClick={() => handleQuantityChange(-1)}
-                disabled={quantity <= 1 || loadingStock || stock === 0}
-                className="w-10 h-10 flex items-center justify-center text-gray-400 hover:bg-white/10 hover:text-white transition-colors disabled:opacity-30"
-              >
-                <Minus className="w-4 h-4" />
-              </button>
-              <input 
-                type="number"
-                value={quantity}
-                onChange={handleQuantityInputChange}
-                className="w-16 h-10 flex items-center justify-center text-center text-white font-mono text-sm border-x border-white/5 bg-transparent focus:outline-none focus:bg-white/5 transition-colors"
-                min="1"
-                max={Math.min(100, stock || 100)}
-                disabled={loadingStock || stock === 0}
-              />
-              <button 
-                onClick={() => handleQuantityChange(1)}
-                disabled={quantity >= Math.min(100, stock || 100) || loadingStock || stock === 0}
-                className="w-10 h-10 flex items-center justify-center text-gray-400 hover:bg-white/10 hover:text-white transition-colors disabled:opacity-30"
-              >
-                <Plus className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-
-          {/* Sekcja Kodu Promocyjnego */}
-          <div className="mb-6">
-            <div className="text-[10px] font-bold text-gray-500 tracking-widest uppercase mb-2">Promo Code (Optional)</div>
-            <div className="flex gap-2 relative">
-              <input
-                type="text"
-                value={promoCode}
-                onChange={(e) => setPromoCode(e.target.value)}
-                placeholder="Enter code"
-                className="w-full bg-[#0a0a0a]/50 border border-white/10 rounded-xl py-3 pl-4 text-white font-bold focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/50 transition-all text-sm shadow-inner"
-              />
-              <button
-                onClick={applyPromoCode}
-                disabled={isApplyingPromo || !promoCode.trim()}
-                className="px-4 py-3 bg-white/5 hover:bg-white/10 text-white font-bold rounded-xl transition-colors disabled:opacity-50 text-sm border border-white/10"
-              >
-                {isApplyingPromo ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> : "Apply"}
-              </button>
-            </div>
-            {promoCodeSuccess && <p className="text-xs text-emerald-400 font-bold mt-2">{promoCodeSuccess}</p>}
-            {promoCodeError && <p className="text-xs text-red-400 font-bold mt-2">{promoCodeError}</p>}
-          </div>
-
-          {/* Sekcja Metoda Płatności — inline, nie dropdown */}
-          <div className="mb-8">
-            <div className="text-[10px] font-bold text-gray-500 tracking-widest uppercase mb-2">Payment method</div>
-            <div ref={paymentDropdownRef} className="flex flex-col gap-2">
-
-              {loadingSettings ? (
-                <>
-                  <div className="w-full h-[66px] bg-[#0a0a0a]/50 border border-white/5 rounded-xl animate-pulse"></div>
-                  <div className="w-full h-[66px] bg-[#0a0a0a]/50 border border-white/5 rounded-xl animate-pulse"></div>
-                </>
-              ) : (
-                <>
-              {/* Stripe */}
-              <button 
-                onClick={() => { if (settings.stripe_enabled) { setPaymentMethod("stripe"); } }}
-                disabled={!settings.stripe_enabled}
-                className={`w-full px-4 py-3 rounded-xl text-left flex items-center gap-3 border transition-all ${!settings.stripe_enabled ? "opacity-50 cursor-not-allowed grayscale bg-[#0a0a0a]/50 border-white/5" : paymentMethod === "stripe" ? "bg-white/5 border-white/20" : "bg-[#0a0a0a]/50 border-white/10 hover:bg-white/5 hover:border-white/20"}`}
-              >
-                <div className={`flex items-center justify-center w-10 h-10 rounded-lg shrink-0 ${paymentMethod === "stripe" ? "bg-[#635BFF]/10" : "bg-[#141414] border border-white/5"}`}>
-                  <SiStripe className={`w-5 h-5 ${paymentMethod === "stripe" ? "text-[#635BFF]" : "text-gray-400"}`} />
-                </div>
-                <div>
-                  <div className={`font-bold text-sm ${paymentMethod === "stripe" ? "text-white" : settings.stripe_enabled ? "text-white" : "text-gray-400"}`}>Debit / Credit Card</div>
-                  <div className="text-xs text-gray-500">{!settings.stripe_enabled ? 'Temporarily disabled' : 'Mastercard, Visa, Apple Pay etc.'} <span className="text-indigo-400 font-bold">{settings.stripe_enabled ? `(1.5% + ${convert(0.25).formatted} fee)` : ''}</span></div>
-                </div>
-              </button>
-
-              {/* Crypto */}
-              <div className={`rounded-xl border transition-all ${!settings.crypto_enabled ? 'opacity-50 cursor-not-allowed bg-[#0a0a0a]/50 border-white/5 grayscale' : paymentMethod === "crypto" ? "border-white/20" : "border-white/10"}`}>
-                <button
-                  onClick={() => settings.crypto_enabled && setPaymentMethod("crypto")}
-                  disabled={!settings.crypto_enabled}
-                  className={`w-full px-4 py-3 rounded-xl text-left flex items-center justify-between ${!settings.crypto_enabled ? "" : paymentMethod === "crypto" ? "bg-white/5" : "bg-[#0a0a0a]/50 hover:bg-white/5"}`}
+          {/* Config */}
+          <div className="flex flex-col gap-6">
+            
+            {/* Quantity */}
+            <div className="flex items-center justify-between">
+              <div className="flex flex-col gap-1.5">
+                <span className="text-white font-medium">Quantity</span>
+                <span className={`text-[11px] font-medium px-2 py-0.5 rounded-md w-fit tracking-wide ${stock === 0 ? 'bg-red-500/10 text-red-400' : 'bg-white/5 text-gray-300'}`}>
+                  {loadingStock ? "CHECKING..." : stock === 0 ? "OUT OF STOCK" : `${stock} IN STOCK`}
+                </span>
+              </div>
+              <div className="flex items-center border border-[#333] rounded-lg overflow-hidden bg-[#111]">
+                <button 
+                  onClick={() => handleQuantityChange(-1)}
+                  disabled={quantity <= 1 || loadingStock || stock === 0}
+                  className="w-10 h-10 flex items-center justify-center text-gray-400 hover:bg-[#222] hover:text-white transition-colors disabled:opacity-30"
                 >
-                  <div className="flex items-center gap-3">
-                    <div className={`flex items-center justify-center w-10 h-10 rounded-lg shrink-0 ${paymentMethod === "crypto" ? "bg-amber-500/10" : "bg-[#141414] border border-white/5"}`}>
-                      <SiBitcoin className={`w-5 h-5 ${paymentMethod === "crypto" ? "text-amber-400" : settings.crypto_enabled ? "text-amber-400" : "text-gray-400"}`} />
-                    </div>
-                    <div>
-                      <div className={`font-bold text-sm ${paymentMethod === "crypto" ? "text-white" : settings.crypto_enabled ? "text-white" : "text-gray-400"}`}>Cryptocurrency</div>
-                      <div className="text-xs text-gray-500">
-                        {!settings.crypto_enabled ? 'Temporarily disabled' : 'Pay via OxaPay'} <span className="text-amber-400 font-bold">{settings.crypto_enabled ? '(0% fee)' : ''}</span>
-                      </div>
-                    </div>
-                  </div>
+                  <Minus className="w-4 h-4" />
                 </button>
-                {/* Sekcja Wyboru Krypto - inside the button container */}
-                {paymentMethod === 'crypto' && (
-                  <div className="p-3 border-t border-white/10 bg-black/20 rounded-b-xl animate-in fade-in slide-in-from-top-1">
-                    <div className="relative">
-                      <button
-                        onClick={() => setIsCryptoCoinDropdownOpen(!isCryptoCoinDropdownOpen)}
-                        className="w-full flex items-center justify-between p-3 rounded-xl border bg-white/5 border-white/10 text-white hover:bg-white/10 transition-colors"
-                      >
-                        <div className="flex items-center gap-3">
-                          {!selectedCryptoCoin ? (
-                            <span className="text-gray-400 text-sm">Select cryptocurrency...</span>
-                          ) : (
-                            <>
-                              {selectedCryptoCoin === 'BTC' && <SiBitcoin className="w-4 h-4 text-amber-500" />}
-                              {selectedCryptoCoin === 'ETH' && <SiEthereum className="w-4 h-4 text-indigo-400" />}
-                              {selectedCryptoCoin === 'USDT_TRC20' && <SiTether className="w-4 h-4 text-emerald-500" />}
-                              {selectedCryptoCoin === 'USDC_ERC20' && <CircleDollarSign className="w-4 h-4 text-blue-400" />}
-                              {selectedCryptoCoin === 'LTC' && <SiLitecoin className="w-4 h-4 text-blue-400" />}
-                              {selectedCryptoCoin === 'SOL' && <SiSolana className="w-4 h-4 text-purple-500" />}
-                              <span className="text-sm font-bold">
-                                {selectedCryptoCoin === 'USDT_TRC20' ? 'USDT' : selectedCryptoCoin === 'USDC_ERC20' ? 'USDC' : selectedCryptoCoin}
-                              </span>
-                              {selectedCryptoCoin === 'BTC' && (
-                                <span className="text-[10px] text-amber-500/80 font-bold ml-1">
-                                  (Min. {convert(15).formatted})
-                                </span>
-                              )}
-                            </>
+                <input 
+                  type="number"
+                  value={quantity}
+                  onChange={handleQuantityInputChange}
+                  className="w-12 h-10 text-center text-white font-medium border-x border-[#333] bg-transparent focus:outline-none"
+                  min="1"
+                  max={Math.min(100, stock || 100)}
+                  disabled={loadingStock || stock === 0}
+                />
+                <button 
+                  onClick={() => handleQuantityChange(1)}
+                  disabled={quantity >= Math.min(100, stock || 100) || loadingStock || stock === 0}
+                  className="w-10 h-10 flex items-center justify-center text-gray-400 hover:bg-[#222] hover:text-white transition-colors disabled:opacity-30"
+                >
+                  <Plus className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            {/* Promo */}
+            <div className="flex flex-col gap-2">
+              <span className="text-white font-medium text-sm">Promo Code</span>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={promoCode}
+                  onChange={(e) => setPromoCode(e.target.value)}
+                  placeholder="Enter code"
+                  className="flex-1 bg-[#111] border border-[#333] rounded-lg py-3 px-4 text-white text-sm focus:outline-none focus:border-white transition-colors"
+                />
+                <button
+                  onClick={applyPromoCode}
+                  disabled={isApplyingPromo || !promoCode.trim()}
+                  className="px-6 py-3 bg-[#222] hover:bg-[#333] text-white font-medium rounded-lg transition-colors disabled:opacity-50 text-sm"
+                >
+                  {isApplyingPromo ? "Applying..." : "Apply"}
+                </button>
+              </div>
+              {promoCodeSuccess && <p className="text-sm text-emerald-400 mt-1">{promoCodeSuccess}</p>}
+              {promoCodeError && <p className="text-sm text-red-400 mt-1">{promoCodeError}</p>}
+            </div>
+
+            {/* Payment Method */}
+            <div className="flex flex-col gap-3">
+              <span className="text-white font-medium text-sm">Payment Method</span>
+              {loadingSettings ? (
+                <div className="w-full h-14 bg-[#111] rounded-lg animate-pulse" />
+              ) : (
+                <div className="grid grid-cols-1 gap-2">
+                  <button 
+                    onClick={() => { if (settings.stripe_enabled) setPaymentMethod("stripe"); }}
+                    disabled={!settings.stripe_enabled}
+                    className={`flex items-center justify-between p-4 rounded-lg border transition-all ${paymentMethod === "stripe" ? "border-[#47c92f] bg-[#47c92f]/5" : "border-[#333] bg-[#111] hover:border-gray-500"} ${!settings.stripe_enabled && "opacity-50"}`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <SiStripe className={`w-5 h-5 ${paymentMethod === "stripe" ? "text-[#635BFF]" : "text-gray-400"}`} />
+                      <span className={`font-medium ${paymentMethod === "stripe" ? "text-white" : "text-gray-300"}`}>Card</span>
+                    </div>
+                    {settings.stripe_enabled && <span className="text-xs font-medium text-gray-500">1.5% + {convert(0.25).formatted} fee</span>}
+                  </button>
+
+                  <div className={`flex flex-col rounded-lg border transition-all ${paymentMethod === "crypto" ? "border-[#47c92f] bg-[#47c92f]/5" : "border-[#333] bg-[#111]"} ${!settings.crypto_enabled && "opacity-50"}`}>
+                    <button
+                      onClick={() => { if (settings.crypto_enabled) setPaymentMethod("crypto"); }}
+                      disabled={!settings.crypto_enabled}
+                      className="flex items-center justify-between p-4 hover:opacity-80"
+                    >
+                      <div className="flex items-center gap-3">
+                        <SiBitcoin className={`w-5 h-5 ${paymentMethod === "crypto" ? "text-amber-500" : "text-gray-400"}`} />
+                        <span className={`font-medium ${paymentMethod === "crypto" ? "text-white" : "text-gray-300"}`}>Crypto</span>
+                      </div>
+                      {settings.crypto_enabled && <span className="text-xs font-medium text-amber-500/80">0% fee</span>}
+                    </button>
+                    {paymentMethod === "crypto" && (
+                      <div className="px-4 pb-4 pt-2">
+                        <div className="relative">
+                          <button
+                            onClick={() => setIsCryptoCoinDropdownOpen(!isCryptoCoinDropdownOpen)}
+                            className="w-full flex items-center justify-between p-3 rounded border bg-[#111] border-[#333] text-white hover:bg-[#222] transition-colors"
+                          >
+                            <span className="text-sm font-medium">
+                              {selectedCryptoCoin ? selectedCryptoCoin : "Select currency..."}
+                            </span>
+                            <ChevronDown className="w-4 h-4" />
+                          </button>
+                          {isCryptoCoinDropdownOpen && (
+                            <div className="absolute top-full left-0 right-0 mt-1 bg-[#111] border border-[#333] rounded overflow-hidden z-50 shadow-xl">
+                              {[
+                                { id: 'BTC', label: 'Bitcoin', icon: <SiBitcoin className="w-4 h-4 text-amber-500" /> },
+                                { id: 'ETH', label: 'Ethereum', icon: <SiEthereum className="w-4 h-4 text-indigo-400" /> },
+                                { id: 'USDT_TRC20', label: 'USDT', icon: <SiTether className="w-4 h-4 text-emerald-500" /> },
+                                { id: 'USDC_ERC20', label: 'USDC', icon: <CircleDollarSign className="w-4 h-4 text-blue-400" /> },
+                                { id: 'LTC', label: 'Litecoin', icon: <SiLitecoin className="w-4 h-4 text-blue-400" /> },
+                                { id: 'SOL', label: 'Solana', icon: <SiSolana className="w-4 h-4 text-purple-500" /> }
+                              ].map((coin) => (
+                                <button
+                                  key={coin.id}
+                                  onClick={() => { setSelectedCryptoCoin(coin.id); setIsCryptoCoinDropdownOpen(false); }}
+                                  className="w-full flex items-center gap-2 p-3 text-left text-sm text-white hover:bg-[#222] border-b border-[#222] last:border-0 transition-colors"
+                                >
+                                  {coin.icon}
+                                  {coin.label}
+                                </button>
+                              ))}
+                            </div>
                           )}
                         </div>
-                        <ChevronDown className={`w-4 h-4 text-gray-500 transition-transform ${isCryptoCoinDropdownOpen ? 'rotate-180' : ''}`} />
-                      </button>
-                      
-                      {isCryptoCoinDropdownOpen && (
-                        <div className="absolute top-full left-0 right-0 mt-2 bg-[#1c1c1c] border border-white/10 rounded-xl overflow-y-auto max-h-[200px] custom-scrollbar z-50 shadow-2xl">
-                          {[
-                            { id: 'BTC', label: 'Bitcoin (BTC)', icon: <SiBitcoin className="w-4 h-4 text-amber-500" /> },
-                            { id: 'ETH', label: 'Ethereum (ETH)', icon: <SiEthereum className="w-4 h-4 text-indigo-400" /> },
-                            { id: 'USDT_TRC20', label: 'Tether (USDT)', icon: <SiTether className="w-4 h-4 text-emerald-500" /> },
-                            { id: 'USDC_ERC20', label: 'USD Coin (USDC)', icon: <CircleDollarSign className="w-4 h-4 text-blue-400" /> },
-                            { id: 'LTC', label: 'Litecoin (LTC)', icon: <SiLitecoin className="w-4 h-4 text-blue-400" /> },
-                            { id: 'SOL', label: 'Solana (SOL)', icon: <SiSolana className="w-4 h-4 text-purple-500" /> },
-                          ].map((coin) => (
-                            <button
-                              key={coin.id}
-                              onClick={() => { setSelectedCryptoCoin(coin.id); setIsCryptoCoinDropdownOpen(false); }}
-                              className="w-full flex items-center gap-3 p-3 text-left hover:bg-white/5 transition-colors border-b border-white/5 last:border-0"
-                            >
-                              <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center">
-                                {coin.icon}
-                              </div>
-                              <span className="text-sm font-medium text-white">
-                                {coin.label}
-                                {coin.id === 'BTC' && <span className="text-[10px] text-amber-500/80 font-bold ml-2">(Min. {convert(15).formatted})</span>}
-                              </span>
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                    </div>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
 
-              {/* Balance */}
-              <button
-                onClick={() => { setPaymentMethod("balance"); }}
-                className={`w-full px-4 py-3 rounded-xl text-left flex items-center gap-3 border transition-all ${paymentMethod === "balance" ? "bg-white/5 border-white/20" : "bg-[#0a0a0a]/50 border-white/10 hover:bg-white/5 hover:border-white/20"}`}
-              >
-                <div className="w-8 h-8 bg-emerald-500/10 rounded-full flex items-center justify-center shrink-0">
-                  <Wallet className="w-4 h-4 text-emerald-400" />
+                  <button 
+                    onClick={() => setPaymentMethod("balance")}
+                    className={`flex items-center justify-between p-4 rounded-lg border transition-all ${paymentMethod === "balance" ? "border-[#47c92f] bg-[#47c92f]/5" : "border-[#333] bg-[#111] hover:border-gray-500"}`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <Wallet className={`w-5 h-5 ${paymentMethod === "balance" ? "text-emerald-500" : "text-gray-400"}`} />
+                      <span className={`font-medium ${paymentMethod === "balance" ? "text-white" : "text-gray-300"}`}>Balance</span>
+                    </div>
+                    <span className="text-xs font-medium text-emerald-500/80">0% fee</span>
+                  </button>
                 </div>
-                <div>
-                  <div className="text-sm text-white font-medium">Balance</div>
-                  <div className="text-xs text-gray-500">Pay with your NFA Store balance <span className="text-emerald-400">(Instant)</span></div>
-                </div>
-              </button>
-
-                </>
               )}
             </div>
-          </div>
 
-          {/* Przycisk Płatności */}
-          {authChecked && !user ? (
-            <button 
-              onClick={() => window.dispatchEvent(new Event('open-auth'))}
-              className="w-full bg-emerald-500 hover:bg-emerald-400 text-black font-bold rounded-2xl px-4 py-4 flex items-center justify-center gap-2 transition-all shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:shadow-[0_0_30px_rgba(16,185,129,0.5)] hover:-translate-y-0.5"
-            >
-              Sign in to pay
-            </button>
-          ) : (
-            <button 
-              onClick={handleCheckout}
-              disabled={loadingCheckout || loadingStock || stock === 0 || (paymentMethod === 'crypto' && selectedCryptoCoin === 'BTC' && rawTotalPrice < 15)}
-              className="w-full bg-emerald-500 hover:bg-emerald-400 text-black font-bold rounded-2xl px-4 py-4 flex items-center justify-center gap-2 transition-all shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:shadow-[0_0_30px_rgba(16,185,129,0.5)] disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none hover:-translate-y-0.5 disabled:hover:translate-y-0"
-            >
-              {loadingCheckout ? (
-                <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin" />
+            <div className="mt-4">
+              {authChecked && !user ? (
+                <button 
+                  onClick={() => window.dispatchEvent(new Event('open-auth'))}
+                  className="w-full py-4 bg-white text-black font-semibold rounded-xl hover:bg-gray-200 transition-colors text-lg"
+                >
+                  Sign in to buy
+                </button>
               ) : (
-                  `Pay ${convert(finalAmount).formatted} with ${paymentMethod === "stripe" ? "Card" : paymentMethod === "crypto" ? "Crypto" : "Balance"}`
+                <button 
+                  onClick={handleCheckout}
+                  disabled={loadingCheckout || loadingStock || stock === 0 || (paymentMethod === 'crypto' && selectedCryptoCoin === 'BTC' && rawTotalPrice < 15)}
+                  className="w-full py-4 bg-white text-black font-semibold rounded-xl hover:bg-gray-200 transition-colors text-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {loadingCheckout ? "Processing..." : `Buy for ${convert(finalAmount).formatted}`}
+                </button>
               )}
-            </button>
-          )}
-          
+            </div>
+
+          </div>
         </div>
       </div>
 
       {/* Reviews Section */}
-      <div id="reviews" className="w-full max-w-5xl mt-16 px-4 pb-20">
-        <div className="flex items-center justify-between mb-8">
-          <h2 className="text-2xl font-bold text-white flex items-center gap-3">
-            <Star className="w-6 h-6 text-yellow-500" />
-            Verified Reviews for {selectedProduct.name}
-          </h2>
+      <div id="reviews" className="w-full max-w-6xl mt-24 px-0 lg:px-0">
+        <div className="w-full h-px bg-[#222] mb-16" />
+        
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-12 gap-6">
+          <div className="flex flex-col gap-2">
+            <h2 className="text-3xl font-semibold text-white tracking-tight">Reviews</h2>
+            {!reviewsLoading && totalReviews > 0 && (
+              <div className="text-gray-400 text-lg">
+                <span className="text-white font-medium">{averageRating} out of 5</span> based on {totalReviews} {totalReviews === 1 ? 'review' : 'reviews'}.
+              </div>
+            )}
+          </div>
+          
           {!reviewsLoading && totalReviews > 0 && (
-            <div className="flex items-center gap-6">
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Sort by:</span>
-                <select 
-                  value={sortBy} 
-                  onChange={(e) => { setSortBy(e.target.value as any); setCurrentPage(1); }}
-                  className="bg-[#0a0a0a] border border-white/10 rounded-lg px-3 py-1.5 text-sm text-gray-300 font-medium focus:outline-none focus:border-white/20"
-                >
-                  <option value="newest">Newest</option>
-                  <option value="oldest">Oldest</option>
-                  <option value="best">Highest Rated</option>
-                  <option value="worst">Lowest Rated</option>
-                </select>
-              </div>
-              <div className="text-sm text-gray-400 font-medium hidden sm:block">
-                <span className="text-white font-bold text-lg mr-1">{averageRating}</span>/ 5.0
-              </div>
+            <div className="relative">
+              <button 
+                onClick={() => setIsSortDropdownOpen(!isSortDropdownOpen)}
+                className="flex items-center gap-3 bg-[#111] rounded-lg pl-4 pr-3 py-2.5 border border-[#333] hover:bg-[#222] transition-colors"
+              >
+                <span className="text-sm font-medium text-white">{sortOptions[sortBy as keyof typeof sortOptions]}</span>
+                <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${isSortDropdownOpen ? "rotate-180" : ""}`} />
+              </button>
+              {isSortDropdownOpen && (
+                <div className="absolute right-0 top-full mt-2 w-48 bg-[#111] border border-[#333] rounded-lg shadow-2xl overflow-hidden z-50">
+                  {Object.entries(sortOptions).map(([key, label]) => (
+                    <button
+                      key={key}
+                      onClick={() => {
+                        setSortBy(key as any);
+                        setCurrentPage(1);
+                        setIsSortDropdownOpen(false);
+                      }}
+                      className={`w-full text-left px-4 py-3 text-sm transition-colors ${sortBy === key ? 'bg-[#222] text-white font-medium' : 'text-gray-400 hover:bg-[#1a1a1a] hover:text-white'}`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>
         
         {reviewsLoading ? (
-          <div className="flex justify-center p-12">
-            <div className="w-8 h-8 border-2 border-accent/30 border-t-accent rounded-full animate-spin"></div>
-          </div>
+          <div className="py-20 text-center text-gray-500">Loading reviews...</div>
         ) : reviews.length > 0 ? (
-          <>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="flex flex-col">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-12">
               {sortedReviews.slice((currentPage - 1) * reviewsPerPage, currentPage * reviewsPerPage).map((review, i) => (
-                <div key={i} className="p-6 bg-[#0a0a0a]/80 backdrop-blur-xl border border-white/5 rounded-2xl hover:border-white/10 transition-colors shadow-xl">
-                  <div className="flex items-center gap-2 mb-4">
-                    <div className="flex text-yellow-500">
-                      {Array.from({ length: 5 }).map((_, idx) => (
-                        <Star key={idx} className={`w-4 h-4 ${idx < review.rating ? 'fill-current' : 'text-gray-700'}`} />
-                      ))}
+                <div key={i} className="flex flex-col bg-[#111] p-6 rounded-2xl border border-white/5">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 shrink-0 rounded-full bg-[#47c92f]/10 flex items-center justify-center text-[#47c92f] font-semibold text-lg">
+                      {(review.profiles?.display_name || 'A').charAt(0).toUpperCase()}
                     </div>
-                    <span className="text-gray-500 text-xs font-bold">{new Date(review.created_at).toLocaleDateString()}</span>
-                    <span className="text-[10px] ml-auto bg-green-500/10 text-green-400 px-2 py-1 rounded font-bold uppercase tracking-widest flex items-center gap-1">
-                      <CheckCircle2 className="w-3 h-3" /> Verified
-                    </span>
-                  </div>
-                  <p className="text-gray-300 italic mb-1">
-                    "{review.comment ? (
-                      expandedReviews.has(i) || review.comment.length <= 150 
-                        ? review.comment 
-                        : review.comment.slice(0, 150) + '...'
-                    ) : 'Great service!'}"
-                  </p>
-                  {review.comment && review.comment.length > 150 && (
-                    <button 
-                      onClick={() => toggleReview(i)}
-                      className="text-accent text-xs font-bold hover:underline mb-4 text-left"
-                    >
-                      {expandedReviews.has(i) ? "Show less" : "Show more"}
-                    </button>
-                  )}
-                  {!review.comment || review.comment.length <= 150 ? <div className="mb-4"></div> : null}
-                  <div className="flex items-center gap-3 border-t border-white/5 pt-4">
-                    {review.profiles?.avatar_url ? (
-                      <img src={review.profiles.avatar_url} alt="Avatar" className="w-8 h-8 rounded-full border border-white/10" />
-                    ) : (
-                      <div className="w-8 h-8 bg-[#1a1a1a] border border-white/10 rounded-full flex items-center justify-center text-gray-500">
-                        <UserIcon className="w-4 h-4" />
+                    <div className="flex flex-col">
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-white">{review.profiles?.display_name || 'Anonymous'}</span>
+                        <span className="text-gray-600">&middot;</span>
+                        <span className="text-sm text-gray-500">{new Date(review.created_at).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}</span>
                       </div>
-                    )}
-                    <Link href={`/user/${review.profiles?.id}`} className="text-sm font-bold text-gray-300 hover:text-white transition-colors flex flex-col leading-tight">
-                      <span>{review.profiles?.display_name || 'Anonymous'}</span>
-                      <span className="text-[10px] text-accent font-normal hover:underline">View Profile</span>
-                    </Link>
+                      <div className="flex items-center gap-1 mt-1">
+                        {Array.from({ length: 5 }).map((_, idx) => (
+                          <Star key={idx} className={`w-3.5 h-3.5 ${idx < review.rating ? 'text-[#47c92f] fill-[#47c92f]' : 'text-[#333]'}`} />
+                        ))}
+                      </div>
+                    </div>
                   </div>
+                  <p className="text-gray-300 text-base leading-relaxed">
+                    {review.comment || 'Great service!'}
+                  </p>
                 </div>
               ))}
             </div>
             
             {/* Pagination Controls */}
             {Math.ceil(reviews.length / reviewsPerPage) > 1 && (
-              <div className="flex justify-center mt-12 gap-2">
+              <div className="flex justify-center mt-16 pt-8 border-t border-[#222] gap-2">
                 <button
                   onClick={() => {
                     setCurrentPage(Math.max(1, currentPage - 1));
                     document.getElementById('reviews')?.scrollIntoView({ behavior: 'smooth' });
                   }}
                   disabled={currentPage === 1}
-                  className="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold transition-all bg-[#141414] border border-white/10 text-gray-400 hover:text-white hover:border-white/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-10 h-10 rounded flex items-center justify-center text-sm font-medium transition-colors text-white disabled:text-gray-600 disabled:cursor-not-allowed hover:bg-[#111]"
                 >
                   <ChevronLeft className="w-5 h-5" />
                 </button>
@@ -743,10 +772,10 @@ export default function ProductDetailView() {
                       setCurrentPage(i + 1);
                       document.getElementById('reviews')?.scrollIntoView({ behavior: 'smooth' });
                     }}
-                    className={`w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold transition-all ${
+                    className={`w-10 h-10 rounded flex items-center justify-center text-sm font-medium transition-colors ${
                       currentPage === i + 1 
-                        ? 'bg-emerald-500 text-black' 
-                        : 'bg-[#141414] border border-white/10 text-gray-400 hover:text-white hover:border-white/20'
+                        ? 'bg-white text-black' 
+                        : 'text-gray-400 hover:text-white hover:bg-[#111]'
                     }`}
                   >
                     {i + 1}
@@ -758,18 +787,16 @@ export default function ProductDetailView() {
                     document.getElementById('reviews')?.scrollIntoView({ behavior: 'smooth' });
                   }}
                   disabled={currentPage === Math.ceil(reviews.length / reviewsPerPage)}
-                  className="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold transition-all bg-[#141414] border border-white/10 text-gray-400 hover:text-white hover:border-white/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-10 h-10 rounded flex items-center justify-center text-sm font-medium transition-colors text-white disabled:text-gray-600 disabled:cursor-not-allowed hover:bg-[#111]"
                 >
                   <ChevronRight className="w-5 h-5" />
                 </button>
               </div>
             )}
-          </>
+          </div>
         ) : (
-          <div className="p-12 bg-[#0a0a0a]/80 backdrop-blur-xl border border-white/5 rounded-2xl text-center shadow-xl">
-            <Star className="w-12 h-12 text-gray-600 mx-auto mb-4 opacity-50" />
-            <h3 className="text-xl font-bold text-white mb-2">No reviews yet</h3>
-            <p className="text-gray-400 max-w-sm mx-auto">This variant doesn't have any reviews yet. Be the first to review it after purchase!</p>
+          <div className="py-20 text-center text-gray-500">
+            No reviews yet for this product.
           </div>
         )}
       </div>

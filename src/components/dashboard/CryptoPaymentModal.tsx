@@ -160,16 +160,12 @@ export function CryptoPaymentModal({ payAddress, payAmount, trackId, orderId, cu
   const qrValue = getPaymentUri();
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in overflow-y-auto">
-      <div className="bg-[#0a0a0a] border border-white/10 rounded-[2rem] w-full max-w-[400px] shadow-[0_0_50px_rgba(0,0,0,0.5)] relative overflow-hidden flex flex-col my-auto">
-        
-        {/* Glow effect at top */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[200px] h-[100px] bg-accent/20 blur-[60px] pointer-events-none rounded-full" />
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/90 animate-in fade-in overflow-y-auto">
+      <div className="bg-[#0a0a0a] border border-white/10 rounded-[2rem] w-full max-w-[400px] relative overflow-hidden flex flex-col my-auto">
 
         {isRefunded ? (
           <div className="p-8 py-16 text-center animate-in zoom-in-95 duration-500">
             <div className="w-24 h-24 bg-amber-500/10 rounded-full flex items-center justify-center mx-auto mb-6 relative">
-              <div className="absolute inset-0 bg-amber-500/20 rounded-full animate-ping"></div>
               <AlertTriangle className="w-12 h-12 text-amber-500 relative z-10" />
             </div>
             <h2 className="text-2xl font-black text-white mb-2">Supplier Issue</h2>
@@ -177,19 +173,18 @@ export function CryptoPaymentModal({ payAddress, payAmount, trackId, orderId, cu
               Your payment was successful, but we ran out of stock during fulfillment. <br/><br/>
               <span className="text-white font-bold text-base">The funds have been automatically added to your store balance!</span>
             </p>
-            <button onClick={() => window.location.href = '/dashboard'} className="w-full bg-amber-600 hover:bg-amber-500 text-white font-bold py-4 rounded-xl transition-all shadow-[0_0_20px_rgba(245,158,11,0.1)] hover:shadow-[0_0_30px_rgba(245,158,11,0.2)]">
+            <button onClick={() => window.location.href = '/dashboard'} className="w-full bg-amber-600 hover:bg-amber-500 text-white font-semibold py-3.5 rounded-full transition-colors">
               View Balance in Dashboard
             </button>
           </div>
         ) : isPaid ? (
           <div className="p-8 py-16 text-center animate-in zoom-in-95 duration-500">
             <div className="w-24 h-24 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto mb-6 relative">
-              <div className="absolute inset-0 bg-emerald-500/20 rounded-full animate-ping"></div>
               <CheckCircle2 className="w-12 h-12 text-emerald-400 relative z-10" />
             </div>
             <h2 className="text-2xl font-black text-white mb-2">Payment Completed!</h2>
             <p className="text-neutral-400 mb-8 font-medium">Your payment has been processed successfully.</p>
-            <button onClick={onSuccess} className="w-full bg-accent hover:bg-accent/90 text-white font-bold py-4 rounded-xl transition-all shadow-[0_0_20px_rgba(255,255,255,0.1)] hover:shadow-[0_0_30px_rgba(255,255,255,0.2)]">
+            <button onClick={onSuccess} className="w-full bg-[#f5f5f7] hover:bg-white text-black font-semibold py-3.5 rounded-full transition-colors">
               Continue
             </button>
           </div>
@@ -201,7 +196,7 @@ export function CryptoPaymentModal({ payAddress, payAmount, trackId, orderId, cu
                 {coin.icon} <span>{coin.name}</span>
               </div>
               <div className="text-[10px] uppercase tracking-widest text-accent font-bold mb-8 flex items-center justify-center gap-2">
-                <div className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
+                <div className="w-1.5 h-1.5 rounded-full bg-accent" />
                 {(String(paymentStatus).toLowerCase().includes("confirm") || String(paymentStatus).toLowerCase() === "paying")
                   ? "Confirming"
                   : String(paymentStatus).toLowerCase().includes("paid")

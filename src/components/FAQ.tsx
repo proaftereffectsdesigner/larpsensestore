@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef } from "react";
 import { ChevronDown } from "lucide-react";
 
-export default function FAQ() {
+export default function FAQ({ hideTitle = false }: { hideTitle?: boolean }) {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
   const [isVisible, setIsVisible] = useState(false);
   const containerRef = useRef<HTMLElement>(null);
@@ -58,32 +58,34 @@ export default function FAQ() {
   ];
 
   return (
-    <section ref={containerRef} className="w-full max-w-3xl mx-auto py-24 px-4">
-      <div className={`text-center mb-16 transition-all duration-1000 ease-out ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-20'}`}>
-        <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Frequently Asked Questions</h2>
-        <p className="text-gray-400 font-medium">Everything you need to know about our NFA system.</p>
-      </div>
+    <section ref={containerRef} className="w-full max-w-3xl mx-auto py-12 px-4">
+      {!hideTitle && (
+        <div className={`text-center mb-16 transition-all duration-1000 ease-out ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-20'}`}>
+          <h2 className="text-2xl md:text-3xl font-black text-[#f5f5f7] mb-4 uppercase tracking-widest">[ FAQ ]</h2>
+          <p className="text-[#f5f5f7]/50 text-xs tracking-widest uppercase">Everything you need to know about our NFA system.</p>
+        </div>
+      )}
 
-      <div className="space-y-4">
+      <div className="space-y-0">
         {faqs.map((faq, index) => (
           <div 
             key={index} 
-            className={`border border-white/5 rounded-2xl overflow-hidden transition-all duration-300 ${openIndex === index ? 'bg-[#0f0f0f] border-white/10 shadow-[0_4px_20px_rgba(0,0,0,0.5)]' : 'bg-[#0a0a0a] hover:bg-[#0c0c0c] hover:border-white/10'} ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}
-            style={{ transitionDelay: `${isVisible ? 100 + index * 100 : 0}ms`, transitionDuration: '500ms' }}
+            className={`border-b border-[#262626] transition-all duration-300 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
+            style={{ transitionDelay: `${isVisible ? index * 50 : 0}ms`, transitionDuration: '500ms' }}
           >
             <button
               onClick={() => setOpenIndex(openIndex === index ? null : index)}
-              className="w-full px-6 py-5 flex items-center justify-between text-left focus:outline-none"
+              className="w-full py-6 flex items-center justify-between text-left focus:outline-none"
             >
-              <span className={`font-bold text-sm md:text-base transition-colors ${openIndex === index ? 'text-white' : 'text-gray-300'}`}>
+              <span className={`font-bold text-xs uppercase tracking-widest transition-colors ${openIndex === index ? 'text-accent' : 'text-[#f5f5f7]/80 hover:text-[#f5f5f7]'}`}>
                 {faq.question}
               </span>
-              <ChevronDown className={`w-5 h-5 text-gray-500 transition-transform duration-300 ${openIndex === index ? 'rotate-180 text-emerald-500' : ''}`} />
+              <ChevronDown className={`w-5 h-5 transition-transform duration-300 ${openIndex === index ? 'rotate-180 text-accent' : 'text-[#f5f5f7]/30'}`} />
             </button>
             <div 
-              className={`transition-all duration-300 ease-in-out overflow-hidden ${openIndex === index ? 'max-h-40 opacity-100' : 'max-h-0 opacity-0'}`}
+              className={`transition-all duration-300 ease-in-out overflow-hidden ${openIndex === index ? 'max-h-60 opacity-100' : 'max-h-0 opacity-0'}`}
             >
-              <div className="px-6 pb-6 text-gray-400 text-sm leading-relaxed border-t border-white/5 pt-4 mt-2">
+              <div className="pb-6 text-[#f5f5f7]/50 text-sm leading-relaxed pr-8">
                 {faq.answer}
               </div>
             </div>

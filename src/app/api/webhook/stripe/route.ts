@@ -144,10 +144,32 @@ export async function POST(req: Request) {
           const promoCodeId = session.metadata?.promoCodeId;
 
           if (isStandardPromo && promoCodeId) {
-            const { data: codeData } = await supabaseAdmin.from("promo_codes").select("current_uses").eq("id", promoCodeId).single();
+            const { data: codeData } = await supabaseAdmin.from("promo_codes").select("code, current_uses").eq("id", promoCodeId).single();
             if (codeData) {
               await supabaseAdmin.from("promo_codes").update({ current_uses: codeData.current_uses + 1 }).eq("id", promoCodeId);
               await supabaseAdmin.from("promo_code_usages").insert({ user_id: userId, promo_code_id: promoCodeId });
+
+              if (codeData.code?.startsWith("CARD") || codeData.code?.startsWith("SCRATCH")) {
+                try {
+                  const { data: userData } = await supabaseAdmin.auth.admin.getUserById(userId);
+                  const appMeta = userData?.user?.app_metadata || {};
+                  const userMeta = userData?.user?.user_metadata || {};
+                  const activeCard = appMeta.active_scratch_card || userMeta.active_scratch_card;
+                  if (activeCard) {
+                    const updatedCard = {
+                      ...activeCard,
+                      status: "used",
+                      used_at: new Date().toISOString()
+                    };
+                    await supabaseAdmin.auth.admin.updateUserById(userId, {
+                      app_metadata: { ...appMeta, active_scratch_card: updatedCard },
+                      user_metadata: { ...userMeta, active_scratch_card: updatedCard }
+                    });
+                  }
+                } catch (e) {
+                  console.error("Failed to update active_scratch_card status in Stripe webhook:", e);
+                }
+              }
             }
           } else {
             await processAffiliateCommission(supabaseAdmin, userId, totalPrice, appliedPromoCode);

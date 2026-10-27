@@ -94,7 +94,20 @@ export async function POST(req: Request) {
         // Check if user already used this standard code
         const { data: usage } = await supabaseAdmin.from("promo_code_usages").select("*").eq("user_id", userId).eq("promo_code_id", standardCode.id).maybeSingle();
         
-        if (isNotExpired && hasUsesLeft && meetsMinSpent && !usage) {
+        let isOwner = true;
+        if (standardCode.code.startsWith("CARD") || standardCode.code.startsWith("SCRATCH")) {
+          const parts = standardCode.code.split("-");
+          if (parts.length >= 2) {
+            const userPrefix = parts[1].toUpperCase();
+            const cleanUserPrefix = userId.replace(/-/g, "").slice(0, 8).toUpperCase();
+            const dashedUserPrefix = userId.slice(0, 8).toUpperCase();
+            if (userPrefix !== cleanUserPrefix && userPrefix !== dashedUserPrefix) {
+              isOwner = false;
+            }
+          }
+        }
+
+        if (isNotExpired && hasUsesLeft && meetsMinSpent && !usage && isOwner) {
           discountPct = standardCode.discount_pct;
           appliedPromoCode = standardCode.code;
           isStandardPromo = true;

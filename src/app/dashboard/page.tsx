@@ -3,9 +3,8 @@
 import { useEffect, useState, Suspense, useRef } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase-client";
-import ParticlesBackground from "@/components/ParticlesBackground";
 import { User } from "@supabase/supabase-js";
-import { Camera, ExternalLink, Key, Package, Plus, Send, Settings, Shield, ShieldAlert, Star, Wallet, User as UserIcon, LogOut, Check, ShoppingCart, Loader2, Upload, Crown, ShieldCheck, X, RefreshCw, Eye, EyeOff, LayoutGrid, MessageSquare, ChevronLeft, ChevronRight, UserPlus, Image as ImageIcon, CalendarCheck, Medal, Award, Copy, Search, Lock, KeyRound, TrendingUp, Gamepad, ShoppingBag, Mail, Crop, Trash2, Gem, Zap, ArrowRight, Smartphone, Monitor, Coins } from "lucide-react";
+import { Camera, ExternalLink, Key, Package, Plus, Send, Settings, Shield, ShieldAlert, Star, Wallet, User as UserIcon, LogOut, Check, ShoppingCart, Loader2, Upload, Crown, ShieldCheck, X, RefreshCw, Eye, EyeOff, LayoutGrid, MessageSquare, ChevronLeft, ChevronRight, ChevronDown, UserPlus, Image as ImageIcon, CalendarCheck, Medal, Award, Copy, Search, Lock, KeyRound, TrendingUp, Gamepad, ShoppingBag, Mail, Crop, Trash2, Gem, Zap, ArrowRight, Smartphone, Monitor, Coins } from "lucide-react";
 import TicketChat from "@/components/TicketChat";
 import Cropper from 'react-easy-crop';
 import getCroppedImg from '@/lib/cropImage';
@@ -13,6 +12,8 @@ import { products, getProductImage, getGameName } from "@/lib/products";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
+import MiniPumpkin from "@/components/halloween/MiniPumpkin";
+import { HALLOWEEN_EVENT_ENABLED } from "@/components/halloween/HalloweenConfig";
 
 function DashboardContent() {
   const [user, setUser] = useState<User | null>(null);
@@ -28,6 +29,9 @@ function DashboardContent() {
   
   const searchParams = useSearchParams();
   const initialTab = searchParams.get('tab') || 'orders';
+  const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
+  const [copiedOrderId, setCopiedOrderId] = useState<string | null>(null);
+  const [copiedOrderCreds, setCopiedOrderCreds] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState(initialTab);
   const [discordUsername, setDiscordUsername] = useState<string | null>(null);
   const [isBanned, setIsBanned] = useState(false);
@@ -756,8 +760,20 @@ function DashboardContent() {
     setImgSrc("");
     
     if (user) {
-        const { data } = await supabase.auth.updateUser({ data: { avatar_url: "" } });
+        if (user?.user_metadata?.avatar_url && user.user_metadata.avatar_url.includes('avatars/')) {
+            const oldFileName = user.user_metadata.avatar_url.split('/').pop()?.split('?')[0];
+            if (oldFileName && oldFileName.startsWith(user.id)) {
+                await supabase.storage.from('avatars').remove([oldFileName]);
+            }
+        }
+        
+        const { data } = await supabase.auth.updateUser({ data: { avatar_url: null } });
         if (data.user) setUser(data.user);
+        
+        await supabase.from("profiles").update({ avatar_url: null }).eq("id", user.id);
+        if (profile) setProfile({ ...profile, avatar_url: null });
+        
+        toast.success("Avatar removed.");
     }
   };
 
@@ -844,12 +860,12 @@ function DashboardContent() {
   const joinDate = new Date(user.created_at || new Date()).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
   
   const ALL_TIME_BADGES = [
-    { name: "Newcomer / Registered", desc: "Welcome to the community", color: "text-blue-400", bg: "bg-blue-500/10 border-blue-500/20", glow: "shadow-[0_0_2px_rgba(59,130,246,0.2)]", Icon: UserPlus, daysReq: 0 },
-    { name: "Active Member", desc: "Active community member for a week", color: "text-emerald-400", bg: "bg-emerald-500/10 border-emerald-500/20", glow: "shadow-[0_0_5px_rgba(16,185,129,0.3)]", Icon: CalendarCheck, daysReq: 7 },
-    { name: "Trusted User", desc: "30 days of trusted membership", color: "text-purple-400", bg: "bg-purple-500/10 border-purple-500/20", glow: "shadow-[0_0_8px_rgba(168,85,247,0.4)]", Icon: ShieldCheck, daysReq: 30 },
-    { name: "Established Client", desc: "90 days of consistent presence", color: "text-orange-400", bg: "bg-orange-500/10 border-orange-500/20", glow: "shadow-[0_0_12px_rgba(249,115,22,0.5)]", Icon: Award, daysReq: 90 },
-    { name: "Platform Veteran", desc: "Legendary 6 months milestone", color: "text-red-400", bg: "bg-red-500/10 border-red-500/20", glow: "shadow-[0_0_16px_rgba(239,68,68,0.6)]", Icon: Medal, daysReq: 180 },
-    { name: "Foundation Pillar", desc: "Full year of elite platform status", color: "text-yellow-400", bg: "bg-yellow-500/10 border-yellow-500/30", glow: "shadow-[0_0_22px_rgba(234,179,8,0.8)]", Icon: Crown, daysReq: 365 },
+    { name: "Newcomer / Registered", desc: "Welcome to the community", color: "text-blue-500", bg: "bg-blue-500/10 border-blue-500/30", glow: "shadow-none", Icon: UserPlus, daysReq: 0 },
+    { name: "Active Member", desc: "Active community member for a week", color: "text-emerald-500", bg: "bg-emerald-500/10 border-emerald-500/30", glow: "shadow-none", Icon: CalendarCheck, daysReq: 7 },
+    { name: "Trusted User", desc: "30 days of trusted membership", color: "text-purple-500", bg: "bg-purple-500/10 border-purple-500/30", glow: "shadow-none", Icon: ShieldCheck, daysReq: 30 },
+    { name: "Established Client", desc: "90 days of consistent presence", color: "text-orange-500", bg: "bg-orange-500/10 border-orange-500/30", glow: "shadow-none", Icon: Award, daysReq: 90 },
+    { name: "Platform Veteran", desc: "Legendary 6 months milestone", color: "text-red-500", bg: "bg-red-500/10 border-red-500/30", glow: "shadow-none", Icon: Medal, daysReq: 180 },
+    { name: "Foundation Pillar", desc: "Full year of elite platform status", color: "text-yellow-500", bg: "bg-yellow-500/10 border-yellow-500/30", glow: "shadow-none", Icon: Crown, daysReq: 365 },
   ];
   
   let TimeIcon = UserPlus;
@@ -861,26 +877,26 @@ function DashboardContent() {
   else if (accountAgeDays >= 7) { timeBadge = ALL_TIME_BADGES[1]; TimeIcon = CalendarCheck; }
 
   let BuyerIcon = ShoppingBag;
-  let buyerBadge = { name: "Verified Buyer", color: "text-green-400", bg: "bg-green-500/10 border-green-500/20", glow: "shadow-[0_0_8px_rgba(34,197,94,0.3)]" };
+  let buyerBadge = { name: "Verified Buyer", color: "text-[#f5f5f7]", bg: "bg-green-500/10 border-green-500/20", glow: "shadow-none" };
   
   if (totalSpent >= 250) {
-    buyerBadge = { name: "VIP Status", color: "text-cyan-400", bg: "bg-cyan-500/10 border-cyan-500/30", glow: "shadow-[0_0_15px_rgba(34,211,238,0.5)]" };
+    buyerBadge = { name: "VIP Status", color: "text-[#f5f5f7]", bg: "bg-cyan-500/10 border-cyan-500/30", glow: "shadow-none" };
     BuyerIcon = Gem;
   } else if (totalSpent >= 50) {
-    buyerBadge = { name: "Premium Tier", color: "text-yellow-400", bg: "bg-yellow-500/10 border-yellow-500/30", glow: "shadow-[0_0_15px_rgba(234,179,8,0.5)]" };
+    buyerBadge = { name: "Premium Tier", color: "text-[#f5f5f7]", bg: "bg-yellow-500/10 border-yellow-500/30", glow: "shadow-none" };
     BuyerIcon = Coins;
   }
 
   return (
     <>
-      <ParticlesBackground />
+      
       {/* Cropper Modal */}
       {isCropping && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-[#141414] border border-white/10 rounded-3xl overflow-hidden w-full max-w-2xl max-h-[90vh] shadow-2xl relative flex flex-col">
-            <div className="p-4 border-b border-white/5 flex justify-between items-center bg-[#0a0a0a] shrink-0">
+          <div className="bg-[#141414] border border-[#262626] rounded-2xl shadow-none overflow-hidden w-full max-w-2xl max-h-[90vh] shadow-2xl relative flex flex-col">
+            <div className="p-4 border-b border-[#262626] flex justify-between items-center bg-[#0a0a0a] shrink-0">
               <h3 className="font-bold text-white text-lg">Crop Avatar</h3>
-              <button onClick={() => { setIsCropping(false); setImgSrc(savedImgSrc); }} className="text-gray-400 hover:text-white transition-colors">
+              <button onClick={() => { setIsCropping(false); setImgSrc(savedImgSrc); }} className="text-[#f5f5f7]/50 hover:text-white transition-colors">
                 <X className="w-6 h-6" />
               </button>
             </div>
@@ -902,7 +918,7 @@ function DashboardContent() {
             
             <div className="p-6 bg-[#0a0a0a] space-y-4 shrink-0">
               <div>
-                <label className="text-xs text-gray-500 uppercase font-bold tracking-wider mb-2 block">Zoom</label>
+                <label className="text-xs text-[#f5f5f7]/50 uppercase font-bold tracking-wider mb-2 block">Zoom</label>
                 <input
                   type="range"
                   value={zoom}
@@ -913,13 +929,13 @@ function DashboardContent() {
                   onChange={(e) => {
                     setZoom(Number(e.target.value))
                   }}
-                  className="w-full accent-accent bg-white/5 h-2 rounded-lg appearance-none cursor-pointer"
+                  className="w-full accent-accent bg-[#262626] h-2 rounded-lg appearance-none cursor-pointer"
                 />
               </div>
               <button 
                 onClick={handleAvatarCropAndUpload}
                 disabled={avatarUploading}
-                className="w-full bg-white text-black font-bold rounded-xl px-6 py-3.5 hover:bg-gray-200 transition-all hover:scale-[1.02] disabled:opacity-50 disabled:hover:scale-100 flex justify-center items-center gap-2 shadow-[0_0_15px_rgba(255,255,255,0.15)]"
+                className="w-full bg-white text-accent font-bold rounded-xl px-6 py-3.5 hover:bg-gray-200 transition-all hover:scale-[1.02] disabled:opacity-50 disabled:hover:scale-100 flex justify-center items-center gap-2 shadow-[0_0_15px_rgba(255,255,255,0.15)]"
               >
                 {avatarUploading ? <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin" /> : "Crop & Save"}
               </button>
@@ -931,22 +947,22 @@ function DashboardContent() {
       {/* Review Modal */}
       {reviewModalOpen && reviewOrder && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-[#141414] border border-white/10 rounded-3xl overflow-hidden w-full max-w-md shadow-2xl relative flex flex-col">
-            <div className="p-4 border-b border-white/5 flex justify-between items-center bg-[#0a0a0a]">
+          <div className="bg-[#141414] border border-[#262626] rounded-2xl shadow-none overflow-hidden w-full max-w-md shadow-2xl relative flex flex-col">
+            <div className="p-4 border-b border-[#262626] flex justify-between items-center bg-[#0a0a0a]">
               <h3 className="font-bold text-white text-lg">Leave a Review</h3>
-              <button onClick={() => setReviewModalOpen(false)} className="text-gray-400 hover:text-white transition-colors">
+              <button onClick={() => setReviewModalOpen(false)} className="text-[#f5f5f7]/50 hover:text-white transition-colors">
                 <X className="w-6 h-6" />
               </button>
             </div>
             <div className="p-6 space-y-6">
               <div>
-                <p className="text-sm text-gray-400 mb-2">Order: <span className="text-white font-mono">{reviewOrder.id.split('-')[0]}</span></p>
+                <p className="text-sm text-[#f5f5f7]/50 mb-2">Order: <span className="text-white font-mono">{reviewOrder.id.split('-')[0]}</span></p>
                 <div className="flex items-center gap-2">
                   {[1, 2, 3, 4, 5].map((star) => (
                     <button
                       key={star}
                       onClick={() => setReviewRating(star)}
-                      className={`transition-all hover:scale-110 ${reviewRating >= star ? 'text-yellow-400' : 'text-gray-600'}`}
+                      className={`transition-all hover:scale-110 ${reviewRating >= star ? 'text-amber-400' : 'text-[#262626]'}`}
                     >
                       <svg className="w-8 h-8 drop-shadow-md" fill="currentColor" viewBox="0 0 20 20">
                         <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
@@ -957,22 +973,22 @@ function DashboardContent() {
               </div>
               <div>
                 <div className="flex justify-between items-center mb-2">
-                  <label className="block text-xs font-bold tracking-widest text-gray-500 uppercase">Comment (Optional)</label>
-                  <span className="text-[10px] text-gray-500 font-mono">{reviewComment.length}/400</span>
+                  <label className="block text-xs font-bold tracking-widest text-[#f5f5f7]/50 uppercase">Comment (Optional)</label>
+                  <span className="text-[10px] text-[#f5f5f7]/50 font-mono">{reviewComment.length}/400</span>
                 </div>
                 <textarea 
                   value={reviewComment}
                   onChange={(e) => setReviewComment(e.target.value)}
                   rows={4}
                   maxLength={400}
-                  className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-3 text-gray-300 focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/50 transition-all resize-none"
+                  className="w-full bg-[#0a0a0a] border border-[#262626] rounded-xl px-4 py-3 text-gray-300 focus:outline-none focus:border-[#f5f5f7] transition-colors resize-none"
                   placeholder="Tell us what you think..."
                 />
               </div>
               <button 
                 onClick={handleSubmitReview}
                 disabled={submittingReview}
-                className="w-full bg-accent text-white font-bold rounded-xl px-6 py-3.5 hover:bg-accent/80 transition-all hover:scale-[1.02] disabled:opacity-50 disabled:hover:scale-100 flex justify-center items-center"
+                className="w-full bg-[#f5f5f7] text-black font-bold rounded-xl px-6 py-3.5 hover:bg-gray-200 transition-all hover:scale-[1.02] disabled:opacity-50 disabled:hover:scale-100 flex justify-center items-center"
               >
                 {submittingReview ? "Submitting..." : "Submit Review"}
               </button>
@@ -983,12 +999,11 @@ function DashboardContent() {
 
       <div className="max-w-6xl mx-auto p-6 mt-8 w-full min-h-screen relative z-10">
         {/* Background glow */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[300px] bg-accent/5 rounded-full blur-[120px] pointer-events-none -z-10" />
-
+      
       {/* Premium Header */}
       <div className="flex items-center gap-6 mb-12 relative">
-        <div className="w-20 h-20 rounded-3xl bg-gradient-to-tr from-accent to-purple-500 p-[2px] shadow-2xl shadow-accent/20">
-          <div className="w-full h-full bg-[#0a0a0a] rounded-[22px] flex items-center justify-center overflow-hidden">
+        <div className="w-20 h-20 rounded-2xl border border-[#262626] bg-[#0a0a0a] p-0 overflow-hidden shadow-none">
+          <div className="w-full h-full bg-[#0a0a0a] rounded-2xl flex items-center justify-center overflow-hidden">
             {profile?.avatar_url ? (
               <img src={profile.avatar_url} className="w-full h-full object-cover" alt="Avatar" />
             ) : (
@@ -997,10 +1012,11 @@ function DashboardContent() {
           </div>
         </div>
         <div>
-          <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400 tracking-tight mb-2">
-            Overview
+          <h1 className="text-4xl font-black text-[#f5f5f7] tracking-tighter mb-2 flex items-center gap-2">
+            <span>Overview</span>
+            {HALLOWEEN_EVENT_ENABLED && <MiniPumpkin className="w-7 h-7 -mt-1 inline-block" />}
           </h1>
-          <p className="text-gray-400 font-medium">Welcome back, <span className="text-gray-200">{profile?.display_name || user.email?.split('@')[0]}</span></p>
+          <p className="text-[#f5f5f7]/50 font-medium">Welcome back, <span className="text-gray-200">{profile?.display_name || user.email?.split('@')[0]}</span></p>
         </div>
       </div>
 
@@ -1014,7 +1030,7 @@ function DashboardContent() {
             <div className="text-center sm:text-left">
               <h2 className="text-xl font-black uppercase tracking-tight text-white mb-1">Your account has been suspended.</h2>
               <p className="text-red-400 font-medium">Banned on {bannedAt ? new Date(bannedAt).toLocaleString() : 'Unknown date'} {banExpiresAt ? `until ${new Date(banExpiresAt).toLocaleString()}` : '(Permanent)'}</p>
-              <p className="text-sm text-gray-400 mt-2">You can no longer make purchases, add balance, or change your profile settings. You can only view your past orders.</p>
+              <p className="text-sm text-[#f5f5f7]/50 mt-2">You can no longer make purchases, add balance, or change your profile settings. You can only view your past orders.</p>
             </div>
           </div>
         </div>
@@ -1042,23 +1058,23 @@ function DashboardContent() {
         
         {/* Sidebar */}
         <div className="w-full md:w-64 shrink-0 space-y-2">
-          <button onClick={() => handleTabChange('profile')} className={`w-full flex items-center gap-3 px-5 py-3.5 rounded-2xl transition-all ${activeTab === 'profile' ? 'bg-white/10 text-white font-bold shadow-lg' : 'text-gray-400 hover:bg-white/5 hover:text-gray-200 font-medium'}`}>
-            <UserIcon className={`w-5 h-5 ${activeTab === 'profile' ? 'text-accent' : ''}`} /> Profile Settings
+          <button onClick={() => handleTabChange('profile')} className={`w-full flex items-center gap-3 px-5 py-3.5 rounded-2xl transition-all ${activeTab === 'profile' ? 'bg-[#1a1a1a] border-l-2 border-accent text-[#f5f5f7] font-bold rounded-l-none rounded-r-2xl' : 'text-[#f5f5f7]/50 hover:bg-[#262626] hover:text-gray-200 font-medium'}`}>
+            <UserIcon className={`w-5 h-5 ${activeTab === 'profile' ? 'text-accent' : 'text-[#f5f5f7]/60'}`} /> Profile Settings
           </button>
-          <button onClick={() => handleTabChange('orders')} className={`w-full flex items-center gap-3 px-5 py-3.5 rounded-2xl transition-all ${activeTab === 'orders' ? 'bg-white/10 text-white font-bold shadow-lg' : 'text-gray-400 hover:bg-white/5 hover:text-gray-200 font-medium'}`}>
-            <LayoutGrid className={`w-5 h-5 ${activeTab === 'orders' ? 'text-accent' : ''}`} /> My Orders
+          <button onClick={() => handleTabChange('orders')} className={`w-full flex items-center gap-3 px-5 py-3.5 rounded-2xl transition-all ${activeTab === 'orders' ? 'bg-[#1a1a1a] border-l-2 border-accent text-[#f5f5f7] font-bold rounded-l-none rounded-r-2xl' : 'text-[#f5f5f7]/50 hover:bg-[#262626] hover:text-gray-200 font-medium'}`}>
+            <LayoutGrid className={`w-5 h-5 ${activeTab === 'orders' ? 'text-accent' : 'text-[#f5f5f7]/60'}`} /> My Orders
           </button>
-          <button onClick={() => handleTabChange('security')} className={`w-full flex items-center gap-3 px-5 py-3.5 rounded-2xl transition-all ${activeTab === 'security' ? 'bg-white/10 text-white font-bold shadow-lg' : 'text-gray-400 hover:bg-white/5 hover:text-gray-200 font-medium'}`}>
-            <Shield className={`w-5 h-5 ${activeTab === 'security' ? 'text-accent' : ''}`} /> Security
+          <button onClick={() => handleTabChange('security')} className={`w-full flex items-center gap-3 px-5 py-3.5 rounded-2xl transition-all ${activeTab === 'security' ? 'bg-[#1a1a1a] border-l-2 border-accent text-[#f5f5f7] font-bold rounded-l-none rounded-r-2xl' : 'text-[#f5f5f7]/50 hover:bg-[#262626] hover:text-gray-200 font-medium'}`}>
+            <Shield className={`w-5 h-5 ${activeTab === 'security' ? 'text-accent' : 'text-[#f5f5f7]/60'}`} /> Security
           </button>
-          <button onClick={() => handleTabChange('tickets')} className={`w-full flex items-center gap-3 px-5 py-3.5 rounded-2xl transition-all ${activeTab === 'tickets' ? 'bg-white/10 text-white font-bold shadow-lg' : 'text-gray-400 hover:bg-white/5 hover:text-gray-200 font-medium'}`}>
-            <MessageSquare className={`w-5 h-5 ${activeTab === 'tickets' ? 'text-accent' : ''}`} /> Support Tickets
+          <button onClick={() => handleTabChange('tickets')} className={`w-full flex items-center gap-3 px-5 py-3.5 rounded-2xl transition-all ${activeTab === 'tickets' ? 'bg-[#1a1a1a] border-l-2 border-accent text-[#f5f5f7] font-bold rounded-l-none rounded-r-2xl' : 'text-[#f5f5f7]/50 hover:bg-[#262626] hover:text-gray-200 font-medium'}`}>
+            <MessageSquare className={`w-5 h-5 ${activeTab === 'tickets' ? 'text-accent' : 'text-[#f5f5f7]/60'}`} /> Support Tickets
           </button>
-          <button onClick={() => handleTabChange('affiliate')} className={`w-full flex items-center gap-3 px-5 py-3.5 rounded-2xl transition-all ${activeTab === 'affiliate' ? 'bg-white/10 text-white font-bold shadow-lg' : 'text-gray-400 hover:bg-white/5 hover:text-gray-200 font-medium'}`}>
-            <UserPlus className={`w-5 h-5 ${activeTab === 'affiliate' ? 'text-accent' : ''}`} /> Affiliate Program
+          <button onClick={() => handleTabChange('affiliate')} className={`w-full flex items-center gap-3 px-5 py-3.5 rounded-2xl transition-all ${activeTab === 'affiliate' ? 'bg-[#1a1a1a] border-l-2 border-accent text-[#f5f5f7] font-bold rounded-l-none rounded-r-2xl' : 'text-[#f5f5f7]/50 hover:bg-[#262626] hover:text-gray-200 font-medium'}`}>
+            <UserPlus className={`w-5 h-5 ${activeTab === 'affiliate' ? 'text-accent' : 'text-[#f5f5f7]/60'}`} /> Affiliate Program
           </button>
-          <button onClick={() => handleTabChange('reviews')} className={`w-full flex items-center gap-3 px-5 py-3.5 rounded-2xl transition-all ${activeTab === 'reviews' ? 'bg-white/10 text-white font-bold shadow-lg' : 'text-gray-400 hover:bg-white/5 hover:text-gray-200 font-medium'}`}>
-            <Star className={`w-5 h-5 ${activeTab === 'reviews' ? 'text-accent' : ''}`} /> Reviews
+          <button onClick={() => handleTabChange('reviews')} className={`w-full flex items-center gap-3 px-5 py-3.5 rounded-2xl transition-all ${activeTab === 'reviews' ? 'bg-[#1a1a1a] border-l-2 border-accent text-[#f5f5f7] font-bold rounded-l-none rounded-r-2xl' : 'text-[#f5f5f7]/50 hover:bg-[#262626] hover:text-gray-200 font-medium'}`}>
+            <Star className={`w-5 h-5 ${activeTab === 'reviews' ? 'text-accent' : 'text-[#f5f5f7]/60'}`} /> Reviews
           </button>
         </div>
 
@@ -1068,28 +1084,23 @@ function DashboardContent() {
             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                 <h2 className="text-2xl font-bold text-white tracking-tight flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-[#141414] border border-white/10 flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-full bg-[#141414] border border-[#262626] flex items-center justify-center">
                     <UserIcon className="w-5 h-5 text-gray-300" />
                   </div>
                   Community Profile
                 </h2>
-                <Link href={`/user/${user?.id}`} className="flex items-center justify-center gap-2 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-400 px-5 py-2.5 rounded-xl text-sm font-bold transition-colors shadow-[0_0_15px_rgba(16,185,129,0.05)] hover:shadow-[0_0_20px_rgba(16,185,129,0.15)]">
+                <Link href={`/user/${user?.id}`} className="flex items-center justify-center gap-2 bg-[#141414] hover:bg-[#1a1a1a] border border-[#262626] text-[#f5f5f7] px-6 py-3 rounded-xl text-xs uppercase tracking-widest font-bold transition-colors shadow-none">
                   View Public Profile <ArrowRight className="w-4 h-4" />
                 </Link>
               </div>
               
-              <div className="bg-[#141414] border border-white/5 rounded-3xl overflow-hidden shadow-2xl relative max-w-4xl">
-                {/* Banner Area */}
-                <div className="h-48 w-full bg-gradient-to-r from-[#0a0a0a] via-accent/20 to-[#0a0a0a] relative border-b border-white/5">
-                  <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 mix-blend-overlay"></div>
-                </div>
-
+              <div className="bg-[#141414] border border-[#262626] rounded-2xl shadow-none overflow-hidden shadow-2xl relative max-w-4xl">
                 {/* Profile Body */}
-                <div className="px-6 md:px-10 pb-10 relative">
+                <div className="px-6 md:px-10 py-10 relative">
                   <div className="flex flex-col md:flex-row gap-8">
                     
                     {/* Left Column: Avatar & Badges */}
-                    <div className="flex flex-col items-center -mt-24 z-10 shrink-0 w-full md:w-48 space-y-6">
+                    <div className="flex flex-col items-center z-10 shrink-0 w-full md:w-48 space-y-6">
                       
                       {/* Avatar Editor */}
                       <div className="w-48">
@@ -1097,34 +1108,34 @@ function DashboardContent() {
                           <div className="relative w-48 h-48 group rounded-full overflow-hidden border-4 border-[#141414] shadow-2xl bg-[#0a0a0a]">
                             <img src={newAvatar} alt="Avatar Preview" className="w-full h-full object-cover" />
                             
-                            <div className="absolute inset-0 bg-black/50 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center gap-4">
+                            <div className="absolute inset-0 bg-[#0a0a0a]/80 backdrop-blur-none opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center gap-4">
                               <button 
                                 onClick={(e) => {
                                   e.preventDefault();
                                   setImgSrc(savedImgSrc || newAvatar);
                                   setIsCropping(true);
                                 }}
-                                className="w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 flex flex-col items-center justify-center transition-all hover:scale-110 shadow-xl"
+                                className="w-12 h-12 rounded-xl bg-[#141414] hover:bg-[#1a1a1a] border border-[#262626] flex flex-col items-center justify-center transition-all hover:scale-110 shadow-none"
                                 title="Edit Avatar"
                               >
-                                <Crop className="w-5 h-5 text-white" />
+                                <Crop className="w-5 h-5 text-[#f5f5f7] hover:text-accent transition-colors" />
                               </button>
 
                               <button 
                                 onClick={handleRemoveAvatar}
-                                className="w-12 h-12 rounded-full bg-red-500/20 hover:bg-red-500/40 border border-red-500/30 flex flex-col items-center justify-center transition-all hover:scale-110 shadow-xl"
+                                className="w-12 h-12 rounded-xl bg-[#141414] hover:bg-[#1a1a1a] border border-[#262626] flex flex-col items-center justify-center transition-all hover:scale-110 shadow-none"
                                 title="Remove Avatar"
                               >
-                                <Trash2 className="w-5 h-5 text-red-400 hover:text-red-300" />
+                                <Trash2 className="w-5 h-5 text-[#f5f5f7] hover:text-[#ff3333] transition-colors" />
                               </button>
                             </div>
                           </div>
                         ) : (
-                          <label className="flex items-center justify-center w-48 h-48 bg-[#0a0a0a] hover:bg-white/5 border-4 border-[#141414] text-white font-semibold rounded-full cursor-pointer transition-colors shadow-2xl relative overflow-hidden group">
+                          <label className="flex items-center justify-center w-48 h-48 bg-[#0a0a0a] hover:bg-[#262626] border-4 border-[#141414] text-white font-semibold rounded-full cursor-pointer transition-colors shadow-2xl relative overflow-hidden group">
                             {avatarUploading ? (
                               <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                             ) : (
-                              <div className="flex flex-col items-center gap-2 text-gray-400 group-hover:text-white transition-colors">
+                              <div className="flex flex-col items-center gap-2 text-[#f5f5f7]/50 group-hover:text-white transition-colors">
                                 <Upload className="w-6 h-6" />
                                 <span className="text-sm">Upload</span>
                               </div>
@@ -1141,18 +1152,18 @@ function DashboardContent() {
                       </div>
 
                       {/* Rank */}
-                      <div className="w-full bg-[#0a0a0a] rounded-xl p-2 border border-accent/20 shadow-[0_0_10px_rgba(34,197,94,0.1)] flex items-center justify-center gap-1.5">
+                      <div className="w-full bg-[#0a0a0a] rounded-xl p-2 border border-[#262626] shadow-none flex items-center justify-center gap-1.5">
                         {totalSpent > 50 ? (
-                          <><Crown className="w-3.5 h-3.5 text-accent" /><span className="text-xs font-bold text-accent uppercase tracking-widest">Elite Buyer</span></>
+                          <><Crown className="w-3.5 h-3.5 text-[#f5f5f7]" /><span className="text-xs font-bold text-white uppercase tracking-widest">Elite Buyer</span></>
                         ) : (
-                          <><ShieldCheck className="w-3.5 h-3.5 text-emerald-400" /><span className="text-xs font-bold text-emerald-400 uppercase tracking-widest">Verified Member</span></>
+                          <><ShieldCheck className="w-3.5 h-3.5 text-[#f5f5f7]" /><span className="text-xs font-bold text-[#f5f5f7] uppercase tracking-widest">Verified Member</span></>
                         )}
                       </div>
 
                       {/* Badges */}
-                      <div className="w-full bg-[#0a0a0a] rounded-2xl p-4 border border-white/5 space-y-3">
+                      <div className="w-full bg-[#0a0a0a] rounded-2xl p-4 border border-[#262626] space-y-3">
                         <h3 
-                          className="text-xs font-bold text-gray-400 uppercase tracking-widest text-center cursor-pointer hover:text-white transition-colors"
+                          className="text-xs font-bold text-[#f5f5f7]/50 uppercase tracking-widest text-center cursor-pointer hover:text-white transition-colors"
                           onClick={() => setIsBadgesModalOpen(true)}
                           title="Click to view all badges"
                         >
@@ -1162,9 +1173,9 @@ function DashboardContent() {
                           {/* Time Badge (Dynamic) */}
                           <div className={`p-2 rounded-xl transition-all border group relative ${timeBadge.bg} ${timeBadge.glow} hover:scale-110`}>
                             <TimeIcon className={`w-5 h-5 ${timeBadge.color}`} />
-                            <div className="absolute -top-14 left-1/2 -translate-x-1/2 bg-black border border-white/10 px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap transition-all z-50 flex flex-col items-center shadow-xl">
+                            <div className="absolute -top-14 left-1/2 -translate-x-1/2 bg-black border border-[#262626] px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap transition-all z-50 flex flex-col items-center shadow-xl">
                               <span className={`font-bold text-xs ${timeBadge.color}`}>{timeBadge.name}</span>
-                              <span className="text-[10px] text-gray-400 mt-0.5">Member since {joinDate}</span>
+                              <span className="text-[10px] text-[#f5f5f7]/50 mt-0.5">Member since {joinDate}</span>
                             </div>
                           </div>
 
@@ -1172,7 +1183,7 @@ function DashboardContent() {
                           {totalOrders > 0 && (
                             <div className={`p-2 rounded-xl transition-all border group relative ${buyerBadge.bg} ${buyerBadge.glow} hover:scale-110`}>
                               <BuyerIcon className={`w-5 h-5 ${buyerBadge.color}`} />
-                              <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-black border border-white/10 px-3 py-1 text-xs rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap transition-opacity z-50 shadow-xl font-bold ${buyerBadge.color} flex flex-col items-center">
+                              <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-black border border-[#262626] px-3 py-1 text-xs rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap transition-opacity z-50 shadow-xl font-bold ${buyerBadge.color} flex flex-col items-center">
                                 <span className={buyerBadge.color}>{buyerBadge.name}</span>
                               </div>
                             </div>
@@ -1181,18 +1192,18 @@ function DashboardContent() {
                       </div>
 
                       {/* Linked Accounts */}
-                      <div className="w-full bg-[#0a0a0a] rounded-2xl p-4 border border-white/5 space-y-3">
-                        <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest text-center">Connections</h3>
+                      <div className="w-full bg-[#0a0a0a] rounded-2xl p-4 border border-[#262626] space-y-3">
+                        <h3 className="text-xs font-bold text-[#f5f5f7]/50 uppercase tracking-widest text-center">Connections</h3>
                         {discordUsername ? (
-                          <div className="w-full flex items-center justify-between gap-2 bg-[#5865F2]/5 border border-[#5865F2]/20 rounded-xl px-3 py-2">
+                          <div className="w-full flex items-center justify-between gap-2 bg-[#141414] border border-[#262626] rounded-xl px-4 py-3">
                             <div className="flex items-center gap-2 overflow-hidden">
                               <svg className="w-4 h-4 text-[#5865F2] shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8852 1.515.0699.0699 0 00-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.946 2.4189-2.1568 2.4189z" /></svg>
                               <span className="text-sm font-medium text-white truncate">{discordUsername}</span>
                             </div>
-                            <a href={`/api/discord/link?userId=${user?.id}`} className="text-[10px] uppercase font-bold text-[#5865F2] hover:text-white transition-colors">Relink</a>
+                            <a href={`/api/discord/link?userId=${user?.id}`} className="text-[10px] uppercase font-bold text-accent hover:text-[#f5f5f7] transition-colors">Relink</a>
                           </div>
                         ) : (
-                          <a href={`/api/discord/link?userId=${user?.id}`} className="w-full flex items-center justify-center gap-2 bg-[#5865F2]/10 hover:bg-[#5865F2]/20 border border-[#5865F2]/30 text-[#5865F2] font-semibold py-2 rounded-xl transition-colors text-sm">
+                          <a href={`/api/discord/link?userId=${user?.id}`} className="w-full flex items-center justify-center gap-2 bg-[#5865F2] hover:bg-[#4752C4] text-white font-bold uppercase tracking-widest text-xs py-3 rounded-xl transition-colors shadow-none border-none">
                             <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8852 1.515.0699.0699 0 00-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.946 2.4189-2.1568 2.4189z" /></svg>
                             Link Discord
                           </a>
@@ -1206,70 +1217,70 @@ function DashboardContent() {
                       
                       {/* Display Name */}
                       <div>
-                        <label className="block text-xs font-bold tracking-widest text-gray-500 mb-2 uppercase">Display Name</label>
+                        <label className="block text-xs font-bold tracking-widest text-[#f5f5f7]/50 mb-2 uppercase">Display Name</label>
                         <input 
                           type="text" 
                           value={newName}
                           onChange={(e) => setNewName(e.target.value)}
-                          className="w-full bg-transparent border-b-2 border-white/10 px-0 py-2 text-2xl font-bold text-white focus:outline-none focus:border-accent transition-colors placeholder:text-gray-600"
+                          className="w-full bg-transparent border-b-2 border-[#262626] px-0 py-2 text-2xl font-bold text-white focus:outline-none focus:border-[#f5f5f7] transition-colors placeholder:text-gray-600"
                           placeholder="Your Nickname"
                         />
                       </div>
 
                       {/* Bio */}
                       <div>
-                        <label className="block text-xs font-bold tracking-widest text-gray-500 mb-2 uppercase">About Me</label>
+                        <label className="block text-xs font-bold tracking-widest text-[#f5f5f7]/50 mb-2 uppercase">About Me</label>
                         <textarea 
                           value={newBio}
                           onChange={(e) => setNewBio(e.target.value)}
                           rows={4}
-                          className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-3 text-gray-300 focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/50 transition-all font-medium resize-none placeholder:text-gray-600"
+                          className="w-full bg-[#0a0a0a] border border-[#262626] rounded-xl px-4 py-3 text-gray-300 focus:outline-none focus:border-[#f5f5f7] transition-colors font-medium resize-none placeholder:text-gray-600"
                           placeholder="Write something about yourself..."
                         />
                       </div>
 
                       {/* Statistics Preview */}
                       <div>
-                        <label className="block text-xs font-bold tracking-widest text-gray-500 mb-2 uppercase">Public Statistics</label>
+                        <label className="block text-xs font-bold tracking-widest text-[#f5f5f7]/50 mb-2 uppercase">Public Statistics</label>
                         <div className="grid grid-cols-2 gap-4">
-                          <div className="bg-[#0a0a0a] border border-white/5 rounded-xl p-4 flex flex-col justify-center items-center">
+                          <div className="bg-[#0a0a0a] border border-[#262626] rounded-xl p-4 flex flex-col justify-center items-center">
                             <span className="text-2xl font-bold text-white">{totalOrders}</span>
-                            <span className="text-xs text-gray-500 font-semibold uppercase tracking-widest">Orders</span>
+                            <span className="text-xs text-[#f5f5f7]/50 font-semibold uppercase tracking-widest">Orders</span>
                           </div>
-                          <div className="bg-[#0a0a0a] border border-white/5 rounded-xl p-4 flex flex-col justify-center items-center">
+                          <div className="bg-[#0a0a0a] border border-[#262626] rounded-xl p-4 flex flex-col justify-center items-center">
                             <span className="text-2xl font-bold text-white">€{totalSpent.toFixed(2)}</span>
-                            <span className="text-xs text-gray-500 font-semibold uppercase tracking-widest">Spent</span>
+                            <span className="text-xs text-[#f5f5f7]/50 font-semibold uppercase tracking-widest">Spent</span>
                           </div>
                         </div>
                       </div>
 
                       {/* Privacy Toggle */}
-                      <div className="flex items-center justify-between p-4 bg-[#0a0a0a] border border-white/5 rounded-xl">
+                      <div className="flex items-center justify-between p-4 bg-[#0a0a0a] border border-[#262626] rounded-xl">
                         <div>
                           <div className="text-sm font-bold text-white mb-1">Private Profile</div>
-                          <div className="text-xs text-gray-500 font-medium">Hide your profile from public view. Only you can see it.</div>
+                          <div className="text-xs text-[#f5f5f7]/50 font-medium">Hide your profile from public view. Only you can see it.</div>
                         </div>
                         <button
                           onClick={() => setIsPrivate(!isPrivate)}
-                          className={`relative w-12 h-6 rounded-full transition-colors ${isPrivate ? 'bg-accent' : 'bg-white/10'}`}
+                          className={`relative w-12 h-6 rounded-full transition-colors ${isPrivate ? 'bg-[#f5f5f7]' : 'bg-white/10'}`}
                         >
-                          <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform ${isPrivate ? 'left-7' : 'left-1'}`} />
+                          <div className={`absolute top-1 w-4 h-4 rounded-full bg-[#141414] transition-transform ${isPrivate ? 'left-7' : 'left-1'}`} />
                         </button>
                       </div>
 
                       {/* Save Button */}
-                      <div className="pt-4 border-t border-white/5 flex items-center justify-between">
+                      <div className="pt-4 border-t border-[#262626] flex items-center justify-between">
                         {profileMessage ? (
-                          <span className={`text-sm font-semibold animate-in fade-in ${profileMessage.type === 'success' ? 'text-emerald-400' : 'text-red-400'}`}>
+                          <span className={`text-sm font-semibold animate-in fade-in ${profileMessage.type === 'success' ? 'text-[#f5f5f7]' : 'text-red-400'}`}>
                             {profileMessage.text}
                           </span>
                         ) : (
-                          <span className="text-sm text-gray-500 font-medium">Save your changes to update your public profile.</span>
+                          <span className="text-sm text-[#f5f5f7]/50 font-medium">Save your changes to update your public profile.</span>
                         )}
                         <button 
                           onClick={handleUpdateProfile}
                           disabled={profileUpdating}
-                          className="bg-accent text-white font-bold rounded-xl px-8 py-3 hover:bg-accent/80 transition-all hover:scale-105 shadow-[0_0_15px_rgba(255,255,255,0.1)] disabled:opacity-50 disabled:hover:scale-100 flex items-center gap-2"
+                          className="bg-accent hover:bg-accent/80 text-black uppercase tracking-widest text-xs font-bold rounded-xl px-8 py-3 transition-colors shadow-none disabled:opacity-50 flex items-center gap-2"
                         >
                           {profileUpdating ? (
                             <>
@@ -1296,34 +1307,34 @@ function DashboardContent() {
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Statystyki */}
-                <div className="bg-gradient-to-br from-[#141414] to-[#0a0a0a] border border-white/5 rounded-3xl p-8 shadow-[0_8px_30px_rgb(0,0,0,0.5)] flex flex-col justify-center relative overflow-hidden group">
-                  <div className="absolute -right-4 -bottom-4 w-32 h-32 bg-white/5 rounded-full blur-3xl group-hover:bg-accent/10 transition-colors duration-500" />
+                <div className="bg-[#141414] border border-[#262626] rounded-2xl p-8 shadow-none flex flex-col justify-center relative overflow-hidden group">
+                  
                   <div className="flex items-center gap-3 mb-4 relative z-10">
-                    <div className="w-10 h-10 rounded-2xl bg-white/5 flex items-center justify-center border border-white/10">
-                      <TrendingUp className="w-5 h-5 text-gray-300 group-hover:text-accent transition-colors" />
+                    <div className="w-10 h-10 rounded-2xl bg-[#262626] flex items-center justify-center border border-[#262626]">
+                      <TrendingUp className="w-5 h-5 text-gray-300 group-hover:text-[#f5f5f7] transition-colors" />
                     </div>
-                    <p className="text-gray-400 text-sm font-semibold tracking-wider uppercase">Total Spent</p>
+                    <p className="text-[#f5f5f7]/50 text-sm font-semibold tracking-wider uppercase">Total Spent</p>
                   </div>
                   <p className="text-4xl font-bold text-white font-mono mb-2 relative z-10 tracking-tight">€{totalSpent.toFixed(2)}</p>
-                  <p className="text-xs text-gray-500 font-medium relative z-10">{totalOrders} {totalOrders === 1 ? 'Order' : 'Orders'} Completed</p>
+                  <p className="text-xs text-[#f5f5f7]/50 font-medium relative z-10">{totalOrders} {totalOrders === 1 ? 'Order' : 'Orders'} Completed</p>
                 </div>
 
                 {/* Sekcja Balansu */}
-                <div className="bg-gradient-to-br from-[#141414] to-[#0a0a0a] border border-white/5 rounded-3xl p-8 shadow-[0_8px_30px_rgb(0,0,0,0.5)] flex flex-col justify-center relative overflow-hidden group">
-                  <div className="absolute -right-4 -top-4 w-32 h-32 bg-emerald-500/10 rounded-full blur-3xl group-hover:bg-emerald-500/20 transition-colors duration-500" />
+                <div className="bg-[#141414] border border-[#262626] rounded-2xl p-8 shadow-none flex flex-col justify-center relative overflow-hidden group">
+                  
                   
                   <div className="flex items-center gap-3 mb-4 relative z-10">
-                    <div className="w-10 h-10 rounded-2xl bg-white/5 flex items-center justify-center border border-white/10">
-                      <Wallet className="w-5 h-5 text-gray-300 group-hover:text-emerald-400 transition-colors" />
+                    <div className="w-10 h-10 rounded-2xl bg-[#262626] flex items-center justify-center border border-[#262626]">
+                      <Wallet className="w-5 h-5 text-gray-300 group-hover:text-[#f5f5f7] transition-colors" />
                     </div>
-                    <p className="text-gray-400 text-sm font-semibold tracking-wider uppercase">Available Funds</p>
+                    <p className="text-[#f5f5f7]/50 text-sm font-semibold tracking-wider uppercase">Available Funds</p>
                   </div>
                   
                   <div className="flex items-end justify-between relative z-10 mt-1">
                     <p className="text-4xl font-bold text-white font-mono tracking-tight">€{balance.toFixed(2)}</p>
                     <button 
                       onClick={() => window.dispatchEvent(new Event('open-topup'))}
-                      className="bg-white hover:bg-gray-200 text-black font-bold px-5 py-2.5 rounded-xl transition-all hover:scale-105 hover:shadow-[0_0_20px_rgba(255,255,255,0.3)] flex items-center gap-2 text-sm shadow-lg"
+                      className="bg-accent hover:bg-accent/80 text-black uppercase tracking-widest text-xs font-bold px-6 py-3 rounded-xl transition-colors shadow-none flex items-center gap-2"
                     >
                       <Plus className="w-4 h-4" /> Top Up
                     </button>
@@ -1331,185 +1342,218 @@ function DashboardContent() {
                 </div>
               </div>
 
-              <div className="mt-8">
+              <div className="mt-12">
                 {/* Purchase History Header + Status Filter */}
-                <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-6">
+                <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 mb-6">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-[#141414] border border-white/10 flex items-center justify-center">
-                      <Package className="w-5 h-5 text-gray-300" />
+                    <div className="w-10 h-10 rounded-lg bg-[#141414] border border-[#262626] flex items-center justify-center">
+                      <Package className="w-5 h-5 text-white" />
                     </div>
                     <h2 className="text-2xl font-bold text-white tracking-tight">Purchase History</h2>
                   </div>
-                  <div className="flex items-center gap-2 flex-wrap sm:ml-auto">
+                  <div className="flex items-center gap-2 flex-wrap">
                     {(['all', 'completed', 'pending', 'cancelled', 'failed', 'refunded'] as const).map((status) => (
                       <button
                         key={status}
                         onClick={() => { setOrderStatusFilter(status); setOrdersPage(1); }}
-                        className={`px-3 py-1.5 rounded-xl text-[11px] font-bold uppercase tracking-widest border transition-all ${
+                        className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest border transition-all ${
                           orderStatusFilter === status
-                            ? status === 'completed' ? 'bg-emerald-500/20 border-emerald-500/30 text-emerald-400'
-                            : status === 'pending' ? 'bg-yellow-500/20 border-yellow-500/30 text-yellow-400'
-                            : status === 'cancelled' ? 'bg-gray-500/20 border-gray-500/30 text-gray-300'
-                            : status === 'failed' ? 'bg-red-500/20 border-red-500/30 text-red-400'
-                            : status === 'refunded' ? 'bg-indigo-500/20 border-indigo-500/30 text-indigo-400'
-                            : 'bg-white/10 border-white/20 text-white'
-                            : 'bg-transparent border-transparent text-gray-500 hover:text-gray-300'
+                            ? 'bg-[#262626] text-white border-[#404040]'
+                            : 'bg-[#0a0a0a] border-[#262626] text-[#f5f5f7]/50 hover:text-white'
                         }`}
                       >
-                        {status === 'all' ? 'All' : status.charAt(0).toUpperCase() + status.slice(1)}
+                        {status === 'all' ? 'All' : status}
                       </button>
                     ))}
                   </div>
                 </div>
 
                 {orders.length === 0 ? (
-                  <div className="bg-[#141414] border border-white/5 rounded-3xl p-16 text-center shadow-2xl relative overflow-hidden">
-                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-accent/5 rounded-full blur-[80px]" />
-                    <div className="relative z-10">
-                      <div className="w-20 h-20 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mx-auto mb-6 shadow-inner">
-                        <Package className="w-8 h-8 text-gray-400" />
-                      </div>
-                      <h3 className="text-xl font-bold text-white mb-2">No orders yet</h3>
-                      <p className="text-gray-400 mb-8 max-w-sm mx-auto">Your inventory is currently empty. Browse our store to find your perfect account.</p>
-                      <Link href="/" className="inline-flex items-center gap-2 bg-white text-black font-bold rounded-xl px-8 py-3.5 hover:bg-gray-200 transition-all hover:scale-105 shadow-[0_0_20px_rgba(255,255,255,0.15)]">
-                        <ShoppingBag className="w-5 h-5" />
-                        Browse Store
-                      </Link>
+                  <div className="bg-[#0a0a0a] border border-[#262626] rounded-xl p-16 text-center">
+                    <div className="w-16 h-16 rounded-lg bg-[#141414] border border-[#262626] flex items-center justify-center mx-auto mb-6">
+                      <Package className="w-6 h-6 text-[#f5f5f7]/30" />
                     </div>
+                    <h3 className="text-lg font-bold text-white mb-2">No orders yet</h3>
+                    <p className="text-[#f5f5f7]/50 mb-8 max-w-sm mx-auto">Your inventory is currently empty. Browse our store to find your perfect account.</p>
+                    <Link href="/" className="inline-flex items-center gap-2 bg-[#f5f5f7] hover:bg-white text-black font-bold uppercase tracking-widest text-xs px-8 py-4 rounded-lg transition-colors">
+                      <ShoppingBag className="w-4 h-4" />
+                      Browse Store
+                    </Link>
                   </div>
                 ) : (() => {
                   const filteredOrders = orderStatusFilter === 'all' ? orders : orders.filter((o: any) => o.status === orderStatusFilter);
                   return (
-                  <div className="bg-[#141414] border border-white/5 rounded-3xl p-6 md:p-8 flex flex-col min-h-[820px]">
-                    <div className="space-y-6 flex-1">
+                  <div className="space-y-4">
                       {filteredOrders.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center h-64 gap-4 text-center">
-                          <div className="w-16 h-16 rounded-full bg-white/5 border border-white/10 flex items-center justify-center">
-                            <Package className="w-6 h-6 text-gray-500" />
-                          </div>
-                          <p className="text-gray-500 font-medium">No {orderStatusFilter} orders found</p>
-                          <button onClick={() => setOrderStatusFilter('all')} className="text-xs text-accent underline">Show all orders</button>
+                        <div className="bg-[#0a0a0a] border border-[#262626] rounded-xl flex flex-col items-center justify-center h-48 gap-4 text-center">
+                          <p className="text-[#f5f5f7]/50 font-medium">No {orderStatusFilter} orders found.</p>
+                          <button onClick={() => setOrderStatusFilter('all')} className="text-xs text-white underline">Show all</button>
                         </div>
                       ) : filteredOrders.slice((ordersPage - 1) * 5, ordersPage * 5).map((order) => {
                       const pInfo = products.find(p => p.id === order.product_id);
-                      // In the future, you can add an `icon` field to `products` and do: const Icon = pInfo?.icon || Gamepad;
-                      const ProductIcon = Gamepad;
-                      
-                      const accounts = order.accounts_data
-                        ? order.accounts_data
-                            .split(/\\n|\n/)
-                            .map((t: string) => t.trim())
-                            .filter((t: string) => t.length > 0 && !t.startsWith('[') && t.includes(':'))
-                        : [];
                       
                       return (
-                        <Link href={`/order/${order.id}`} key={order.id} className="block bg-[#0a0a0a] border border-white/5 rounded-2xl p-6 relative group overflow-hidden hover:border-white/10 hover:shadow-xl transition-all cursor-pointer">
-                          <div className="absolute inset-0 bg-gradient-to-br from-white/[0.02] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+                        <div key={order.id} className="bg-[#0a0a0a] border border-[#262626] rounded-xl hover:border-[#404040] transition-colors group flex flex-col">
                           
-                          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 relative z-10">
-                            <div className="flex items-center gap-4">
-                              <div className="w-16 h-12 rounded-xl border border-white/10 flex items-center justify-center shadow-inner group-hover:scale-105 transition-transform overflow-hidden relative bg-black/50">
+                          <div 
+                            className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 p-5 cursor-pointer"
+                            onClick={(e) => {
+                              if ((e.target as HTMLElement).closest('.prevent-nav')) return;
+                              router.push(`/order/${order.id}`);
+                            }}
+                          >
+                            {/* Left: Image & Info */}
+                            <div className="flex items-center gap-4 flex-1 min-w-0 pr-4">
+                              <div className="w-16 h-12 rounded-lg border border-[#262626] flex items-center justify-center overflow-hidden relative bg-[#141414] shrink-0">
                                 {order.product_id === "topup" ? (
-                                  <Wallet className="w-6 h-6 text-accent z-10" />
+                                  <Wallet className="w-5 h-5 text-[#f5f5f7]" />
                                 ) : (
                                   <Image 
                                     src={pInfo?.image || getProductImage(order.product_id, pInfo?.category)} 
                                     alt={pInfo?.name || "Product"} 
                                     fill 
                                     sizes="64px"
-                                    className="object-cover"
+                                    className="object-cover opacity-80 group-hover:opacity-100 transition-opacity"
                                   />
                                 )}
-                                <div className="absolute inset-0 bg-black/20 pointer-events-none" />
                               </div>
-                              <div>
-                                {order.product_id === "topup" ? (
-                                  <div className="text-[10px] uppercase tracking-widest font-bold text-accent mb-0.5">Store Balance</div>
-                                ) : (
-                                  <div className="text-[10px] uppercase tracking-widest font-bold text-emerald-500 mb-0.5">
-                                    {getGameName(pInfo?.endpoint, order.product_id)}
-                                  </div>
-                                )}
-                                <div className="font-bold text-white text-lg tracking-tight group-hover:text-emerald-400 transition-colors">
-                                  {order.product_id === "topup" ? "Balance Top-up" : pInfo?.name || "Premier Ready"}
+                              
+                              <div className="flex flex-col min-w-0 gap-0.5">
+                                <div className="flex items-center gap-2">
+                                  <span className="font-bold text-white text-base tracking-tight truncate">
+                                    {order.product_id === "topup" ? "Balance Top-up" : pInfo?.name || "Premier Ready"}
+                                  </span>
+                                  <span className={`text-[10px] uppercase tracking-widest font-bold ${
+                                    order.status === 'completed' ? 'text-emerald-500' :
+                                    order.status === 'failed' ? 'text-red-500' :
+                                    order.status === 'cancelled' ? 'text-gray-500' :
+                                    order.status === 'refunded' ? 'text-indigo-500' :
+                                    'text-yellow-500'
+                                  }`}>
+                                    {order.status}
+                                  </span>
                                 </div>
-                                <div className="text-xs text-gray-500 font-mono mt-1">#{order.id.split('-')[0]} • {new Date(order.created_at).toLocaleString('en-GB')}</div>
+                                <div className="text-xs text-[#f5f5f7]/50 truncate">
+                                  {order.product_id === "topup" ? "Store Balance" : getGameName(pInfo?.endpoint, order.product_id)} • Order #{order.id.split('-')[0]} • {new Date(order.created_at).toLocaleDateString('en-GB')}
+                                </div>
                               </div>
                             </div>
-                            <div className="flex items-center gap-4 sm:gap-6 bg-white/5 px-4 py-3 rounded-xl border border-white/5">
-                              <div className="hidden sm:block text-right">
-                                <div className="text-[10px] uppercase text-gray-500 font-bold mb-0.5 tracking-widest">Payment</div>
-                                <div className="text-sm font-semibold text-gray-300">
+                            
+                            {/* Right: Stats & Actions */}
+                            <div className="flex items-center gap-4 shrink-0">
+                              <div className="hidden sm:flex flex-col items-end mr-2">
+                                <span className="font-mono text-white text-base font-bold">€{Number(order.total_price).toFixed(2)}</span>
+                                <span className="text-[10px] uppercase text-[#f5f5f7]/50 font-bold tracking-widest">
                                   {order.product_id === 'topup' 
                                     ? 'Crypto' 
                                     : order.accounts_data?.toLowerCase().includes('oxapay') || order.accounts_data?.toLowerCase().includes('crypto') 
                                       ? 'Crypto' 
                                       : order.accounts_data?.toLowerCase().includes('stripe') 
                                         ? 'Stripe' 
-                                        : 'Balance'}
+                                        : 'Balance'} • {order.product_id === 'topup' ? '1 Item' : `${order.quantity} Item${order.quantity > 1 ? 's' : ''}`}
+                                </span>
+                              </div>
+                              
+                              {/* Review Button */}
+                              {order.status === 'completed' && order.product_id !== 'topup' && (
+                                <div className="hidden md:block prevent-nav">
+                                  {order.reviews ? (
+                                    <button disabled className="text-xs font-bold text-[#f5f5f7]/30 px-4 py-2.5 rounded-lg border border-[#262626] bg-[#141414] cursor-not-allowed">
+                                      Reviewed
+                                    </button>
+                                  ) : (
+                                    <button
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        setReviewOrder(order);
+                                        setReviewComment("");
+                                        setReviewRating(5);
+                                        setReviewModalOpen(true);
+                                      }}
+                                      className="text-xs font-bold text-white px-4 py-2.5 rounded-lg border border-[#262626] bg-[#141414] hover:bg-[#262626] transition-colors flex items-center gap-2 shrink-0"
+                                    >
+                                      ⭐ Review
+                                    </button>
+                                  )}
                                 </div>
-                              </div>
-                              <div className="w-px h-8 bg-white/10 hidden sm:block"></div>
-                              <div className="text-right">
-                                <div className="text-[10px] uppercase text-gray-500 font-bold mb-0.5 tracking-widest">Total</div>
-                                <div className="font-mono text-white text-xl font-bold tracking-tight">€{Number(order.total_price).toFixed(2)}</div>
-                              </div>
-                              <div className="w-px h-8 bg-white/10 hidden sm:block"></div>
-                              <div className={`inline-flex flex-col items-center justify-center px-4 py-1.5 rounded-lg border min-w-[80px] ${
-                                order.status === 'completed' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' :
-                                order.status === 'failed' ? 'bg-red-500/10 border-red-500/20 text-red-400' :
-                                order.status === 'cancelled' ? 'bg-gray-500/10 border-gray-500/20 text-gray-400' :
-                                order.status === 'refunded' ? 'bg-indigo-500/10 border-indigo-500/20 text-indigo-400' :
-                                'bg-yellow-500/10 border-yellow-500/20 text-yellow-400'
-                              }`}>
-                                <div className="text-lg font-black leading-none">{order.product_id === 'topup' ? '€' : order.quantity}</div>
-                                <div className="text-[9px] uppercase tracking-widest font-bold opacity-80 mt-0.5">
-                                  {order.product_id === 'topup' ? "Top-up" : order.quantity === 1 ? "Account" : "Accounts"}
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                          
-                          {order.status === 'completed' && order.product_id !== 'topup' && (
-                            <div className="mt-4 pt-4 border-t border-white/5 flex justify-end">
-                            {order.reviews ? (
-                              <button
-                                disabled
-                                className="text-xs bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-bold px-4 py-2 rounded-lg flex items-center gap-1.5 z-20 relative cursor-not-allowed opacity-80"
-                              >
-                                ✓ Already Reviewed
-                              </button>
-                            ) : (
-                              <button
+                              )}
+                              
+                              {/* Expand Arrow */}
+                              <button 
+                                className="prevent-nav w-10 h-10 flex items-center justify-center rounded-lg border border-[#262626] bg-[#141414] hover:bg-[#262626] transition-colors shrink-0"
                                 onClick={(e) => {
                                   e.preventDefault();
                                   e.stopPropagation();
-                                  setReviewOrder(order);
-                                  setReviewComment("");
-                                  setReviewRating(5);
-                                  setReviewModalOpen(true);
+                                  setExpandedOrder(expandedOrder === order.id ? null : order.id);
                                 }}
-                                className="text-xs bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold px-4 py-2 rounded-lg transition-colors flex items-center gap-1.5 z-20 relative"
                               >
-                                ⭐ Leave a Review
+                                <ChevronDown className={`w-5 h-5 text-white transition-transform duration-300 ${expandedOrder === order.id ? 'rotate-180' : ''}`} />
                               </button>
-                            )}
+                            </div>
+                          </div>
+
+                          {/* Dropdown Content */}
+                          {expandedOrder === order.id && (
+                            <div className="border-t border-[#262626] p-5 bg-[#141414]/50 rounded-b-xl flex flex-col gap-6 animate-in slide-in-from-top-2 fade-in duration-200">
+                              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                                <div>
+                                  <div className="text-[10px] uppercase tracking-widest text-[#f5f5f7]/50 font-bold mb-1">Order ID</div>
+                                  <div className="font-mono text-sm text-white">{order.id}</div>
+                                </div>
+                                <button 
+                                  className={`prevent-nav text-xs font-bold px-4 py-2 rounded-lg border transition-colors flex items-center gap-2 shrink-0 ${copiedOrderId === order.id ? 'border-white bg-white text-black' : 'border-[#262626] bg-[#0a0a0a] text-white hover:bg-[#262626]'}`}
+                                  onClick={(e) => { 
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    navigator.clipboard.writeText(order.id); 
+                                    setCopiedOrderId(order.id);
+                                    setTimeout(() => setCopiedOrderId(null), 2000);
+                                  }}
+                                >
+                                  {copiedOrderId === order.id ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                                  {copiedOrderId === order.id ? "Copied!" : "Copy ID"}
+                                </button>
+                              </div>
+                              
+                              {order.status === 'completed' && order.product_id !== 'topup' && order.accounts_data && (
+                                <div className="flex flex-col gap-3">
+                                  <div className="flex justify-between items-center">
+                                    <div className="text-[10px] uppercase tracking-widest text-accent font-bold">Credentials</div>
+                                    <button 
+                                      className={`prevent-nav text-xs font-bold px-4 py-2 rounded-lg border transition-colors flex items-center gap-2 shrink-0 ${copiedOrderCreds === order.id ? 'border-white bg-white text-black' : 'border-[#262626] bg-[#0a0a0a] text-white hover:bg-[#262626]'}`}
+                                      onClick={(e) => { 
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        navigator.clipboard.writeText(order.accounts_data); 
+                                        setCopiedOrderCreds(order.id);
+                                        setTimeout(() => setCopiedOrderCreds(null), 2000);
+                                      }}
+                                    >
+                                      {copiedOrderCreds === order.id ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                                      {copiedOrderCreds === order.id ? "Copied!" : "Copy Credentials"}
+                                    </button>
+                                  </div>
+                                  <div className="bg-[#0a0a0a] border border-[#262626] p-4 rounded-lg flex items-center">
+                                    <pre className="text-xs text-[#f5f5f7]/80 font-mono truncate w-full selection:bg-accent/30">{order.accounts_data}</pre>
+                                  </div>
+                                </div>
+                              )}
                             </div>
                           )}
-                        </Link>
+                        </div>
                       );
                     })}
-                    </div>
 
                     {/* Pagination Controls */}
                     {filteredOrders.length > 0 && (
-                      <div className="flex items-center justify-center gap-2 pt-6 border-t border-white/5 mt-auto">
+                      <div className="flex items-center justify-center gap-2 pt-4">
                         <button
                           onClick={() => setOrdersPage(Math.max(1, ordersPage - 1))}
                           disabled={ordersPage === 1}
-                          className="w-10 h-10 flex items-center justify-center bg-white/5 hover:bg-white/10 disabled:opacity-50 disabled:hover:bg-white/5 rounded-xl transition-all"
+                          className="w-10 h-10 flex items-center justify-center bg-[#141414] border border-[#262626] hover:bg-[#262626] disabled:opacity-50 disabled:hover:bg-[#141414] rounded-lg transition-all"
                         >
-                          <ChevronLeft className="w-5 h-5 text-gray-400" />
+                          <ChevronLeft className="w-5 h-5 text-white" />
                         </button>
                         
                         <div className="flex items-center gap-2 px-2">
@@ -1517,23 +1561,23 @@ function DashboardContent() {
                             <button
                               key={i}
                               onClick={() => setOrdersPage(i + 1)}
-                              className={`w-10 h-10 flex items-center justify-center rounded-xl text-sm font-bold transition-all ${
-                                ordersPage === i + 1 
-                                  ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
-                                  : 'text-gray-400 hover:text-white hover:bg-white/5 border border-transparent'
+                              className={`w-10 h-10 flex items-center justify-center rounded-lg text-sm font-bold border transition-all ${
+                                ordersPage === i + 1
+                                  ? 'bg-[#262626] text-white border-[#404040]'
+                                  : 'bg-[#141414] text-[#f5f5f7]/50 hover:text-white border-[#262626]'
                               }`}
                             >
                               {i + 1}
                             </button>
                           ))}
                         </div>
-
+                        
                         <button
                           onClick={() => setOrdersPage(Math.min(Math.ceil(filteredOrders.length / 5), ordersPage + 1))}
                           disabled={ordersPage === Math.ceil(filteredOrders.length / 5)}
-                          className="w-10 h-10 flex items-center justify-center bg-white/5 hover:bg-white/10 disabled:opacity-50 disabled:hover:bg-white/5 rounded-xl transition-all"
+                          className="w-10 h-10 flex items-center justify-center bg-[#141414] border border-[#262626] hover:bg-[#262626] disabled:opacity-50 disabled:hover:bg-[#141414] rounded-lg transition-all"
                         >
-                          <ChevronRight className="w-5 h-5 text-gray-400" />
+                          <ChevronRight className="w-5 h-5 text-white" />
                         </button>
                       </div>
                     )}
@@ -1547,33 +1591,33 @@ function DashboardContent() {
           {/* TICKETS TAB */}
           {activeTab === 'tickets' && (
             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <div className="flex items-center justify-between mb-8 border-b border-white/10 pb-4">
+              <div className="flex items-center justify-between mb-8 border-b border-[#262626] pb-4">
                 <h2 className="text-2xl font-bold text-white tracking-tight flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-[#141414] border border-white/10 flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-full bg-[#141414] border border-[#262626] flex items-center justify-center">
                     <MessageSquare className="w-5 h-5 text-gray-300" />
                   </div>
                   Support Tickets
                 </h2>
-                <Link href="/support" className="text-xs bg-accent hover:bg-accent/80 text-white font-bold px-4 py-2 rounded-lg transition-colors flex items-center gap-1.5 shadow-lg">
+                <Link href="/support/ticket" className="bg-[#f5f5f7] text-black font-bold uppercase tracking-widest text-xs px-6 py-2.5 rounded-xl hover:bg-[#e5e5e7] transition-colors shadow-none flex items-center gap-1.5">
                   <Plus className="w-4 h-4" />
                   Open Ticket
                 </Link>
               </div>
 
-              <div className="bg-[#141414] border border-white/5 rounded-3xl p-4 md:p-8 shadow-2xl relative overflow-hidden min-h-[400px] flex flex-col">
-                <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-accent/5 rounded-full blur-3xl pointer-events-none" />
+              <div className="bg-[#141414] border border-[#262626] rounded-2xl shadow-none p-4 md:p-8 relative overflow-hidden min-h-[400px] flex flex-col">
+                
                 
                 {tickets.length === 0 ? (
                   <div className="flex-1 flex flex-col items-center justify-center text-center max-w-sm mx-auto z-10 py-10">
-                    <div className="w-20 h-20 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mb-6">
-                      <MessageSquare className="w-8 h-8 text-gray-500" />
+                    <div className="w-20 h-20 rounded-full bg-[#262626] border border-[#262626] flex items-center justify-center mb-6">
+                      <MessageSquare className="w-8 h-8 text-[#f5f5f7]/50" />
                     </div>
                     <h3 className="text-xl font-bold text-white mb-2">No tickets yet</h3>
-                    <p className="text-gray-400 text-sm leading-relaxed mb-6">
+                    <p className="text-[#f5f5f7]/50 text-sm leading-relaxed mb-6">
                       You haven't opened any support tickets. If you need help, feel free to contact us.
                     </p>
-                    <Link href="/support">
-                      <button className="bg-white text-black hover:bg-gray-200 font-bold rounded-xl px-8 py-3 transition-colors text-sm flex items-center justify-center gap-2">
+                    <Link href="/support/ticket">
+                      <button className="bg-[#f5f5f7] hover:bg-[#e5e5e7] text-black font-bold uppercase tracking-widest text-xs px-8 py-4 rounded-xl transition-colors shadow-none flex items-center justify-center gap-2">
                         <MessageSquare className="w-4 h-4" />
                         Get Support
                       </button>
@@ -1582,22 +1626,22 @@ function DashboardContent() {
                 ) : (
                   <div className="grid grid-cols-1 gap-4 z-10 flex-1 content-start">
                     {tickets.slice((ticketsPage - 1) * 5, ticketsPage * 5).map((ticket, i) => (
-                      <div key={ticket.id} className="bg-[#0a0a0a] rounded-2xl border border-white/5 hover:border-white/10 transition-colors p-4 md:p-6 group relative overflow-hidden flex flex-col sm:flex-row gap-4 sm:items-center justify-between">
+                      <div key={ticket.id} className="bg-[#0a0a0a] rounded-2xl border border-[#262626] hover:border-[#262626] transition-colors p-4 md:p-6 group relative overflow-hidden flex flex-col sm:flex-row gap-4 sm:items-center justify-between">
                         <div className="flex-1 min-w-0 flex items-start gap-4">
                           <div className={`shrink-0 w-12 h-12 rounded-full border flex items-center justify-center ${ticket.status === 'open' ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-gray-500/10 border-gray-500/30'}`}>
-                            <MessageSquare className={`w-5 h-5 ${ticket.status === 'open' ? 'text-emerald-400' : 'text-gray-400'}`} />
+                            <MessageSquare className={`w-5 h-5 ${ticket.status === 'open' ? 'text-[#f5f5f7]' : 'text-[#f5f5f7]/50'}`} />
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-3 mb-1">
                               <h3 className="font-bold text-white text-lg truncate">Ticket #{ticket.ticket_number || ticket.id.split('-')[0]}</h3>
-                              <span className={`text-[10px] uppercase font-bold tracking-widest px-2 py-0.5 rounded-full border ${ticket.status === 'open' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-gray-500/10 text-gray-400 border-gray-500/20'}`}>
+                              <span className={`text-[10px] uppercase font-bold tracking-widest px-2 py-0.5 rounded-full border ${ticket.status === 'open' ? 'bg-emerald-500/10 text-[#f5f5f7] border-emerald-500/20' : 'bg-gray-500/10 text-[#f5f5f7]/50 border-gray-500/20'}`}>
                                 {ticket.status}
                               </span>
                             </div>
-                            <div className="text-xs text-gray-400 font-medium mb-1">
+                            <div className="text-xs text-[#f5f5f7]/50 font-medium mb-1">
                               Subject: <span className="text-gray-300">{ticket.issue_type.replace(/_/g, ' ')}</span>
                             </div>
-                            <div className="text-[10px] text-gray-500 font-mono">
+                            <div className="text-[10px] text-[#f5f5f7]/50 font-mono">
                               Created: {new Date(ticket.created_at).toLocaleString('en-GB')}
                             </div>
                           </div>
@@ -1609,7 +1653,7 @@ function DashboardContent() {
                                 localStorage.setItem('larpsense_ticket_session', ticket.ticket_number.toString());
                                 window.location.href = '/support';
                               }}
-                              className="flex-1 sm:flex-none text-xs bg-emerald-500/10 border border-emerald-500/30 hover:bg-emerald-500/20 text-emerald-400 font-bold px-4 py-2.5 rounded-xl transition-colors flex items-center justify-center gap-2 text-center cursor-pointer"
+                              className="flex-1 sm:flex-none text-xs bg-emerald-500/10 border border-emerald-500/30 hover:bg-emerald-500/20 text-[#f5f5f7] font-bold px-4 py-2.5 rounded-xl transition-colors flex items-center justify-center gap-2 text-center cursor-pointer"
                             >
                               <MessageSquare className="w-3.5 h-3.5" />
                               Resume Chat
@@ -1618,7 +1662,7 @@ function DashboardContent() {
                           {ticket.transcript_url && (
                             <button 
                               onClick={() => handleViewTranscript(ticket.transcript_url)}
-                              className="flex-1 sm:flex-none text-xs bg-white/5 border border-white/10 hover:bg-white/10 text-white font-bold px-4 py-2.5 rounded-xl transition-colors flex items-center justify-center gap-2 text-center cursor-pointer"
+                              className="flex-1 sm:flex-none text-xs bg-[#262626] border border-[#262626] hover:bg-white/10 text-white font-bold px-4 py-2.5 rounded-xl transition-colors flex items-center justify-center gap-2 text-center cursor-pointer"
                             >
                               <ExternalLink className="w-3.5 h-3.5" />
                               View Transcript
@@ -1632,13 +1676,13 @@ function DashboardContent() {
                 
                 {/* Pagination Controls */}
                 {tickets.length > 5 && (
-                  <div className="flex items-center justify-center gap-2 pt-6 border-t border-white/5 mt-auto z-10">
+                  <div className="flex items-center justify-center gap-2 pt-6 border-t border-[#262626] mt-auto z-10">
                     <button
                       onClick={() => setTicketsPage(Math.max(1, ticketsPage - 1))}
                       disabled={ticketsPage === 1}
-                      className="w-10 h-10 flex items-center justify-center bg-white/5 hover:bg-white/10 disabled:opacity-50 disabled:hover:bg-white/5 rounded-xl transition-all"
+                      className="w-10 h-10 flex items-center justify-center bg-[#262626] hover:bg-white/10 disabled:opacity-50 disabled:hover:bg-[#262626] rounded-xl transition-all"
                     >
-                      <ChevronLeft className="w-5 h-5 text-gray-400" />
+                      <ChevronLeft className="w-5 h-5 text-[#f5f5f7]/50" />
                     </button>
                     
                     <div className="flex items-center gap-2 px-2">
@@ -1648,8 +1692,8 @@ function DashboardContent() {
                           onClick={() => setTicketsPage(i + 1)}
                           className={`w-10 h-10 flex items-center justify-center rounded-xl text-sm font-bold transition-all ${
                             ticketsPage === i + 1 
-                              ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
-                              : 'text-gray-400 hover:text-white hover:bg-white/5 border border-transparent'
+                              ? 'bg-emerald-500/10 text-[#f5f5f7] border border-emerald-500/20' 
+                              : 'text-[#f5f5f7]/50 hover:text-white hover:bg-[#262626] border border-transparent'
                           }`}
                         >
                           {i + 1}
@@ -1660,9 +1704,9 @@ function DashboardContent() {
                     <button
                       onClick={() => setTicketsPage(Math.min(Math.ceil(tickets.length / 5), ticketsPage + 1))}
                       disabled={ticketsPage === Math.ceil(tickets.length / 5)}
-                      className="w-10 h-10 flex items-center justify-center bg-white/5 hover:bg-white/10 disabled:opacity-50 disabled:hover:bg-white/5 rounded-xl transition-all"
+                      className="w-10 h-10 flex items-center justify-center bg-[#262626] hover:bg-white/10 disabled:opacity-50 disabled:hover:bg-[#262626] rounded-xl transition-all"
                     >
-                      <ChevronRight className="w-5 h-5 text-gray-400" />
+                      <ChevronRight className="w-5 h-5 text-[#f5f5f7]/50" />
                     </button>
                   </div>
                 )}
@@ -1673,16 +1717,16 @@ function DashboardContent() {
           {/* AFFILIATE TAB */}
           {activeTab === 'affiliate' && (
             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <div className="flex items-center justify-between mb-8 border-b border-white/10 pb-4">
+              <div className="flex items-center justify-between mb-8 border-b border-[#262626] pb-4">
                 <h2 className="text-2xl font-bold text-white tracking-tight flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-[#141414] border border-white/10 flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-full bg-[#141414] border border-[#262626] flex items-center justify-center">
                     <UserPlus className="w-5 h-5 text-gray-300" />
                   </div>
                   Affiliate Program
                 </h2>
                 {!affiliateStats && !isLoadingAffiliate && (affActiveChat || tickets.some(t => t.issue_type === 'affiliate_application' && t.status !== 'closed')) && (
                   <div className="flex gap-2">
-                    <span className="text-xs bg-green-500/20 text-green-400 px-3 py-2 rounded-lg font-bold border border-green-500/20">
+                    <span className="text-xs bg-green-500/20 text-[#f5f5f7] px-3 py-2 rounded-lg font-bold border border-green-500/20">
                       Application Pending
                     </span>
                   </div>
@@ -1691,34 +1735,34 @@ function DashboardContent() {
               
               {isLoadingAffiliate ? (
                 <div className="flex justify-center items-center py-20">
-                  <Loader2 className="w-8 h-8 text-accent animate-spin" />
+                  <Loader2 className="w-8 h-8 text-[#f5f5f7] animate-spin" />
                 </div>
               ) : affiliateStats ? (
-                <div className="bg-[#141414] border border-white/5 rounded-3xl p-6 md:p-8 shadow-2xl relative overflow-hidden">
-                  <div className="absolute top-0 right-0 w-64 h-64 bg-accent/5 rounded-full blur-[100px] pointer-events-none" />
+                <div className="bg-[#141414] border border-[#262626] rounded-2xl shadow-none p-6 md:p-8 shadow-2xl relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-64 h-64 bg-[#f5f5f7]/5 rounded-full blur-[100px] pointer-events-none" />
                   <h3 className="text-xl font-bold text-white mb-6">Affiliate Dashboard</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 relative z-10 mb-8">
-                    <div className="bg-white/5 border border-white/10 rounded-2xl p-5 flex flex-col justify-between">
-                      <span className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">Total Earned</span>
-                      <span className="text-2xl font-black text-accent">€{affiliateStats.stats?.totalEarned?.toFixed(2) || '0.00'}</span>
+                    <div className="bg-[#262626] border border-[#262626] rounded-2xl p-5 flex flex-col justify-between">
+                      <span className="text-[#f5f5f7]/50 text-xs font-bold uppercase tracking-wider mb-2">Total Earned</span>
+                      <span className="text-2xl font-black text-[#f5f5f7]">€{affiliateStats.stats?.totalEarned?.toFixed(2) || '0.00'}</span>
                     </div>
-                    <div className="bg-white/5 border border-white/10 rounded-2xl p-5 flex flex-col justify-between">
-                      <span className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">Users Referred</span>
+                    <div className="bg-[#262626] border border-[#262626] rounded-2xl p-5 flex flex-col justify-between">
+                      <span className="text-[#f5f5f7]/50 text-xs font-bold uppercase tracking-wider mb-2">Users Referred</span>
                       <span className="text-2xl font-black text-white">{affiliateStats.stats?.usersReferred || 0}</span>
                     </div>
-                    <div className="bg-white/5 border border-white/10 rounded-2xl p-5 flex flex-col justify-between">
-                      <span className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">Products Bought</span>
+                    <div className="bg-[#262626] border border-[#262626] rounded-2xl p-5 flex flex-col justify-between">
+                      <span className="text-[#f5f5f7]/50 text-xs font-bold uppercase tracking-wider mb-2">Products Bought</span>
                       <span className="text-2xl font-black text-white">{affiliateStats.stats?.totalProductsBought || 0}</span>
                     </div>
-                    <div className="bg-white/5 border border-white/10 rounded-2xl p-5 flex flex-col justify-between">
-                      <span className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">Revenue Generated</span>
+                    <div className="bg-[#262626] border border-[#262626] rounded-2xl p-5 flex flex-col justify-between">
+                      <span className="text-[#f5f5f7]/50 text-xs font-bold uppercase tracking-wider mb-2">Revenue Generated</span>
                       <span className="text-2xl font-black text-white">€{affiliateStats.stats?.totalRevenue?.toFixed(2) || '0.00'}</span>
                     </div>
                   </div>
                   <div className="relative z-10">
-                    <label className="block text-xs font-bold tracking-widest text-gray-500 mb-3 uppercase">Your Affiliate Code</label>
+                    <label className="block text-xs font-bold tracking-widest text-[#f5f5f7]/50 mb-3 uppercase">Your Affiliate Code</label>
                     <div className="flex items-center gap-3">
-                      <div className="bg-black/50 border border-accent/30 rounded-xl px-5 py-4 font-mono text-lg text-accent font-bold tracking-widest grow text-center shadow-[0_0_15px_rgba(34,197,94,0.1)]">
+                      <div className="bg-black/50 border border-accent/30 rounded-xl px-5 py-4 font-mono text-lg text-[#f5f5f7] font-bold tracking-widest grow text-center shadow-[0_0_15px_rgba(34,197,94,0.1)]">
                         {affiliateStats.code}
                       </div>
                       <button 
@@ -1731,16 +1775,16 @@ function DashboardContent() {
                         <Copy className="w-6 h-6" />
                       </button>
                     </div>
-                    <div className="mt-4 flex flex-wrap gap-4 text-sm text-gray-400 justify-center">
-                      <span className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-accent"></span> You earn {affiliateStats.commission_pct}%</span>
+                    <div className="mt-4 flex flex-wrap gap-4 text-sm text-[#f5f5f7]/50 justify-center">
+                      <span className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-[#f5f5f7]"></span> You earn {affiliateStats.commission_pct}%</span>
                       <span className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-blue-400"></span> Users get {affiliateStats.discount_pct}%</span>
-                      <span className="flex items-center gap-2 text-gray-500">Since {new Date(affiliateStats.created_at).toLocaleDateString()}</span>
+                      <span className="flex items-center gap-2 text-[#f5f5f7]/50">Since {new Date(affiliateStats.created_at).toLocaleDateString()}</span>
                     </div>
                   </div>
                 </div>
               ) : (affActiveChat || tickets.some(t => t.issue_type === 'affiliate_application' && t.status !== 'closed')) ? (
-                <div className="bg-[#141414] border border-white/5 rounded-3xl p-4 md:p-6 shadow-2xl">
-                  <div className="mb-4 p-4 bg-accent/10 border border-accent/20 rounded-xl">
+                <div className="bg-[#141414] border border-[#262626] rounded-2xl shadow-none p-4 md:p-6 shadow-2xl">
+                  <div className="mb-4 p-4 bg-[#f5f5f7]/10 border border-accent/20 rounded-xl">
                     <p className="text-sm text-gray-300 text-center">
                       <strong className="text-white">Your application is being reviewed.</strong> You can chat with our team below if you need to provide additional information.
                     </p>
@@ -1775,243 +1819,49 @@ function DashboardContent() {
                 </div>
               ) : isLoadingAffiliate ? (
                 <div className="flex justify-center items-center py-20">
-                  <Loader2 className="w-8 h-8 text-accent animate-spin" />
+                  <Loader2 className="w-8 h-8 text-[#f5f5f7] animate-spin" />
                 </div>
               ) : (
-              <div className="bg-[#141414] border border-white/5 rounded-3xl p-6 md:p-8 shadow-2xl relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-accent/5 rounded-full blur-[100px] pointer-events-none" />
-                <h3 className="text-xl font-bold text-white mb-2">Apply for Partnership</h3>
-                <p className="text-gray-400 text-sm mb-8">Join our affiliate program and earn commissions on every sale you bring. Fill out the application below and we will get back to you via a Discord ticket.</p>
-                
-                <form onSubmit={handleAffiliateSubmit} className="space-y-6 relative z-10">
-                  
-                  {/* Platforms Selection */}
-                  <div>
-                    <label className="block text-xs font-bold tracking-widest text-gray-500 mb-3 uppercase">Primary Platforms</label>
-                    <div className="flex flex-wrap gap-3">
-                      {['YouTube', 'TikTok', 'Kick / Twitch'].map((platform) => (
-                        <button
-                          key={platform}
-                          type="button"
-                          onClick={() => {
-                            if (affPlatforms.includes(platform)) {
-                              setAffPlatforms(prev => prev.filter(p => p !== platform));
-                              const newStats = {...affStats};
-                              delete newStats[platform];
-                              setAffStats(newStats);
-                            } else {
-                              setAffPlatforms(prev => [...prev, platform]);
-                              setAffStats(prev => ({ ...prev, [platform]: { channelLink: '', subs: '', longViews: '', shortsViews: '', liveViewers: '', screenshots: [] } }));
-                            }
-                          }}
-                          className={`px-4 py-2 rounded-xl text-sm font-bold border transition-all ${
-                            affPlatforms.includes(platform)
-                              ? 'bg-accent/20 border-accent/40 text-accent shadow-[0_0_15px_rgba(34,197,94,0.1)]'
-                              : 'bg-[#0a0a0a] border-white/10 text-gray-400 hover:border-white/20'
-                          }`}
-                        >
-                          {platform}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Per Platform Inputs */}
-                  {affPlatforms.map(platform => (
-                    <div key={platform} className="bg-[#0a0a0a]/50 border border-white/5 rounded-2xl p-6 mt-4">
-                      <h4 className="text-accent font-bold mb-4 uppercase tracking-widest text-sm flex items-center gap-2">
-                        {platform} Stats
-                      </h4>
-                      <div className="space-y-6">
-                        {/* Channel Link */}
-                        <div>
-                          <label className="block text-xs font-bold tracking-widest text-gray-500 mb-2 uppercase">Main Channel Link</label>
-                          <input 
-                            type="url" 
-                            required
-                            value={affStats[platform]?.channelLink || ''}
-                            onChange={(e) => setAffStats(prev => ({...prev, [platform]: {...prev[platform], channelLink: e.target.value}}))}
-                            className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-accent/50 transition-all placeholder:text-gray-600"
-                            placeholder={`https://${platform.toLowerCase().replace(' / ', '.')}.com/@yourchannel`}
-                          />
-                        </div>
-
-                        {/* Stats Grid */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-end">
-                          <div>
-                            <label className="block text-[10px] font-bold tracking-widest text-gray-500 mb-2 uppercase">Followers / Subs</label>
-                            <input 
-                              type="text" 
-                              required
-                              value={affStats[platform]?.subs || ''}
-                              onChange={(e) => setAffStats(prev => ({...prev, [platform]: {...prev[platform], subs: e.target.value.replace(/\D/g, '')}}))}
-                              className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-accent/50 transition-all placeholder:text-gray-600"
-                              placeholder="e.g. 50000"
-                            />
-                          </div>
-                          
-                          {(platform === 'YouTube' || platform === 'TikTok') && (
-                            <div>
-                              <label className="block text-[10px] font-bold tracking-widest text-gray-500 mb-2 uppercase">
-                                {platform === 'YouTube' ? 'Avg Views (Long Videos)' : 'Avg Views (TikToks)'}
-                              </label>
-                              <input 
-                                type="text" 
-                                value={affStats[platform]?.longViews || ''}
-                                onChange={(e) => setAffStats(prev => ({...prev, [platform]: {...prev[platform], longViews: e.target.value.replace(/\D/g, '')}}))}
-                                className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-accent/50 transition-all placeholder:text-gray-600"
-                                placeholder="e.g. 100000"
-                              />
-                            </div>
-                          )}
-
-                          {platform === 'YouTube' && (
-                            <div>
-                              <label className="block text-[10px] font-bold tracking-widest text-gray-500 mb-2 uppercase">Avg Views (Shorts)</label>
-                              <input 
-                                type="text" 
-                                value={affStats[platform]?.shortsViews || ''}
-                                onChange={(e) => setAffStats(prev => ({...prev, [platform]: {...prev[platform], shortsViews: e.target.value.replace(/\D/g, '')}}))}
-                                className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-accent/50 transition-all placeholder:text-gray-600"
-                                placeholder="e.g. 200000"
-                              />
-                            </div>
-                          )}
-
-                          <div>
-                            <label className="block text-[10px] font-bold tracking-widest text-gray-500 mb-2 uppercase">Avg Live Viewers</label>
-                            <input 
-                              type="text" 
-                              value={affStats[platform]?.liveViewers || ''}
-                              onChange={(e) => setAffStats(prev => ({...prev, [platform]: {...prev[platform], liveViewers: e.target.value.replace(/\D/g, '')}}))}
-                              className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-accent/50 transition-all placeholder:text-gray-600"
-                              placeholder="e.g. 500"
-                            />
-                          </div>
-                        </div>
-
-                        {/* Screenshots */}
-                        <div>
-                          <label className="block text-xs font-bold tracking-widest text-gray-500 mb-2 uppercase">Proof Screenshots (Required)</label>
-                          <div className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl p-4">
-                            <label className="flex flex-col items-center justify-center w-full min-h-[120px] bg-white/5 hover:bg-white/10 border-2 border-dashed border-white/20 hover:border-accent/50 rounded-xl cursor-pointer transition-colors group relative">
-                              <input 
-                                type="file"
-                                multiple
-                                accept="image/png, image/jpeg, image/jpg, image/webp"
-                                className="absolute inset-0 opacity-0 cursor-pointer"
-                                onChange={(e) => {
-                                  const files = e.target.files;
-                                  if (!files) return;
-                                  const fileArr = Array.from(files);
-                                  
-                                  const processFiles = async () => {
-                                    const base64Arr: string[] = [];
-                                    for (const file of fileArr) {
-                                      if (file.size > 8 * 1024 * 1024) {
-                                        toast.error(`File ${file.name} is too large. Max 8MB.`);
-                                        continue;
-                                      }
-                                      const base64 = await new Promise<string>((resolve) => {
-                                        const reader = new FileReader();
-                                        reader.onload = (ev) => resolve(ev.target?.result as string);
-                                        reader.readAsDataURL(file);
-                                      });
-                                      base64Arr.push(base64);
-                                    }
-                                    if (base64Arr.length > 0) {
-                                      setAffStats(prev => ({
-                                        ...prev,
-                                        [platform]: {
-                                          ...prev[platform],
-                                          screenshots: [...(prev[platform].screenshots || []), ...base64Arr]
-                                        }
-                                      }));
-                                    }
-                                  };
-                                  processFiles();
-                                }}
-                              />
-                              <div className="flex flex-col items-center justify-center text-center p-4">
-                                <ImageIcon className="w-8 h-8 text-gray-400 group-hover:text-accent mb-2 transition-colors" />
-                                <span className="text-sm font-medium text-gray-300">Click to upload screenshots</span>
-                                <span className="text-xs text-gray-500 mt-1">PNG, JPG up to 8MB</span>
-                              </div>
-                            </label>
-                            
-                            {affStats[platform]?.screenshots && affStats[platform].screenshots.length > 0 && (
-                              <div className="flex flex-wrap gap-2 mt-4">
-                                {affStats[platform].screenshots.map((b64, idx) => (
-                                  <div key={idx} className="relative w-16 h-16 rounded-lg overflow-hidden border border-white/20 group">
-                                    <img src={b64} className="w-full h-full object-cover" alt="Preview" />
-                                    <button 
-                                      type="button"
-                                      onClick={() => {
-                                        setAffStats(prev => ({
-                                          ...prev,
-                                          [platform]: {
-                                            ...prev[platform],
-                                            screenshots: prev[platform].screenshots.filter((_, i) => i !== idx)
-                                          }
-                                        }));
-                                      }}
-                                      className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                                    >
-                                      <X className="w-4 h-4 text-red-400" />
-                                    </button>
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                          
-                          <p className="text-xs text-orange-400 mt-3 font-medium bg-orange-400/10 border border-orange-400/20 p-2.5 rounded-lg flex items-start gap-2">
-                            <span className="text-lg">⚠️</span>
-                            <span>You must provide screenshots proving that the account belongs to you and the views/stats are yours (e.g. YouTube Studio / TikTok Analytics).</span>
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-
-                  <button 
-                    type="submit" 
-                    disabled={affSubmitting}
-                    className="w-full bg-accent hover:bg-accent/90 text-black font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_20px_rgba(34,197,94,0.1)] hover:shadow-[0_0_30px_rgba(34,197,94,0.2)] mt-8"
-                  >
-                    {affSubmitting ? <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin" /> : <><UserPlus className="w-5 h-5" /> Submit Application</>}
-                  </button>
-                </form>
+              <div className="bg-[#141414] border border-[#262626] rounded-xl p-8 flex flex-col items-center text-center max-w-2xl mx-auto shadow-none">
+                <div className="w-16 h-16 bg-[#0a0a0a] rounded-xl flex items-center justify-center mb-6 border border-[#262626]">
+                  <UserPlus className="w-8 h-8 text-[#f5f5f7]" />
+                </div>
+                <h3 className="text-xl font-bold text-[#f5f5f7] mb-2">Apply for Partnership</h3>
+                <p className="text-[#f5f5f7]/50 text-sm mb-8 max-w-md">Join our affiliate program and earn commissions on every sale you bring. Fill out the application on our support page.</p>
+                <Link href="/support/affiliate" className="bg-[#f5f5f7] hover:bg-[#e5e5e7] text-black font-bold uppercase tracking-widest text-xs px-8 py-4 rounded-xl transition-colors shadow-none">
+                  Go to Application
+                </Link>
               </div>
               )}
             </div>
           )}
 
           {/* REVIEWS TAB */}
+          
           {activeTab === 'reviews' && (
             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <div className="flex items-center justify-between mb-8 border-b border-white/10 pb-4">
+              <div className="flex items-center justify-between mb-8 border-b border-[#262626] pb-4">
                 <h2 className="text-2xl font-bold text-white tracking-tight flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-[#141414] border border-white/10 flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-full bg-[#141414] border border-[#262626] flex items-center justify-center">
                     <Star className="w-5 h-5 text-gray-300" />
                   </div>
                   My Reviews
                 </h2>
               </div>
 
-              <div className="bg-[#141414] border border-white/5 rounded-3xl p-4 md:p-8 shadow-2xl relative overflow-hidden min-h-[400px] flex flex-col">
-                <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-accent/5 rounded-full blur-3xl pointer-events-none" />
+              <div className="bg-[#141414] border border-[#262626] rounded-2xl shadow-none p-4 md:p-8 relative overflow-hidden min-h-[400px] flex flex-col">
+                
                 
                 {myReviews.length === 0 ? (
                   <div className="flex-1 flex flex-col items-center justify-center text-center max-w-sm mx-auto z-10 py-10">
-                    <div className="w-20 h-20 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mb-6">
-                      <Star className="w-8 h-8 text-gray-500" />
+                    <div className="w-20 h-20 rounded-full bg-[#262626] border border-[#262626] flex items-center justify-center mb-6">
+                      <Star className="w-8 h-8 text-[#f5f5f7]/50" />
                     </div>
                     <h3 className="text-xl font-bold text-white mb-2">No reviews yet</h3>
-                    <p className="text-gray-400 text-sm leading-relaxed mb-6">
+                    <p className="text-[#f5f5f7]/50 text-sm leading-relaxed mb-6">
                       You haven't submitted any reviews. Purchase a product to share your feedback.
                     </p>
-                    <button onClick={() => handleTabChange('orders')} className="bg-white text-black hover:bg-gray-200 font-bold rounded-xl px-8 py-3 transition-colors text-sm flex items-center justify-center gap-2">
+                    <button onClick={() => handleTabChange('orders')} className="bg-[#f5f5f7] hover:bg-[#e5e5e7] text-black font-bold uppercase tracking-widest text-xs px-8 py-4 rounded-xl transition-colors shadow-none flex items-center justify-center gap-2">
                       <LayoutGrid className="w-4 h-4" />
                       View My Orders
                     </button>
@@ -2019,9 +1869,9 @@ function DashboardContent() {
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 z-10 flex-1 content-start">
                     {myReviews.slice((myReviewsPage - 1) * 8, myReviewsPage * 8).map((review) => (
-                      <div key={review.id} className="bg-[#0a0a0a] rounded-2xl border border-white/5 p-5 relative overflow-hidden flex flex-col">
-                        <div className="flex items-center justify-between mb-3 border-b border-white/5 pb-3">
-                          <div className="text-xs text-gray-400 font-bold uppercase tracking-wider">
+                      <div key={review.id} className="bg-[#0a0a0a] rounded-2xl border border-[#262626] p-5 relative overflow-hidden flex flex-col">
+                        <div className="flex items-center justify-between mb-3 border-b border-[#262626] pb-3">
+                          <div className="text-xs text-[#f5f5f7]/50 font-bold uppercase tracking-wider">
                             {products.find(p => p.id === review.product_type)?.name || review.product_type}
                           </div>
                           <div className="flex text-yellow-500">
@@ -2033,9 +1883,9 @@ function DashboardContent() {
                         <p className="text-gray-300 italic text-sm mb-4 line-clamp-3 leading-relaxed">
                           "{review.comment || 'Great service!'}"
                         </p>
-                        <div className="mt-auto flex items-center justify-between pt-3 border-t border-white/5">
-                          <span className="text-[10px] text-gray-500 font-bold">{new Date(review.created_at).toLocaleDateString()}</span>
-                          <span className={`text-[10px] font-bold tracking-widest uppercase px-2 py-1 rounded ${review.is_published ? 'bg-green-500/10 text-green-400' : 'bg-yellow-500/10 text-yellow-400'}`}>
+                        <div className="mt-auto flex items-center justify-between pt-3 border-t border-[#262626]">
+                          <span className="text-[10px] text-[#f5f5f7]/50 font-bold">{new Date(review.created_at).toLocaleDateString()}</span>
+                          <span className={`text-[10px] font-bold tracking-widest uppercase px-2 py-1 rounded ${review.is_published ? 'bg-green-500/10 text-[#f5f5f7]' : 'bg-yellow-500/10 text-[#f5f5f7]'}`}>
                             {review.is_published ? 'Published' : 'Pending'}
                           </span>
                         </div>
@@ -2046,13 +1896,13 @@ function DashboardContent() {
                 
                 {/* Pagination Controls */}
                 {myReviews.length > 8 && (
-                  <div className="flex items-center justify-center gap-2 pt-6 border-t border-white/5 mt-auto z-10">
+                  <div className="flex items-center justify-center gap-2 pt-6 border-t border-[#262626] mt-auto z-10">
                     <button
                       onClick={() => setMyReviewsPage(Math.max(1, myReviewsPage - 1))}
                       disabled={myReviewsPage === 1}
-                      className="w-10 h-10 flex items-center justify-center bg-white/5 hover:bg-white/10 disabled:opacity-50 disabled:hover:bg-white/5 rounded-xl transition-all"
+                      className="w-10 h-10 flex items-center justify-center bg-[#262626] hover:bg-white/10 disabled:opacity-50 disabled:hover:bg-[#262626] rounded-xl transition-all"
                     >
-                      <ChevronLeft className="w-5 h-5 text-gray-400" />
+                      <ChevronLeft className="w-5 h-5 text-[#f5f5f7]/50" />
                     </button>
                     
                     <div className="flex items-center gap-2 px-2">
@@ -2062,8 +1912,8 @@ function DashboardContent() {
                           onClick={() => setMyReviewsPage(i + 1)}
                           className={`w-10 h-10 flex items-center justify-center rounded-xl text-sm font-bold transition-all ${
                             myReviewsPage === i + 1 
-                              ? 'bg-accent/10 text-accent border border-accent/20' 
-                              : 'text-gray-400 hover:text-white hover:bg-white/5 border border-transparent'
+                              ? 'bg-[#f5f5f7]/10 text-[#f5f5f7] border border-accent/20' 
+                              : 'text-[#f5f5f7]/50 hover:text-white hover:bg-[#262626] border border-transparent'
                           }`}
                         >
                           {i + 1}
@@ -2074,9 +1924,9 @@ function DashboardContent() {
                     <button
                       onClick={() => setMyReviewsPage(Math.min(Math.ceil(myReviews.length / 8), myReviewsPage + 1))}
                       disabled={myReviewsPage === Math.ceil(myReviews.length / 8)}
-                      className="w-10 h-10 flex items-center justify-center bg-white/5 hover:bg-white/10 disabled:opacity-50 disabled:hover:bg-white/5 rounded-xl transition-all"
+                      className="w-10 h-10 flex items-center justify-center bg-[#262626] hover:bg-white/10 disabled:opacity-50 disabled:hover:bg-[#262626] rounded-xl transition-all"
                     >
-                      <ChevronRight className="w-5 h-5 text-gray-400" />
+                      <ChevronRight className="w-5 h-5 text-[#f5f5f7]/50" />
                     </button>
                   </div>
                 )}
@@ -2088,29 +1938,29 @@ function DashboardContent() {
           {activeTab === 'security' && (
             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
               <h2 className="text-2xl font-bold text-white tracking-tight flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-[#141414] border border-white/10 flex items-center justify-center">
+                <div className="w-10 h-10 rounded-full bg-[#141414] border border-[#262626] flex items-center justify-center">
                   <Shield className="w-5 h-5 text-gray-300" />
                 </div>
                 Security Settings
               </h2>
               
               <div className="space-y-6 animate-in fade-in duration-500">
-                <div className="flex flex-wrap gap-2 md:gap-4 mb-8 border-b border-white/10 pb-4">
+                <div className="flex flex-wrap gap-2 md:gap-4 mb-8 border-b border-[#262626] pb-4">
                   <button 
                     onClick={() => setSecurityTab('overview')} 
-                    className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${securityTab === 'overview' ? 'bg-white/10 text-white' : 'text-gray-500 hover:text-gray-300 hover:bg-white/5'}`}
+                    className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${securityTab === 'overview' ? 'bg-white/10 text-white' : 'text-[#f5f5f7]/50 hover:text-gray-300 hover:bg-[#262626]'}`}
                   >
                     Overview
                   </button>
                   <button 
                     onClick={() => setSecurityTab('sessions')} 
-                    className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${securityTab === 'sessions' ? 'bg-white/10 text-white' : 'text-gray-500 hover:text-gray-300 hover:bg-white/5'}`}
+                    className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${securityTab === 'sessions' ? 'bg-white/10 text-white' : 'text-[#f5f5f7]/50 hover:text-gray-300 hover:bg-[#262626]'}`}
                   >
                     Active Sessions
                   </button>
                   <button 
                     onClick={() => setSecurityTab('history')} 
-                    className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${securityTab === 'history' ? 'bg-white/10 text-white' : 'text-gray-500 hover:text-gray-300 hover:bg-white/5'}`}
+                    className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${securityTab === 'history' ? 'bg-white/10 text-white' : 'text-[#f5f5f7]/50 hover:text-gray-300 hover:bg-[#262626]'}`}
                   >
                     Login History
                   </button>
@@ -2119,7 +1969,7 @@ function DashboardContent() {
                 {securityTab === 'overview' && (
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   {isGoogleLogin ? (
-                    <div className="lg:col-span-2 bg-[#141414] border border-white/5 rounded-3xl p-8 shadow-2xl relative overflow-hidden group">
+                    <div className="lg:col-span-2 bg-[#141414] border border-[#262626] rounded-2xl shadow-none p-8 shadow-2xl relative overflow-hidden group">
                       <div className="absolute -right-4 -top-4 w-32 h-32 bg-red-500/10 rounded-full blur-3xl pointer-events-none" />
                       <h3 className="font-bold text-xl text-white flex items-center gap-3 mb-3 relative z-10">
                         <div className="w-8 h-8 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center shadow-inner">
@@ -2127,48 +1977,48 @@ function DashboardContent() {
                         </div>
                         Security Restriction
                       </h3>
-                      <p className="text-gray-400 max-w-lg leading-relaxed relative z-10">
+                      <p className="text-[#f5f5f7]/50 max-w-lg leading-relaxed relative z-10">
                         Password or email change is not possible - you are logged in via Google. Please manage your security settings directly through your Google account.
                       </p>
                     </div>
                   ) : (
                     <>
                       {/* Change Password */}
-                    <div className="bg-[#141414] border border-white/5 rounded-3xl p-8 shadow-2xl relative overflow-hidden group">
-                      <div className="absolute -right-4 -top-4 w-32 h-32 bg-white/5 rounded-full blur-3xl group-hover:bg-accent/10 transition-colors duration-500 pointer-events-none" />
+                    <div className="bg-[#141414] border border-[#262626] rounded-2xl shadow-none p-8 shadow-2xl relative overflow-hidden group">
+                      <div className="absolute -right-4 -top-4 w-32 h-32 bg-[#262626] rounded-full blur-3xl group-hover:bg-[#f5f5f7]/10 transition-colors duration-500 pointer-events-none" />
                       
                       <h3 className="font-bold text-xl text-white flex items-center gap-3 mb-3 relative z-10">
-                        <div className="w-8 h-8 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center shadow-inner">
-                          <KeyRound className="w-4 h-4 text-accent" />
+                        <div className="w-8 h-8 rounded-xl bg-[#262626] border border-[#262626] flex items-center justify-center shadow-inner">
+                          <KeyRound className="w-4 h-4 text-[#f5f5f7]" />
                         </div>
                         Change Password
                       </h3>
                       
-                      <p className="text-sm text-gray-400 mb-6 leading-relaxed relative z-10">
+                      <p className="text-sm text-[#f5f5f7]/50 mb-6 leading-relaxed relative z-10">
                         We will send a secure password reset link directly to your email address <span className="text-gray-200 font-medium">({user.email})</span>.
                       </p>
 
                       <button 
                         onClick={handlePasswordResetRequest}
                         disabled={passwordUpdating}
-                        className="bg-white/5 border border-white/10 text-white font-semibold rounded-xl px-6 py-3 hover:bg-white/10 transition-colors disabled:opacity-50 relative z-10 shadow-lg"
+                        className="bg-[#262626] border border-[#262626] text-white font-semibold rounded-xl px-6 py-3 hover:bg-white/10 transition-colors disabled:opacity-50 relative z-10 shadow-lg"
                       >
                         {passwordUpdating ? "Sending..." : "Send Reset Email"}
                       </button>
                     </div>
 
                     {/* Change Email */}
-                    <div className="bg-[#141414] border border-white/5 rounded-3xl p-8 shadow-2xl relative overflow-hidden group">
-                      <div className="absolute -right-4 -top-4 w-32 h-32 bg-white/5 rounded-full blur-3xl group-hover:bg-accent/10 transition-colors duration-500 pointer-events-none" />
+                    <div className="bg-[#141414] border border-[#262626] rounded-2xl shadow-none p-8 shadow-2xl relative overflow-hidden group">
+                      <div className="absolute -right-4 -top-4 w-32 h-32 bg-[#262626] rounded-full blur-3xl group-hover:bg-[#f5f5f7]/10 transition-colors duration-500 pointer-events-none" />
                       
                       <h3 className="font-bold text-xl text-white flex items-center gap-3 mb-3 relative z-10">
-                        <div className="w-8 h-8 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center shadow-inner">
-                          <Mail className="w-4 h-4 text-accent" />
+                        <div className="w-8 h-8 rounded-xl bg-[#262626] border border-[#262626] flex items-center justify-center shadow-inner">
+                          <Mail className="w-4 h-4 text-[#f5f5f7]" />
                         </div>
                         Change Email
                       </h3>
                       
-                      <p className="text-sm text-gray-400 mb-4 leading-relaxed relative z-10">
+                      <p className="text-sm text-[#f5f5f7]/50 mb-4 leading-relaxed relative z-10">
                         Enter your new email address below. You will receive a confirmation link on your new email.
                       </p>
                       
@@ -2177,13 +2027,13 @@ function DashboardContent() {
                           type="email" 
                           value={newEmail}
                           onChange={(e) => setNewEmail(e.target.value)}
-                          className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/50 transition-all font-medium"
+                          className="w-full bg-[#0a0a0a] border border-[#262626] rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#f5f5f7] transition-colors font-medium"
                           placeholder="new.email@example.com"
                         />
                         <button 
                           onClick={handleUpdateEmail}
                           disabled={emailUpdating || !newEmail || newEmail === user.email}
-                          className="bg-white/5 border border-white/10 text-white font-semibold rounded-xl px-6 py-3 hover:bg-white/10 transition-colors disabled:opacity-50 shadow-lg"
+                          className="bg-[#262626] border border-[#262626] text-white font-semibold rounded-xl px-6 py-3 hover:bg-white/10 transition-colors disabled:opacity-50 shadow-lg"
                         >
                           {emailUpdating ? "Sending..." : "Update"}
                         </button>
@@ -2191,17 +2041,17 @@ function DashboardContent() {
                     </div>
 
                     {/* Recovery Email */}
-                    <div className="bg-[#141414] border border-white/5 rounded-3xl p-8 shadow-2xl relative overflow-hidden group">
-                      <div className="absolute -right-4 -top-4 w-32 h-32 bg-white/5 rounded-full blur-3xl group-hover:bg-accent/10 transition-colors duration-500 pointer-events-none" />
+                    <div className="bg-[#141414] border border-[#262626] rounded-2xl shadow-none p-8 shadow-2xl relative overflow-hidden group">
+                      <div className="absolute -right-4 -top-4 w-32 h-32 bg-[#262626] rounded-full blur-3xl group-hover:bg-[#f5f5f7]/10 transition-colors duration-500 pointer-events-none" />
                       
                       <h3 className="font-bold text-xl text-white flex items-center gap-3 mb-3 relative z-10">
-                        <div className="w-8 h-8 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center shadow-inner">
-                          <ShieldCheck className="w-4 h-4 text-accent" />
+                        <div className="w-8 h-8 rounded-xl bg-[#262626] border border-[#262626] flex items-center justify-center shadow-inner">
+                          <ShieldCheck className="w-4 h-4 text-[#f5f5f7]" />
                         </div>
                         Recovery Options
                       </h3>
                       
-                      <p className="text-sm text-gray-400 mb-4 leading-relaxed relative z-10">
+                      <p className="text-sm text-[#f5f5f7]/50 mb-4 leading-relaxed relative z-10">
                         Add an alternative email address in case you lose access to your primary email account.
                       </p>
                       
@@ -2210,12 +2060,12 @@ function DashboardContent() {
                           type="email" 
                           value={recoveryEmail}
                           onChange={(e) => setRecoveryEmail(e.target.value)}
-                          className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/50 transition-all font-medium"
+                          className="w-full bg-[#0a0a0a] border border-[#262626] rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#f5f5f7] transition-colors font-medium"
                           placeholder="recovery.email@example.com"
                         />
                         <button 
                           onClick={handleUpdateRecoveryEmail}
-                          className="bg-white/5 border border-white/10 text-white font-semibold rounded-xl px-6 py-3 hover:bg-white/10 transition-colors shadow-lg shrink-0"
+                          className="bg-[#262626] border border-[#262626] text-white font-semibold rounded-xl px-6 py-3 hover:bg-white/10 transition-colors shadow-lg shrink-0"
                         >
                           Save
                         </button>
@@ -2227,29 +2077,29 @@ function DashboardContent() {
                   )}
 
                   {securityTab === 'history' && (
-                    <div className="bg-[#141414] border border-white/5 rounded-3xl p-8 shadow-2xl relative overflow-hidden group">
+                    <div className="bg-[#141414] border border-[#262626] rounded-2xl shadow-none p-8 shadow-2xl relative overflow-hidden group">
                       <h3 className="font-bold text-xl text-white flex items-center gap-3 mb-3 relative z-10">
-                        <div className="w-8 h-8 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center shadow-inner">
-                          <RefreshCw className="w-4 h-4 text-accent" />
+                        <div className="w-8 h-8 rounded-xl bg-[#262626] border border-[#262626] flex items-center justify-center shadow-inner">
+                          <RefreshCw className="w-4 h-4 text-[#f5f5f7]" />
                         </div>
                         Login History
                       </h3>
-                      <p className="text-sm text-gray-400 mb-6 leading-relaxed relative z-10">
+                      <p className="text-sm text-[#f5f5f7]/50 mb-6 leading-relaxed relative z-10">
                         History of your recent logins and logouts.
                       </p>
                       
                       <div className="space-y-3 max-h-96 overflow-y-auto pr-2 custom-scrollbar relative z-10">
                         {loginActivity.length > 0 ? (
                           loginActivity.map(log => (
-                            <div key={log.id} className="flex justify-between items-center text-sm border-b border-white/5 pb-3 pt-1 last:border-0 last:pb-0 gap-4">
+                            <div key={log.id} className="flex justify-between items-center text-sm border-b border-[#262626] pb-3 pt-1 last:border-0 last:pb-0 gap-4">
                               <span className="text-gray-300 truncate w-32 font-medium">{log.user_agent}</span>
-                              <span className="text-gray-500 text-xs truncate w-28">{log.ip_address}</span>
-                              <span className="text-gray-500 text-xs text-center flex-1">{new Date(log.created_at).toLocaleString()}</span>
-                              <span className={`text-xs font-bold uppercase tracking-wider ${log.action === 'logout' ? 'text-red-400' : 'text-accent'}`}>{log.action || 'login'}</span>
+                              <span className="text-[#f5f5f7]/50 text-xs truncate w-28">{log.ip_address}</span>
+                              <span className="text-[#f5f5f7]/50 text-xs text-center flex-1">{new Date(log.created_at).toLocaleString()}</span>
+                              <span className={`text-xs font-bold uppercase tracking-wider ${log.action === 'logout' ? 'text-red-400' : 'text-[#f5f5f7]'}`}>{log.action || 'login'}</span>
                             </div>
                           ))
                         ) : (
-                          <div className="text-center py-6 text-gray-500 text-sm bg-[#0a0a0a] rounded-xl border border-white/5">
+                          <div className="text-center py-6 text-[#f5f5f7]/50 text-sm bg-[#0a0a0a] rounded-xl border border-[#262626]">
                             <p>No history found.</p>
                           </div>
                         )}
@@ -2258,15 +2108,15 @@ function DashboardContent() {
                   )}
 
                   {securityTab === 'sessions' && (
-                    <div className="bg-[#141414] border border-white/5 rounded-3xl p-8 shadow-2xl relative overflow-hidden">
+                    <div className="bg-[#141414] border border-[#262626] rounded-2xl shadow-none p-8 shadow-2xl relative overflow-hidden">
                       <h3 className="font-bold text-xl text-white flex items-center gap-3 mb-6">
-                        <div className="w-8 h-8 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center shadow-inner">
-                          <LayoutGrid className="w-4 h-4 text-accent" />
+                        <div className="w-8 h-8 rounded-xl bg-[#262626] border border-[#262626] flex items-center justify-center shadow-inner">
+                          <LayoutGrid className="w-4 h-4 text-[#f5f5f7]" />
                         </div>
                         Active Sessions
                       </h3>
                       
-                      <div className="bg-[#0a0a0a] rounded-xl border border-white/5 overflow-hidden">
+                      <div className="bg-[#0a0a0a] rounded-xl border border-[#262626] overflow-hidden">
                         {(() => {
                           const map = new Map();
                           loginActivity.forEach(log => {
@@ -2277,7 +2127,7 @@ function DashboardContent() {
                           
                           if (active.length === 0) {
                             return (
-                              <div className="text-center py-10 text-gray-500">
+                              <div className="text-center py-10 text-[#f5f5f7]/50">
                                 <p className="text-lg mb-2">No active sessions found.</p>
                               </div>
                             );
@@ -2286,9 +2136,9 @@ function DashboardContent() {
                           return (
                             <div className="divide-y divide-white/5">
                               {active.map((session, index) => (
-                                <div key={session.id} className="p-4 flex items-center justify-between hover:bg-white/5 transition-colors group">
+                                <div key={session.id} className="p-4 flex items-center justify-between hover:bg-[#262626] transition-colors group">
                                   <div className="flex items-center gap-5">
-                                    <div className="text-gray-400 bg-white/5 p-3 rounded-xl border border-white/5">
+                                    <div className="text-[#f5f5f7]/50 bg-[#262626] p-3 rounded-xl border border-[#262626]">
                                       {session.user_agent.toLowerCase().includes('phone') || session.user_agent.toLowerCase().includes('iphone') 
                                         ? <Smartphone className="w-6 h-6" /> 
                                         : <Monitor className="w-6 h-6" />}
@@ -2296,15 +2146,15 @@ function DashboardContent() {
                                     <div>
                                       <div className="font-bold text-gray-200 text-base flex items-center gap-3">
                                         {session.user_agent} 
-                                        {index === 0 && <span className="text-[10px] bg-accent/20 text-accent px-2 py-0.5 rounded-full uppercase tracking-widest font-bold">Current</span>}
+                                        {index === 0 && <span className="text-[10px] bg-[#f5f5f7]/20 text-[#f5f5f7] px-2 py-0.5 rounded-full uppercase tracking-widest font-bold">Current</span>}
                                       </div>
-                                      <div className="flex items-center gap-3 text-xs text-gray-500 mt-1.5">
-                                        <div className="flex items-center gap-1.5 text-gray-400">
-                                          <div className="w-4 h-4 rounded-full bg-accent/20 flex items-center justify-center overflow-hidden">
+                                      <div className="flex items-center gap-3 text-xs text-[#f5f5f7]/50 mt-1.5">
+                                        <div className="flex items-center gap-1.5 text-[#f5f5f7]/50">
+                                          <div className="w-4 h-4 rounded-full bg-[#f5f5f7]/20 flex items-center justify-center overflow-hidden">
                                             {profile?.avatar_url ? (
                                               <img src={profile.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
                                             ) : (
-                                              <UserIcon className="w-2.5 h-2.5 text-accent" />
+                                              <UserIcon className="w-2.5 h-2.5 text-[#f5f5f7]" />
                                             )}
                                           </div>
                                           {user?.email?.split('@')[0]}
@@ -2346,7 +2196,7 @@ function DashboardContent() {
                                         fetchLoginActivity(user.id);
                                       }
                                     }}
-                                    className="text-xs font-bold uppercase tracking-wider bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white transition-colors px-4 py-2 rounded-lg border border-white/10 shrink-0"
+                                    className="text-xs font-bold uppercase tracking-wider bg-[#262626] hover:bg-white/10 text-gray-300 hover:text-white transition-colors px-4 py-2 rounded-lg border border-[#262626] shrink-0"
                                     title={index === 0 ? "Log out of current device" : "Log out of this device"}
                                   >
                                     {index === 0 ? "Log out (Current)" : "Log out device"}
@@ -2362,7 +2212,7 @@ function DashboardContent() {
                         <button 
                           onClick={handleLogoutAllOtherDevices}
                           disabled={loggingOutDevices}
-                          className="bg-white/5 border border-white/10 text-white font-semibold rounded-xl px-8 py-3 hover:bg-white/10 transition-colors disabled:opacity-50 shadow-lg"
+                          className="bg-[#262626] border border-[#404040] text-white font-bold uppercase tracking-widest text-xs rounded-xl px-8 py-4 hover:bg-[#333333] transition-colors disabled:opacity-50 shadow-none"
                         >
                           {loggingOutDevices ? "Logging out..." : "Log out of all other devices"}
                         </button>
@@ -2371,14 +2221,14 @@ function DashboardContent() {
                   )}
 
                   {securityTab === 'overview' && (
-                    <div className="bg-red-500/10 border border-red-500/20 rounded-3xl p-8 shadow-2xl relative overflow-hidden">
-                    <h3 className="font-bold text-xl text-red-400 flex items-center gap-3 mb-3">
-                      <div className="w-8 h-8 rounded-xl bg-red-500/20 border border-red-500/30 flex items-center justify-center shadow-inner">
-                        <Trash2 className="w-4 h-4 text-red-400" />
+                    <div className="bg-[#141414] border border-[#ff3333]/20 rounded-2xl p-8 shadow-none relative overflow-hidden">
+                    <h3 className="font-bold text-xl text-[#ff3333] flex items-center gap-3 mb-3 uppercase tracking-widest">
+                      <div className="w-8 h-8 rounded-xl bg-[#141414] border border-[#ff3333] flex items-center justify-center shadow-none">
+                        <Trash2 className="w-4 h-4 text-[#ff3333]" />
                       </div>
                       Danger Zone: Delete Account
                     </h3>
-                    <p className="text-sm text-red-200/70 mb-4 leading-relaxed max-w-2xl">
+                    <p className="text-sm text-[#f5f5f7]/50 mb-4 leading-relaxed max-w-2xl">
                       Once you delete your account, there is no going back. Please be certain. All your data, orders, and balances will be permanently destroyed.
                     </p>
                     <div className="flex flex-col sm:flex-row gap-4 max-w-lg">
@@ -2387,12 +2237,12 @@ function DashboardContent() {
                         value={deleteConfirmText}
                         onChange={(e) => setDeleteConfirmText(e.target.value)}
                         placeholder="Type DELETE to confirm"
-                        className="flex-1 bg-[#0a0a0a] border border-red-500/30 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-all font-medium"
+                        className="flex-1 bg-[#0a0a0a] border border-[#262626] rounded-xl px-4 py-3 text-[#f5f5f7] focus:outline-none focus:border-[#ff3333] transition-colors"
                       />
                       <button 
                         onClick={handleDeleteAccount}
                         disabled={deletingAccount || deleteConfirmText !== "DELETE"}
-                        className="bg-red-500 text-white font-semibold rounded-xl px-6 py-3 hover:bg-red-600 transition-colors disabled:opacity-50 disabled:hover:bg-red-500 shadow-lg shrink-0"
+                        className="bg-[#ff3333] text-white font-bold uppercase tracking-widest text-xs rounded-xl px-6 py-4 hover:bg-[#e62e2e] transition-colors disabled:opacity-50 shadow-none shrink-0"
                       >
                         {deletingAccount ? "Deleting..." : "Permanently Delete"}
                       </button>
@@ -2410,13 +2260,13 @@ function DashboardContent() {
       {/* Badges Modal */}
       {isBadgesModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200" onClick={() => setIsBadgesModalOpen(false)}>
-          <div className="bg-[#141414] border border-white/10 rounded-3xl overflow-hidden w-full max-w-2xl shadow-2xl relative flex flex-col" onClick={e => e.stopPropagation()}>
-            <div className="p-6 border-b border-white/5 flex justify-between items-center bg-[#0a0a0a]">
+          <div className="bg-[#141414] border border-[#262626] rounded-2xl shadow-none overflow-hidden w-full max-w-2xl shadow-2xl relative flex flex-col" onClick={e => e.stopPropagation()}>
+            <div className="p-6 border-b border-[#262626] flex justify-between items-center bg-[#0a0a0a]">
               <div className="flex items-center gap-3">
-                <Award className="w-6 h-6 text-accent" />
+                <Award className="w-6 h-6 text-[#f5f5f7]" />
                 <h3 className="font-bold text-white text-lg">Available Badges</h3>
               </div>
-              <button onClick={() => setIsBadgesModalOpen(false)} className="text-gray-400 hover:text-white transition-colors">
+              <button onClick={() => setIsBadgesModalOpen(false)} className="text-[#f5f5f7]/50 hover:text-white transition-colors">
                 <X className="w-6 h-6" />
               </button>
             </div>
@@ -2424,50 +2274,50 @@ function DashboardContent() {
             <div className="p-6 space-y-6 overflow-y-auto max-h-[70vh] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-white/10 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-white/20 transition-colors">
               
               {/* Mini Profile Header */}
-              <div className="flex items-center gap-4 p-4 rounded-2xl bg-[#0a0a0a] border border-white/5">
-                <div className="relative w-14 h-14 rounded-full border-2 border-white/10 overflow-hidden shrink-0">
+              <div className="flex items-center gap-4 p-4 rounded-2xl bg-[#0a0a0a] border border-[#262626]">
+                <div className="relative w-14 h-14 rounded-full border-2 border-[#262626] overflow-hidden shrink-0">
                   {profile?.avatar_url ? (
                     <img src={profile.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
                   ) : (
                     <div className="w-full h-full bg-[#141414] flex items-center justify-center">
-                      <UserIcon className="w-6 h-6 text-gray-500" />
+                      <UserIcon className="w-6 h-6 text-[#f5f5f7]/50" />
                     </div>
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mb-0.5">Signed in as</div>
+                  <div className="text-[10px] text-[#f5f5f7]/50 font-bold uppercase tracking-widest mb-0.5">Signed in as</div>
                   <div className="font-bold text-white text-base truncate">{newName || user?.email?.split('@')[0]}</div>
-                  <div className="text-xs text-gray-400 truncate">{user?.email}</div>
+                  <div className="text-xs text-[#f5f5f7]/50 truncate">{user?.email}</div>
                 </div>
                 <div className="shrink-0 text-right hidden sm:block">
-                  <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-0.5">Current Rank</div>
+                  <div className="text-[10px] font-bold text-[#f5f5f7]/50 uppercase tracking-widest mb-0.5">Current Rank</div>
                   {totalSpent >= 250 ? (
-                    <div className="flex items-center justify-end gap-1.5 text-cyan-400"><Gem className="w-3.5 h-3.5" /><span className="text-xs font-bold uppercase tracking-widest">VIP Status</span></div>
+                    <div className="flex items-center justify-end gap-1.5 text-cyan-500"><Gem className="w-3.5 h-3.5" /><span className="text-xs font-bold uppercase tracking-widest">VIP Status</span></div>
                   ) : totalSpent >= 50 ? (
-                    <div className="flex items-center justify-end gap-1.5 text-yellow-400"><Coins className="w-3.5 h-3.5" /><span className="text-xs font-bold uppercase tracking-widest">Premium Tier</span></div>
+                    <div className="flex items-center justify-end gap-1.5 text-yellow-500"><Coins className="w-3.5 h-3.5" /><span className="text-xs font-bold uppercase tracking-widest">Premium Tier</span></div>
                   ) : totalOrders > 0 ? (
-                    <div className="flex items-center justify-end gap-1.5 text-green-400"><ShoppingBag className="w-3.5 h-3.5" /><span className="text-xs font-bold uppercase tracking-widest">Verified Buyer</span></div>
+                    <div className="flex items-center justify-end gap-1.5 text-green-500"><ShoppingBag className="w-3.5 h-3.5" /><span className="text-xs font-bold uppercase tracking-widest">Verified Buyer</span></div>
                   ) : (
-                    <div className="flex items-center justify-end gap-1.5 text-gray-400"><UserPlus className="w-3.5 h-3.5" /><span className="text-xs font-bold uppercase tracking-widest">Registered</span></div>
+                    <div className="flex items-center justify-end gap-1.5 text-[#f5f5f7]/50"><UserPlus className="w-3.5 h-3.5" /><span className="text-xs font-bold uppercase tracking-widest">Registered</span></div>
                   )}
                 </div>
               </div>
 
               <div className="space-y-4">
-                <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest px-2">Time-based Badges</h4>
+                <h4 className="text-xs font-bold text-[#f5f5f7]/50 uppercase tracking-widest px-2">Time-based Badges</h4>
                 <div className="grid grid-cols-1 gap-3">
                   {ALL_TIME_BADGES.map((badge, idx) => {
                     const isOwned = accountAgeDays >= badge.daysReq;
                     return (
-                      <div key={idx} className={`flex items-center gap-4 p-3 rounded-2xl border ${isOwned ? 'bg-[#0a0a0a] border-white/10' : 'bg-transparent border-transparent opacity-50 grayscale'}`}>
-                        <div className={`p-3 rounded-xl border shrink-0 ${isOwned ? badge.bg : 'bg-white/5 border-white/10'} ${isOwned ? badge.glow : ''}`}>
-                          <badge.Icon className={`w-6 h-6 ${isOwned ? badge.color : 'text-gray-400'}`} />
+                      <div key={idx} className={`flex items-center gap-4 p-3 rounded-2xl border ${isOwned ? 'bg-[#0a0a0a] border-[#262626]' : 'bg-transparent border-transparent opacity-50 grayscale'}`}>
+                        <div className={`p-3 rounded-xl border shrink-0 ${isOwned ? badge.bg : 'bg-[#262626] border-[#262626]'} ${isOwned ? badge.glow : ''}`}>
+                          <badge.Icon className={`w-6 h-6 ${isOwned ? badge.color : 'text-[#f5f5f7]/50'}`} />
                         </div>
                         <div className="flex-1">
-                          <div className={`font-bold text-sm ${isOwned ? badge.color : 'text-gray-400'}`}>{badge.name}</div>
-                          <div className="text-xs text-gray-500 mt-1">{badge.desc}</div>
+                          <div className={`font-bold text-sm ${isOwned ? badge.color : 'text-[#f5f5f7]/50'}`}>{badge.name}</div>
+                          <div className="text-xs text-[#f5f5f7]/50 mt-1">{badge.desc}</div>
                         </div>
-                        {isOwned && <div className="text-[10px] uppercase font-bold text-accent tracking-widest px-2">Owned</div>}
+                        {isOwned && <div className="text-[10px] uppercase font-bold text-[#f5f5f7] tracking-widest px-2">Owned</div>}
                         {!isOwned && <div className="text-[10px] uppercase font-bold text-gray-600 tracking-widest px-2">{badge.daysReq} Days</div>}
                       </div>
                     );
@@ -2475,54 +2325,54 @@ function DashboardContent() {
                 </div>
               </div>
 
-              <div className="space-y-4 pt-4 border-t border-white/5">
-                <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest px-2">Purchase Badges</h4>
+              <div className="space-y-4 pt-4 border-t border-[#262626]">
+                <h4 className="text-xs font-bold text-[#f5f5f7]/50 uppercase tracking-widest px-2">Purchase Badges</h4>
                 <div className="grid grid-cols-1 gap-3">
-                  <div className={`flex items-center gap-4 p-3 rounded-2xl border ${totalOrders > 0 ? 'bg-[#0a0a0a] border-white/10' : 'bg-transparent border-transparent opacity-50 grayscale'}`}>
-                    <div className={`p-3 rounded-xl border shrink-0 ${totalOrders > 0 ? 'bg-green-500/10 border-green-500/20 shadow-[0_0_8px_rgba(34,197,94,0.3)]' : 'bg-white/5 border-white/10'}`}>
-                      <ShoppingBag className={`w-6 h-6 ${totalOrders > 0 ? 'text-green-400' : 'text-gray-400'}`} />
+                  <div className={`flex items-center gap-4 p-3 rounded-2xl border ${totalOrders > 0 ? 'bg-[#0a0a0a] border-[#262626]' : 'bg-transparent border-transparent opacity-50 grayscale'}`}>
+                    <div className={`p-3 rounded-xl border shrink-0 ${totalOrders > 0 ? 'bg-green-500/10 border-green-500/30 shadow-none' : 'bg-[#262626] border-[#262626]'}`}>
+                      <ShoppingBag className={`w-6 h-6 ${totalOrders > 0 ? 'text-green-500' : 'text-[#f5f5f7]/50'}`} />
                     </div>
                     <div className="flex-1">
-                      <div className={`font-bold text-sm ${totalOrders > 0 ? 'text-green-400' : 'text-gray-400'}`}>Verified Buyer</div>
-                      <div className="text-xs text-gray-500 mt-1">Has purchased at least one item from the store.</div>
+                      <div className={`font-bold text-sm ${totalOrders > 0 ? 'text-green-500' : 'text-[#f5f5f7]/50'}`}>Verified Buyer</div>
+                      <div className="text-xs text-[#f5f5f7]/50 mt-1">Has purchased at least one item from the store.</div>
                     </div>
-                    {totalOrders > 0 && <div className="text-[10px] uppercase font-bold text-accent tracking-widest px-2">Owned</div>}
+                    {totalOrders > 0 && <div className="text-[10px] uppercase font-bold text-[#f5f5f7] tracking-widest px-2">Owned</div>}
                     {totalOrders === 0 && <div className="text-[10px] uppercase font-bold text-gray-600 tracking-widest px-2">0/1 Orders</div>}
                   </div>
 
-                  <div className={`flex items-center gap-4 p-3 rounded-2xl border ${totalSpent >= 25 ? 'bg-[#0a0a0a] border-white/10' : 'bg-transparent border-transparent opacity-50 grayscale'}`}>
-                    <div className={`p-3 rounded-xl border shrink-0 ${totalSpent >= 25 ? 'bg-purple-500/10 border-purple-500/30 shadow-[0_0_15px_rgba(168,85,247,0.5)]' : 'bg-white/5 border-white/10'}`}>
-                      <Star className={`w-6 h-6 ${totalSpent >= 25 ? 'text-purple-400' : 'text-gray-400'}`} />
+                  <div className={`flex items-center gap-4 p-3 rounded-2xl border ${totalSpent >= 25 ? 'bg-[#0a0a0a] border-[#262626]' : 'bg-transparent border-transparent opacity-50 grayscale'}`}>
+                    <div className={`p-3 rounded-xl border shrink-0 ${totalSpent >= 25 ? 'bg-purple-500/10 border-purple-500/30 shadow-none' : 'bg-[#262626] border-[#262626]'}`}>
+                      <Star className={`w-6 h-6 ${totalSpent >= 25 ? 'text-purple-500' : 'text-[#f5f5f7]/50'}`} />
                     </div>
                     <div className="flex-1">
-                      <div className={`font-bold text-sm ${totalSpent >= 25 ? 'text-purple-400' : 'text-gray-400'}`}>Supporter Tier</div>
-                      <div className="text-xs text-gray-500 mt-1">Accumulative spend over $25.00.</div>
+                      <div className={`font-bold text-sm ${totalSpent >= 25 ? 'text-purple-500' : 'text-[#f5f5f7]/50'}`}>Supporter Tier</div>
+                      <div className="text-xs text-[#f5f5f7]/50 mt-1">Accumulative spend over $25.00.</div>
                     </div>
-                    {totalSpent >= 25 && <div className="text-[10px] uppercase font-bold text-accent tracking-widest px-2">Owned</div>}
+                    {totalSpent >= 25 && <div className="text-[10px] uppercase font-bold text-[#f5f5f7] tracking-widest px-2">Owned</div>}
                     {totalSpent < 25 && <div className="text-[10px] uppercase font-bold text-gray-600 tracking-widest px-2">${totalSpent.toFixed(2)} / $25.00</div>}
                   </div>
 
-                  <div className={`flex items-center gap-4 p-3 rounded-2xl border ${totalSpent >= 50 ? 'bg-[#0a0a0a] border-white/10' : 'bg-transparent border-transparent opacity-50 grayscale'}`}>
-                    <div className={`p-3 rounded-xl border shrink-0 ${totalSpent >= 50 ? 'bg-yellow-500/10 border-yellow-500/30 shadow-[0_0_15px_rgba(234,179,8,0.5)]' : 'bg-white/5 border-white/10'}`}>
-                      <Coins className={`w-6 h-6 ${totalSpent >= 50 ? 'text-yellow-400' : 'text-gray-400'}`} />
+                  <div className={`flex items-center gap-4 p-3 rounded-2xl border ${totalSpent >= 50 ? 'bg-[#0a0a0a] border-[#262626]' : 'bg-transparent border-transparent opacity-50 grayscale'}`}>
+                    <div className={`p-3 rounded-xl border shrink-0 ${totalSpent >= 50 ? 'bg-yellow-500/10 border-yellow-500/30 shadow-none' : 'bg-[#262626] border-[#262626]'}`}>
+                      <Coins className={`w-6 h-6 ${totalSpent >= 50 ? 'text-yellow-500' : 'text-[#f5f5f7]/50'}`} />
                     </div>
                     <div className="flex-1">
-                      <div className={`font-bold text-sm ${totalSpent >= 50 ? 'text-yellow-400' : 'text-gray-400'}`}>Premium Tier</div>
-                      <div className="text-xs text-gray-500 mt-1">Accumulative spend over $50.00.</div>
+                      <div className={`font-bold text-sm ${totalSpent >= 50 ? 'text-yellow-500' : 'text-[#f5f5f7]/50'}`}>Premium Tier</div>
+                      <div className="text-xs text-[#f5f5f7]/50 mt-1">Accumulative spend over $50.00.</div>
                     </div>
-                    {totalSpent >= 50 && <div className="text-[10px] uppercase font-bold text-accent tracking-widest px-2">Owned</div>}
+                    {totalSpent >= 50 && <div className="text-[10px] uppercase font-bold text-[#f5f5f7] tracking-widest px-2">Owned</div>}
                     {totalSpent < 50 && <div className="text-[10px] uppercase font-bold text-gray-600 tracking-widest px-2">${totalSpent.toFixed(2)} / $50.00</div>}
                   </div>
 
-                  <div className={`flex items-center gap-4 p-3 rounded-2xl border ${totalSpent >= 250 ? 'bg-[#0a0a0a] border-white/10' : 'bg-transparent border-transparent opacity-50 grayscale'}`}>
-                    <div className={`p-3 rounded-xl border shrink-0 ${totalSpent >= 250 ? 'bg-cyan-500/10 border-cyan-500/30 shadow-[0_0_15px_rgba(34,211,238,0.5)]' : 'bg-white/5 border-white/10'}`}>
-                      <Gem className={`w-6 h-6 ${totalSpent >= 250 ? 'text-cyan-400' : 'text-gray-400'}`} />
+                  <div className={`flex items-center gap-4 p-3 rounded-2xl border ${totalSpent >= 250 ? 'bg-[#0a0a0a] border-[#262626]' : 'bg-transparent border-transparent opacity-50 grayscale'}`}>
+                    <div className={`p-3 rounded-xl border shrink-0 ${totalSpent >= 250 ? 'bg-cyan-500/10 border-cyan-500/30 shadow-[0_0_15px_rgba(34,211,238,0.5)]' : 'bg-[#262626] border-[#262626]'}`}>
+                      <Gem className={`w-6 h-6 ${totalSpent >= 250 ? 'text-cyan-500' : 'text-[#f5f5f7]/50'}`} />
                     </div>
                     <div className="flex-1">
-                      <div className={`font-bold text-sm ${totalSpent >= 250 ? 'text-cyan-400' : 'text-gray-400'}`}>VIP Status</div>
-                      <div className="text-xs text-gray-500 mt-1">Exclusive status for $250.00+ spend.</div>
+                      <div className={`font-bold text-sm ${totalSpent >= 250 ? 'text-cyan-500' : 'text-[#f5f5f7]/50'}`}>VIP Status</div>
+                      <div className="text-xs text-[#f5f5f7]/50 mt-1">Exclusive status for $250.00+ spend.</div>
                     </div>
-                    {totalSpent >= 250 && <div className="text-[10px] uppercase font-bold text-accent tracking-widest px-2">Owned</div>}
+                    {totalSpent >= 250 && <div className="text-[10px] uppercase font-bold text-[#f5f5f7] tracking-widest px-2">Owned</div>}
                     {totalSpent < 250 && <div className="text-[10px] uppercase font-bold text-gray-600 tracking-widest px-2">${totalSpent.toFixed(2)} / $250.00</div>}
                   </div>
                 </div>

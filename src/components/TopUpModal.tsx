@@ -6,6 +6,9 @@ import { SiStripe, SiSolana, SiLitecoin, SiTether, SiBitcoin, SiEthereum } from 
 import { supabase } from "@/lib/supabase-client";
 import { CryptoPaymentModal } from "@/components/dashboard/CryptoPaymentModal";
 import { useCurrency } from "@/lib/CurrencyContext";
+import CornerWeb from "@/components/halloween/CornerWeb";
+import MiniPumpkin from "@/components/halloween/MiniPumpkin";
+import { HALLOWEEN_EVENT_ENABLED } from "@/components/halloween/HalloweenConfig";
 
 type PaymentMethod = 'card' | 'crypto';
 const getPresets = (currency: string, rate: number) => {
@@ -229,19 +232,25 @@ export default function TopUpModal() {
   return (
     <>
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 overflow-y-auto">
-      <div className="absolute inset-0 bg-black/80 backdrop-blur-md" onClick={() => step !== 2 && setIsOpen(false)}></div>
+      <div className="absolute inset-0 bg-black/90" onClick={() => step !== 2 && setIsOpen(false)}></div>
       
-      <div className={`bg-[#0a0a0a] border border-white/10 rounded-3xl w-full max-w-lg relative z-10 shadow-[0_0_50px_rgba(0,0,0,0.5)] my-auto transition-all duration-500 ${step === 2 ? 'scale-95' : 'scale-100'}`}>
+      <div className={`bg-[#0a0a0a] ${HALLOWEEN_EVENT_ENABLED ? 'border border-orange-500/30' : 'border border-white/10'} rounded-[24px] w-full max-w-lg relative z-10 my-auto transition-all duration-500 overflow-hidden ${step === 2 ? 'scale-95' : 'scale-100'}`}>
         
+        {/* Subtle Halloween Corner Web inside modal */}
+        <CornerWeb className="w-24 h-24 opacity-40 -top-1 -right-1" />
+
         {/* Header */}
         <div className="p-6 md:p-8 pb-0 flex justify-between items-center relative z-20">
-          <h3 className="text-xl font-bold text-white tracking-tight">
-            {step === 1 && "Top Up Balance"}
-            {step === 2 && "Processing Payment"}
-            {step === 3 && "Payment Successful"}
+          <h3 className="text-xl font-bold text-white tracking-tight flex items-center gap-2">
+            <span>
+              {step === 1 && "Top Up Balance"}
+              {step === 2 && "Processing Payment"}
+              {step === 3 && "Payment Successful"}
+            </span>
+            {step === 1 && <MiniPumpkin className="w-5 h-5 -mt-0.5" />}
           </h3>
           {step !== 2 && (
-            <button onClick={() => setIsOpen(false)} className="w-8 h-8 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition-colors">
+            <button onClick={() => setIsOpen(false)} className="w-8 h-8 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition-colors relative z-30">
               <X className="w-4 h-4" />
             </button>
           )}
@@ -252,21 +261,21 @@ export default function TopUpModal() {
             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
               
               {/* Amount Selection */}
-              <div className="space-y-4">
-                <label className="block text-xs font-bold tracking-widest text-gray-500 uppercase">Select Amount</label>
+              <div className="space-y-3">
+                <label className="block text-[13px] font-semibold text-[#f5f5f7]/60">Select Amount</label>
                 <div className="grid grid-cols-4 gap-2">
                   {presets.map(preset => (
                     <button
                       key={preset}
-                    onClick={() => { setAmount(preset); setRawAmount(String(preset)); }}
+                      onClick={() => { setAmount(preset); setRawAmount(String(preset)); }}
                       disabled={(method === 'crypto' && selectedCryptoCoin === 'BTC' && convertFromLocal(preset) < 15)}
-                      className={`py-3 flex flex-col items-center rounded-xl font-bold transition-all ${amount === preset ? 'bg-accent text-white shadow-[0_0_15px_rgba(255,255,255,0.1)]' : 'bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white'} disabled:opacity-30 disabled:cursor-not-allowed`}
+                      className={`py-3.5 flex flex-col items-center rounded-[12px] font-medium transition-all ${amount === preset ? 'bg-white text-black' : 'bg-[#1a1a1a] text-white/50 hover:bg-[#222] hover:text-white'} disabled:opacity-30 disabled:cursor-not-allowed`}
                     >
-                      <span className="text-lg">{convert(convertFromLocal(preset)).formatted}</span>
+                      <span className="text-[15px]">{convert(convertFromLocal(preset)).formatted}</span>
                     </button>
                   ))}
                 </div>
-                <div className="relative">
+                <div className="relative mt-2">
                   {isSuffix ? (
                     <>
                       <input 
@@ -281,14 +290,14 @@ export default function TopUpModal() {
                             setAmount(isNaN(parsed) ? 0 : parsed);
                           }
                         }}
-                        className={`w-full bg-[#141414] border border-white/10 rounded-xl py-4 pl-4 text-white font-bold focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/50 transition-all text-lg shadow-inner ${currentSymbol.length > 2 ? 'pr-16' : 'pr-12'}`}
+                        className={`w-full bg-[#1a1a1a] border-none rounded-[12px] py-4 pl-4 text-white font-semibold focus:outline-none focus:ring-1 focus:ring-white/20 transition-all text-lg ${currentSymbol.length > 2 ? 'pr-16' : 'pr-12'}`}
                         placeholder="10"
                       />
-                      <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold">{currentSymbol}</span>
+                      <span className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 font-medium">{currentSymbol}</span>
                     </>
                   ) : (
                     <>
-                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold">{currentSymbol}</span>
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40 font-medium">{currentSymbol}</span>
                       <input 
                         type="text"
                         inputMode="decimal"
@@ -301,24 +310,24 @@ export default function TopUpModal() {
                             setAmount(isNaN(parsed) ? 0 : parsed);
                           }
                         }}
-                        className={`w-full bg-[#141414] border border-white/10 rounded-xl py-4 pr-4 text-white font-bold focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/50 transition-all text-lg shadow-inner ${currentSymbol.length > 1 ? 'pl-12' : 'pl-10'}`}
+                        className={`w-full bg-[#1a1a1a] border-none rounded-[12px] py-4 pr-4 text-white font-semibold focus:outline-none focus:ring-1 focus:ring-white/20 transition-all text-lg ${currentSymbol.length > 1 ? 'pl-12' : 'pl-10'}`}
                         placeholder="10"
                       />
                     </>
                   )}
                 </div>
-                <p className="text-xs text-gray-600 font-medium pl-1">Minimum deposit: <span className="text-gray-500">{convert(2).formatted}</span>.</p>
+                <p className="text-[12px] text-white/40 font-medium mt-2">Minimum deposit: {convert(2).formatted}</p>
               </div>
 
               {/* Payment Method */}
-              <div className="space-y-4">
-                <label className="block text-xs font-bold tracking-widest text-gray-500 uppercase">Payment Method</label>
-                <div className="space-y-2">
+              <div className="space-y-3">
+                <label className="block text-[13px] font-semibold text-[#f5f5f7]/60">Payment Method</label>
+                <div className="space-y-2 bg-[#1a1a1a] p-2 rounded-[16px]">
                   
                   {loadingSettings ? (
                     <>
-                      <div className="w-full h-[74px] bg-[#141414] border border-white/5 rounded-2xl animate-pulse"></div>
-                      <div className="w-full h-[74px] bg-[#141414] border border-white/5 rounded-2xl animate-pulse"></div>
+                      <div className="w-full h-[64px] bg-white/5 rounded-[12px] animate-pulse"></div>
+                      <div className="w-full h-[64px] bg-white/5 rounded-[12px] animate-pulse"></div>
                     </>
                   ) : (
                     <>
@@ -326,29 +335,29 @@ export default function TopUpModal() {
                   <button 
                     onClick={() => settings.stripe_enabled && setMethod('card')} 
                     disabled={!settings.stripe_enabled}
-                    className={`w-full flex items-center justify-between p-4 border rounded-2xl transition-all ${
-                      !settings.stripe_enabled ? 'opacity-50 cursor-not-allowed bg-[#141414] border-white/5 grayscale' :
-                      method === 'card' ? 'bg-white/10 border-white/20' : 'bg-[#141414] border-white/5 hover:bg-white/5'
+                    className={`w-full flex items-center justify-between p-3 rounded-[12px] transition-all ${
+                      !settings.stripe_enabled ? 'opacity-50 cursor-not-allowed grayscale' :
+                      method === 'card' ? 'bg-[#2a2a2a]' : 'hover:bg-[#222]'
                     }`}
                   >
                       <div className="flex items-center gap-4">
-                        <div className="flex items-center justify-center w-10 h-10 bg-[#635BFF]/10 rounded-xl">
-                          <SiStripe className="w-6 h-6 text-[#635BFF]" />
+                        <div className="flex items-center justify-center w-10 h-10 bg-[#635BFF]/10 text-[#635BFF] rounded-xl">
+                          <SiStripe className="w-6 h-6" />
                         </div>
                         <div className="text-left">
-                          <div className={`font-bold text-sm ${method === 'card' ? 'text-white' : settings.stripe_enabled ? 'text-white' : 'text-gray-400'}`}>Debit / Credit Card</div>
-                          <div className="text-xs text-gray-500">{!settings.stripe_enabled ? 'Temporarily disabled' : 'Mastercard, Visa, Apple Pay etc.'} <span className="text-indigo-400 font-bold">{settings.stripe_enabled ? `(1.5% + ${convert(0.25).formatted} fee)` : ''}</span></div>
+                          <div className={`font-semibold text-[14px] ${method === 'card' || settings.stripe_enabled ? 'text-white' : 'text-white/40'}`}>Debit / Credit Card</div>
+                          <div className="text-[12px] text-white/40 mt-0.5">{!settings.stripe_enabled ? 'Temporarily disabled' : 'Apple Pay, Google Pay, Visa'} <span className="text-indigo-400 font-medium">{settings.stripe_enabled ? `(+${convert(0.25).formatted})` : ''}</span></div>
                         </div>
                       </div>
-                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${method === 'card' ? 'border-[#635BFF]' : 'border-gray-600'}`}>
-                      {method === 'card' && <div className="w-2.5 h-2.5 bg-[#635BFF] rounded-full"></div>}
+                    <div className={`w-5 h-5 rounded-full flex items-center justify-center transition-colors ${method === 'card' ? 'bg-[#635BFF]' : 'border border-white/20'}`}>
+                      {method === 'card' && <CheckCircle2 className="w-3.5 h-3.5 text-white" />}
                     </div>
                   </button>
 
                   {/* Crypto */}
-                  <div className={`border rounded-2xl transition-all ${
-                    !settings.crypto_enabled ? 'opacity-50 cursor-not-allowed bg-[#141414] border-white/5 grayscale' :
-                    method === 'crypto' ? 'bg-white/5 border-white/20' : 'bg-[#141414] border-white/5 hover:bg-white/5'
+                  <div className={`rounded-[12px] transition-all ${
+                    !settings.crypto_enabled ? 'opacity-50 cursor-not-allowed grayscale' :
+                    method === 'crypto' ? 'bg-[#2a2a2a]' : 'hover:bg-[#222]'
                   }`}>
                     <button 
                       onClick={() => { 
@@ -357,32 +366,32 @@ export default function TopUpModal() {
                         setIsCryptoExpanded(!isCryptoExpanded);
                       }}
                       disabled={!settings.crypto_enabled}
-                      className="w-full flex items-center justify-between p-4"
+                      className="w-full flex items-center justify-between p-3"
                     >
                       <div className="flex items-center gap-4">
-                        <div className="flex items-center justify-center w-10 h-10 bg-amber-500/10 rounded-xl">
-                          <SiBitcoin className="w-5 h-5 text-amber-400" />
+                        <div className="flex items-center justify-center w-10 h-10 bg-amber-500/10 text-amber-500 rounded-xl">
+                          <SiBitcoin className="w-5 h-5" />
                         </div>
                         <div className="text-left">
-                          <div className={`font-bold text-sm ${method === 'crypto' ? 'text-white' : settings.crypto_enabled ? 'text-white' : 'text-gray-400'}`}>Cryptocurrency</div>
-                          <div className="text-[11px] text-gray-500 font-medium">{!settings.crypto_enabled ? 'Temporarily disabled' : 'Pay via OxaPay'} <span className="text-amber-400 font-bold">{settings.crypto_enabled ? '(0% fee)' : ''}</span></div>
+                          <div className={`font-semibold text-[14px] ${method === 'crypto' || settings.crypto_enabled ? 'text-white' : 'text-white/40'}`}>Cryptocurrency</div>
+                          <div className="text-[12px] text-white/40 mt-0.5">{!settings.crypto_enabled ? 'Temporarily disabled' : 'Pay via OxaPay'} <span className="text-amber-400 font-medium">{settings.crypto_enabled ? '(0% fee)' : ''}</span></div>
                         </div>
                       </div>
-                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${method === 'crypto' ? 'border-amber-400' : 'border-gray-600'}`}>
-                        {method === 'crypto' && <div className="w-2.5 h-2.5 bg-amber-400 rounded-full"></div>}
+                      <div className={`w-5 h-5 rounded-full flex items-center justify-center transition-colors ${method === 'crypto' ? 'bg-amber-500' : 'border border-white/20'}`}>
+                        {method === 'crypto' && <CheckCircle2 className="w-3.5 h-3.5 text-black" />}
                       </div>
                     </button>
                     
                     {method === 'crypto' && (
-                      <div className="w-full p-4 pt-0 animate-in slide-in-from-top-2">
-                        <div className="relative">
+                      <div className="w-full px-3 pb-3 animate-in slide-in-from-top-2">
+                        <div className="relative mt-2">
                           <button
                             onClick={() => setIsCryptoExpanded(!isCryptoExpanded)}
-                            className="w-full flex items-center justify-between p-3 rounded-xl border bg-white/5 border-white/5 text-white hover:bg-white/10 transition-colors"
+                            className="w-full flex items-center justify-between p-3 rounded-[10px] bg-[#1a1a1a] text-white hover:bg-[#222] transition-colors border border-white/5"
                           >
                             <div className="flex items-center gap-3">
                               {!selectedCryptoCoin ? (
-                                <span className="text-gray-400 text-sm">Select cryptocurrency...</span>
+                                <span className="text-white/40 text-[13px]">Select cryptocurrency...</span>
                               ) : (
                                 <>
                                   {selectedCryptoCoin === 'BTC' && <SiBitcoin className="w-4 h-4 text-amber-500" />}
@@ -391,22 +400,22 @@ export default function TopUpModal() {
                                   {selectedCryptoCoin === 'USDC_ERC20' && <CircleDollarSign className="w-4 h-4 text-blue-400" />}
                                   {selectedCryptoCoin === 'LTC' && <SiLitecoin className="w-4 h-4 text-blue-400" />}
                                   {selectedCryptoCoin === 'SOL' && <SiSolana className="w-4 h-4 text-purple-500" />}
-                                  <span className="text-sm font-bold">
+                                  <span className="text-[13px] font-medium">
                                     {selectedCryptoCoin === 'USDT_TRC20' ? 'USDT' : selectedCryptoCoin === 'USDC_ERC20' ? 'USDC' : selectedCryptoCoin}
                                   </span>
                                   {selectedCryptoCoin === 'BTC' && (
-                                    <span className="text-[10px] text-amber-500/80 font-bold ml-1">
+                                    <span className="text-[10px] text-amber-500/80 font-medium ml-1">
                                       (Min. €15)
                                     </span>
                                   )}
                                 </>
                               )}
                             </div>
-                            <ChevronDown className={`w-4 h-4 text-gray-500 transition-transform ${isCryptoExpanded ? 'rotate-180' : ''}`} />
+                            <ChevronDown className={`w-4 h-4 text-white/40 transition-transform ${isCryptoExpanded ? 'rotate-180' : ''}`} />
                           </button>
                           
                           {isCryptoExpanded && (
-                            <div className="absolute top-full left-0 right-0 mt-2 bg-[#1c1c1c] border border-white/10 rounded-xl overflow-y-auto max-h-[200px] custom-scrollbar z-50 shadow-2xl">
+                            <div className="absolute top-full left-0 right-0 mt-2 bg-[#1c1c1c] border border-white/5 rounded-[12px] overflow-y-auto overscroll-contain max-h-[200px] custom-scrollbar z-50 shadow-2xl">
                               {[
                                 { id: 'BTC', label: 'Bitcoin (BTC)', icon: <SiBitcoin className="w-4 h-4 text-amber-500" /> },
                                 { id: 'ETH', label: 'Ethereum (ETH)', icon: <SiEthereum className="w-4 h-4 text-indigo-400" /> },
@@ -420,12 +429,12 @@ export default function TopUpModal() {
                                   onClick={() => { setSelectedCryptoCoin(coin.id); setIsCryptoExpanded(false); }}
                                   className="w-full flex items-center gap-3 p-3 text-left hover:bg-white/5 transition-colors border-b border-white/5 last:border-0"
                                 >
-                                  <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center">
+                                  <div className="w-6 h-6 rounded-full flex items-center justify-center">
                                     {coin.icon}
                                   </div>
-                                  <span className="text-sm font-medium text-white">
+                                  <span className="text-[13px] font-medium text-white">
                                     {coin.label}
-                                    {coin.id === 'BTC' && <span className="text-[10px] text-amber-500/80 font-bold ml-2">(Min. €15)</span>}
+                                    {coin.id === 'BTC' && <span className="text-[10px] text-amber-500/80 ml-2">(Min. €15)</span>}
                                   </span>
                                 </button>
                               ))}
@@ -441,71 +450,67 @@ export default function TopUpModal() {
               </div>
 
               {/* Promo Code */}
-              <div className="space-y-4">
-                <label className="block text-xs font-bold tracking-widest text-gray-500 uppercase">Promo Code (Optional)</label>
+              <div className="space-y-2">
                 <div className="flex gap-2 relative">
                   <input
                     type="text"
                     value={promoCode}
                     onChange={(e) => setPromoCode(e.target.value)}
-                    placeholder="Enter code"
-                    className="w-full bg-[#141414] border border-white/10 rounded-xl py-3 pl-4 text-white font-bold focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/50 transition-all text-sm"
+                    placeholder="Promo Code (Optional)"
+                    className="w-full bg-[#1a1a1a] border-none rounded-[10px] py-3 pl-4 text-white font-medium focus:outline-none focus:ring-1 focus:ring-white/20 transition-all text-[13px]"
                   />
                   <button
                     onClick={applyPromoCode}
                     disabled={isApplyingPromo || !promoCode.trim()}
-                    className="px-4 py-3 bg-white/5 hover:bg-white/10 text-white font-bold rounded-xl transition-colors disabled:opacity-50 text-sm"
+                    className="px-5 bg-white/10 hover:bg-white/15 text-white font-medium rounded-[10px] transition-colors disabled:opacity-50 text-[13px]"
                   >
                     {isApplyingPromo ? <Loader2 className="w-4 h-4 animate-spin" /> : "Apply"}
                   </button>
                 </div>
-                {promoCodeSuccess && <p className="text-xs text-emerald-400 font-bold">{promoCodeSuccess}</p>}
-                {promoCodeError && <p className="text-xs text-red-400 font-bold">{promoCodeError}</p>}
+                {promoCodeSuccess && <p className="text-[11px] text-emerald-400 font-medium pl-1">{promoCodeSuccess}</p>}
+                {promoCodeError && <p className="text-[11px] text-red-400 font-medium pl-1">{promoCodeError}</p>}
               </div>
 
               {/* Receipt & Action */}
-              <div>
+              <div className="pt-2">
                 {errorMsg && (
-                  <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 mb-4 flex items-start gap-3">
-                    <ShieldAlert className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+                  <div className="bg-red-500/10 rounded-[12px] p-4 mb-6 flex items-start gap-3">
+                    <ShieldAlert className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
                     <div>
-                      <h4 className="text-red-500 font-bold text-sm">Action Failed</h4>
-                      <p className="text-red-400 text-xs mt-0.5">{errorMsg}</p>
+                      <p className="text-red-400 text-[13px] font-medium">{errorMsg}</p>
                     </div>
                   </div>
                 )}
 
-                <div className="bg-[#141414] rounded-2xl p-5 mb-4">
-                  <div className="flex justify-between text-gray-400 text-sm font-medium mb-3">
+                <div className="space-y-3 mb-6 px-1">
+                  <div className="flex justify-between text-white/50 text-[14px] font-medium">
                     <span>Deposit Amount</span>
-                    <span className="text-white block">{convert(convertFromLocal(amount > 0 ? amount : 0)).formatted}</span>
+                    <span className="text-white">{convert(convertFromLocal(amount > 0 ? amount : 0)).formatted}</span>
                   </div>
                   {discountPct > 0 && (
-                    <div className="flex justify-between text-emerald-400 text-sm font-medium mb-3">
+                    <div className="flex justify-between text-emerald-400 text-[14px] font-medium">
                       <span>Bonus (+{discountPct}%)</span>
-                      <span className="block">+{convert(convertFromLocal(bonusAmount)).formatted}</span>
+                      <span>+{convert(convertFromLocal(bonusAmount)).formatted}</span>
                     </div>
                   )}
-                  <div className="flex justify-between text-gray-400 text-sm font-medium mb-4">
-                    <span>Gateway Fee</span>
-                    <span className="text-red-400 block">+{convert(convertFromLocal(cardFee)).formatted}</span>
-                  </div>
-                  <div className="border-t border-dashed border-white/10 pt-4 mb-3 flex justify-between items-end">
-                    <span className="font-bold text-gray-300 uppercase tracking-widest text-xs">Total to pay</span>
-                    <span className="font-black text-white text-2xl block">{convert(convertFromLocal(Number(total))).formatted}</span>
-                  </div>
-                  <div className="bg-accent/10 border border-accent/20 rounded-xl p-3 flex justify-between items-center">
-                    <span className="font-bold text-accent uppercase tracking-widest text-xs">You will receive</span>
-                    <span className="font-black text-accent text-xl block">{convert(convertFromLocal(amount + bonusAmount)).formatted}</span>
+                  {cardFee > 0 && (
+                    <div className="flex justify-between text-white/50 text-[14px] font-medium">
+                      <span>Gateway Fee</span>
+                      <span className="text-white/80">+{convert(convertFromLocal(cardFee)).formatted}</span>
+                    </div>
+                  )}
+                  <div className="border-t border-white/10 pt-4 mt-2 flex justify-between items-end">
+                    <span className="font-semibold text-white/80 text-[15px]">Total to pay</span>
+                    <span className="font-bold text-white text-[20px] leading-none">{convert(convertFromLocal(Number(total))).formatted}</span>
                   </div>
                 </div>
 
                 <button
                   onClick={startPaymentSimulation}
                   disabled={convertFromLocal(amount) < 2 || (method === 'crypto' && selectedCryptoCoin === 'BTC' && convertFromLocal(amount) < 15)}
-                  className="w-full bg-accent hover:bg-accent/90 text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_20px_rgba(255,255,255,0.1)] hover:shadow-[0_0_30px_rgba(255,255,255,0.2)]"
+                  className="w-full bg-white text-black font-semibold text-[15px] py-4 rounded-full transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:bg-neutral-200"
                 >
-                  Confirm Payment <ChevronRight className="w-5 h-5" />
+                  Continue to Payment
                 </button>
               </div>
             </div>
@@ -514,33 +519,33 @@ export default function TopUpModal() {
           {step === 2 && (
             <div className="flex flex-col items-center justify-center py-12 space-y-8 animate-in zoom-in-95 duration-300">
               <div className="relative">
-                <div className="w-24 h-24 border-4 border-white/5 border-t-accent rounded-full animate-spin"></div>
+                <div className="w-24 h-24 border-4 border-white/5 border-t-white rounded-full animate-spin"></div>
                   <div className="absolute inset-0 flex items-center justify-center">
-                    {method === 'card' && <SiStripe className="w-10 h-10 text-accent animate-pulse" />}
-                    {method === 'crypto' && <QrCode className="w-8 h-8 text-accent animate-pulse" />}
+                    {method === 'card' && <SiStripe className="w-10 h-10 text-white animate-pulse" />}
+                    {method === 'crypto' && <QrCode className="w-8 h-8 text-white animate-pulse" />}
                   </div>
               </div>
               
               <div className="text-center space-y-2">
                 <h4 className="text-lg font-bold text-white">Do not close this window</h4>
-                <p className="text-sm font-medium text-accent animate-pulse">{loadingText}</p>
+                <p className="text-sm font-medium text-white/50 animate-pulse">{loadingText}</p>
               </div>
             </div>
           )}
 
           {step === 2 && !cryptoPaymentData && (
-            <div className="absolute inset-0 bg-[#0a0a0a]/90 backdrop-blur-sm flex flex-col items-center justify-center p-8 z-10 text-center animate-in fade-in rounded-[24px]">
+            <div className="absolute inset-0 bg-[#0a0a0a] flex flex-col items-center justify-center p-8 z-10 text-center animate-in fade-in rounded-[24px]">
               <div className="w-16 h-16 relative mb-6">
-                <div className="absolute inset-0 border-t-2 border-accent rounded-full animate-spin"></div>
-                <div className="absolute inset-2 border-r-2 border-accent/50 rounded-full animate-spin-reverse"></div>
-                <div className="absolute inset-0 flex items-center justify-center text-accent">
+                <div className="absolute inset-0 border-t-2 border-white/80 rounded-full animate-spin"></div>
+                <div className="absolute inset-2 border-r-2 border-white/20 rounded-full animate-spin-reverse"></div>
+                <div className="absolute inset-0 flex items-center justify-center text-white/60">
                   <QrCode className="w-6 h-6 animate-pulse" />
                 </div>
               </div>
               
               <div className="text-center space-y-2">
                 <h4 className="text-lg font-bold text-white">Do not close this window</h4>
-                <p className="text-sm font-medium text-accent animate-pulse">{loadingText}</p>
+                <p className="text-sm font-medium text-white/50 animate-pulse">{loadingText}</p>
               </div>
             </div>
           )}
@@ -560,9 +565,6 @@ export default function TopUpModal() {
           )}
         </div>
 
-        {/* Ambient background glows */}
-        <div className="absolute top-0 left-0 w-64 h-64 bg-accent/5 rounded-full blur-3xl pointer-events-none -translate-x-1/2 -translate-y-1/2"></div>
-        {method === 'crypto' && <div className="absolute bottom-0 right-0 w-64 h-64 bg-[#F7931A]/5 rounded-full blur-3xl pointer-events-none translate-x-1/2 translate-y-1/2 transition-opacity duration-1000"></div>}
       </div>
     </div>
     

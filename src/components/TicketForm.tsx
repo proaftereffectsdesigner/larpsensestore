@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase-client";
 import { MessageSquare, AlertCircle, ShoppingBag, Send } from "lucide-react";
 import { toast } from "sonner";
+import { useSearchParams } from "next/navigation";
 import TicketChat from "./TicketChat";
 
 export default function TicketForm() {
@@ -23,9 +24,28 @@ export default function TicketForm() {
   const [initialMessage, setInitialMessage] = useState<string>("");
   const [isMounted, setIsMounted] = useState(false);
   const [isTicketClosed, setIsTicketClosed] = useState(false);
+  
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const typeParam = searchParams.get('type');
+    if (typeParam) {
+      const typeMap: Record<string, string> = {
+        'token': 'invalid_token',
+        'order': 'missing_delivery',
+        'payment': 'payment_issue',
+        'general': 'general_question',
+        'other': 'other'
+      };
+      if (typeMap[typeParam]) {
+        setIssueType(typeMap[typeParam]);
+      }
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     setIsMounted(true);
+
     const checkSession = async () => {
       const savedSession = localStorage.getItem('larpsense_ticket_session');
       if (savedSession) {
@@ -198,13 +218,13 @@ ${description}`;
 
   if (!user) {
     return (
-      <div className="bg-[#111]/80 backdrop-blur-xl border border-white/10 rounded-3xl p-8 text-center">
-        <AlertCircle className="w-12 h-12 text-gray-500 mx-auto mb-4" />
-        <h2 className="text-xl font-bold text-white mb-2">Log in to create a ticket</h2>
-        <p className="text-gray-400 mb-6 max-w-sm mx-auto">You must be logged in to open a support ticket so we can securely link it to your account.</p>
+      <div className="bg-[#0a0a0a] border border-[#262626] rounded-xl p-8 text-center max-w-2xl mx-auto">
+        <AlertCircle className="w-12 h-12 text-[#f5f5f7]/30 mx-auto mb-4" />
+        <h2 className="text-xl font-bold text-[#f5f5f7] mb-2">Log in to create a ticket</h2>
+        <p className="text-[#f5f5f7]/50 mb-6 max-w-sm mx-auto">You must be logged in to open a support ticket so we can securely link it to your account.</p>
         <button 
           onClick={() => window.dispatchEvent(new Event('open-auth'))}
-          className="bg-accent hover:bg-accent/80 text-white font-bold rounded-xl px-8 py-3 transition-colors"
+          className="bg-[#f5f5f7] hover:bg-[#e5e5e7] text-black font-bold rounded-lg px-8 py-3 transition-colors"
         >
           Sign In
         </button>
@@ -237,7 +257,7 @@ ${description}`;
                 setInitialMessage("");
                 setIsTicketClosed(false);
               }}
-              className="px-6 py-3 bg-white/5 border border-white/10 hover:bg-white/10 rounded-xl text-white font-medium transition-colors"
+              className="px-6 py-3 bg-[#141414] border border-[#262626] hover:bg-[#1a1a1a] rounded-xl text-[#f5f5f7] font-medium transition-colors"
             >
               &larr; Start New Ticket
             </button>
@@ -261,143 +281,154 @@ ${description}`;
   }
 
   return (
-    <div className="w-full">
-      <div className="text-center mb-16">
-        <div className="inline-flex items-center justify-center p-4 bg-accent/10 border border-accent/20 rounded-2xl mb-6 shadow-2xl shadow-accent/20">
-          <MessageSquare className="w-8 h-8 text-accent" />
-        </div>
-        <h1 className="text-4xl md:text-6xl font-black text-white mb-6 tracking-tight">
-          Support Center
-        </h1>
-        <p className="text-gray-400 text-lg max-w-2xl mx-auto leading-relaxed">
-          Need help with your purchase? Check our FAQ page or reach out to our team directly. We're here to help.
-        </p>
-      </div>
-
-
-
-      <div className="max-w-2xl mx-auto bg-[#111]/80 backdrop-blur-xl border border-white/10 rounded-3xl p-6 md:p-8 shadow-2xl">
-        <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
-          <MessageSquare className="w-6 h-6 text-accent" />
-          Open a Support Ticket
-        </h2>
-
-        <div className="bg-accent/10 border border-accent/20 rounded-xl p-4 mb-8">
-        <p className="text-gray-300 text-sm leading-relaxed">
-          <strong className="text-white">Live Support is active!</strong> Fill out this form and you will be immediately connected to our support staff via live chat.
-        </p>
-      </div>
-
-      <form onSubmit={handleSubmit} className="space-y-6">
+    <div className="w-full h-full">
+      <div className="max-w-2xl mx-auto bg-[#0a0a0a] border border-[#262626] rounded-xl flex flex-col shadow-2xl overflow-hidden">
         
-        {/* Issue Type */}
-        <div>
-          <label className="block text-xs font-bold tracking-widest text-gray-500 mb-2 uppercase">Issue Type *</label>
-          <select 
-            value={issueType}
-            onChange={(e) => setIssueType(e.target.value)}
-            required
-            onInvalid={(e) => (e.target as HTMLSelectElement).setCustomValidity('Please select an item from the list.')}
-            onInput={(e) => (e.target as HTMLSelectElement).setCustomValidity('')}
-            className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/50 transition-all appearance-none"
-          >
-            <option value="" disabled>Select an issue type...</option>
-            <option value="invalid_token">Invalid / Expired Token</option>
-            <option value="missing_delivery">Order not delivered</option>
-            <option value="payment_issue">Payment Issue / Top-up failed</option>
-            <option value="general_question">General Question</option>
-            <option value="other">Other</option>
-          </select>
+        {/* Chat Header */}
+        <div className="flex items-center justify-between p-4 sm:p-5 border-b border-[#262626] shrink-0 bg-[#0a0a0a] rounded-t-xl z-10">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-[#141414] border border-[#262626] flex items-center justify-center">
+              <MessageSquare className="w-5 h-5 text-[#47c92f]" />
+            </div>
+            <div>
+              <div className="font-bold text-[#f5f5f7]">Support Assistant</div>
+              <div className="text-xs text-[#47c92f] flex items-center gap-1 mt-0.5">
+                <div className="w-1.5 h-1.5 rounded-full bg-[#47c92f] animate-pulse" />
+                Online
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* Order Selection */}
-        {(issueType === 'payment_issue' || issueType === 'missing_delivery' || issueType === 'invalid_token') && (
-          <div className="animate-in fade-in slide-in-from-top-2 duration-300">
-            <label className="block text-xs font-bold tracking-widest text-gray-500 mb-2 uppercase flex items-center gap-2">
-              <ShoppingBag className="w-3 h-3" /> Related Order (Optional)
-            </label>
-            <select 
-              value={orderId}
-              onChange={(e) => setOrderId(e.target.value)}
-              className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/50 transition-all appearance-none"
-            >
-              <option value="">No specific order (or order not listed)</option>
-              {orders.map(o => (
-                <option key={o.id} value={o.id}>
-                  Order #{o.id.split('-')[0]} - {new Date(o.created_at).toLocaleDateString()} ({o.status})
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
-
-        {/* Extra Information based on Issue Type */}
-        {(issueType === 'payment_issue' || issueType === 'missing_delivery' || issueType === 'invalid_token') && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 bg-white/5 border border-white/10 rounded-xl">
-            <div>
-              <label className="block text-xs font-bold tracking-widest text-gray-500 mb-2 uppercase">Payment Method</label>
+        <div className="p-4 sm:p-6 space-y-6 flex flex-col">
+          
+          <div className="flex items-start gap-3 max-w-[95%] sm:max-w-[85%]">
+            <div className="w-8 h-8 rounded-full bg-[#141414] border border-[#262626] shrink-0 flex items-center justify-center mt-1 hidden sm:flex">
+              <MessageSquare className="w-4 h-4 text-gray-500" />
+            </div>
+            <div className="bg-[#141414] border border-[#262626] rounded-2xl rounded-tl-sm p-4 text-sm text-[#f5f5f7] w-full sm:w-auto">
+              <p className="mb-4 text-gray-300">Hi there! 👋 I'm here to help. To get started, please select the type of issue you're experiencing.</p>
+              
               <select 
-                value={paymentMethod}
-                onChange={(e) => setPaymentMethod(e.target.value)}
-                className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-accent/50 transition-all appearance-none text-sm"
+                value={issueType}
+                onChange={(e) => setIssueType(e.target.value)}
+                required
+                className="w-full sm:min-w-[280px] bg-[#0a0a0a] border border-[#262626] rounded-lg px-3 py-3 text-[#f5f5f7] focus:outline-none focus:border-[#404040] transition-colors appearance-none cursor-pointer"
               >
-                <option value="">Select method (Optional)</option>
-                <option value="Stripe / Card">Stripe / Card</option>
-                <option value="Crypto (Coinbase)">Crypto (Coinbase Commerce)</option>
-                <option value="Balance">Store Balance</option>
+                <option value="" disabled>Select an issue type...</option>
+                <option value="invalid_token">Invalid / Expired Token</option>
+                <option value="missing_delivery">Order not delivered</option>
+                <option value="payment_issue">Payment Issue / Top-up failed</option>
+                <option value="general_question">General Question</option>
+                <option value="other">Other</option>
               </select>
             </div>
-            <div>
-              <label className="block text-xs font-bold tracking-widest text-gray-500 mb-2 uppercase">Transaction ID</label>
-              <input 
-                type="text"
-                value={transactionId}
-                onChange={(e) => setTransactionId(e.target.value)}
-                placeholder="e.g. pi_... or hash"
-                className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-accent/50 transition-all text-sm"
-              />
-            </div>
           </div>
-        )}
 
-        {/* Description */}
-        <div>
-          <label className="block text-xs font-bold tracking-widest text-gray-500 mb-2 uppercase">Description *</label>
-          <textarea 
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            rows={5}
-            placeholder="Please describe your issue in detail..."
-            className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/50 transition-all resize-none"
-            required
-          />
+          {(issueType === 'payment_issue' || issueType === 'missing_delivery' || issueType === 'invalid_token') && (
+            <div className="flex items-start gap-3 max-w-[95%] sm:max-w-[85%] animate-in fade-in slide-in-from-left-4 duration-300">
+              <div className="w-8 h-8 rounded-full bg-[#141414] border border-[#262626] shrink-0 flex items-center justify-center mt-1 hidden sm:flex">
+                <MessageSquare className="w-4 h-4 text-gray-500" />
+              </div>
+              <div className="bg-[#141414] border border-[#262626] rounded-2xl rounded-tl-sm p-4 sm:p-5 text-sm text-[#f5f5f7] w-full">
+                <p className="mb-5 text-gray-300">Thanks. Please provide the order details so we can locate your transaction and assist you faster.</p>
+                
+                <div className="space-y-4 bg-[#0a0a0a] p-4 rounded-xl border border-[#262626]">
+                  <div>
+                    <label className="block text-[10px] font-bold tracking-widest text-gray-500 mb-1.5 uppercase flex items-center gap-2">
+                      <ShoppingBag className="w-3 h-3" /> Related Order
+                    </label>
+                    <select 
+                      value={orderId}
+                      onChange={(e) => setOrderId(e.target.value)}
+                      className="w-full bg-[#141414] border border-[#262626] rounded-lg px-3 py-2.5 text-[#f5f5f7] focus:outline-none focus:border-[#404040] transition-colors appearance-none cursor-pointer text-xs sm:text-sm"
+                    >
+                      <option value="">No specific order (or order not listed)</option>
+                      {orders.map(o => (
+                        <option key={o.id} value={o.id}>
+                          Order #{o.id.split('-')[0]} - {new Date(o.created_at).toLocaleDateString()}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-[10px] font-bold tracking-widest text-gray-500 mb-1.5 uppercase">Payment Method</label>
+                      <select 
+                        value={paymentMethod}
+                        onChange={(e) => setPaymentMethod(e.target.value)}
+                        className="w-full bg-[#141414] border border-[#262626] rounded-lg px-3 py-2.5 text-[#f5f5f7] focus:outline-none focus:border-[#404040] transition-colors appearance-none cursor-pointer text-xs sm:text-sm"
+                      >
+                        <option value="">Select method (Optional)</option>
+                        <option value="Stripe / Card">Stripe / Card</option>
+                        <option value="Crypto (Coinbase)">Crypto (Coinbase Commerce)</option>
+                        <option value="Balance">Store Balance</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold tracking-widest text-gray-500 mb-1.5 uppercase">Transaction ID</label>
+                      <input 
+                        type="text"
+                        value={transactionId}
+                        onChange={(e) => setTransactionId(e.target.value)}
+                        placeholder="e.g. pi_... or hash"
+                        className="w-full bg-[#141414] border border-[#262626] rounded-lg px-3 py-2.5 text-[#f5f5f7] focus:outline-none focus:border-[#404040] transition-colors text-xs sm:text-sm"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {issueType && (
+            <div className="flex items-start gap-3 max-w-[95%] sm:max-w-[85%] animate-in fade-in slide-in-from-left-4 duration-300">
+              <div className="w-8 h-8 rounded-full bg-[#141414] border border-[#262626] shrink-0 flex items-center justify-center mt-1 hidden sm:flex">
+                <MessageSquare className="w-4 h-4 text-gray-500" />
+              </div>
+              <div className="bg-[#141414] border border-[#262626] rounded-2xl rounded-tl-sm p-4 text-sm text-[#f5f5f7]">
+                <p className="text-gray-300 leading-relaxed">Perfect. Now, please describe your issue below. <strong className="text-[#47c92f] font-medium">Once you hit send, you'll be connected to a live staff member.</strong></p>
+              </div>
+            </div>
+          )}
+
         </div>
 
-        <button 
-          type="submit"
-          disabled={submitting}
-          className="w-full bg-accent text-white font-bold rounded-xl px-6 py-4 hover:bg-accent/80 transition-all hover:scale-[1.02] disabled:opacity-50 disabled:hover:scale-100 flex items-center justify-center gap-2"
-        >
-          {submitting ? (
-            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-          ) : (
-            <><Send className="w-5 h-5" /> Start Live Chat</>
-          )}
-        </button>
-      </form>
-      </div>
+        {/* Chat Input / Form Submit Area */}
+        <div className="p-4 sm:p-6 border-t border-[#262626] shrink-0 bg-[#0a0a0a]">
+          <form onSubmit={handleSubmit}>
+            <div className="relative flex items-start gap-3 bg-[#141414] border border-[#333] hover:border-[#444] rounded-xl p-3 focus-within:border-[#555] transition-colors">
+              <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Type your message here to start the live chat..."
+                rows={3}
+                className="flex-1 bg-transparent !outline-none !border-none !ring-0 focus:!outline-none focus:!border-none focus:!ring-0 text-sm text-[#f5f5f7] resize-none py-1 px-1 min-h-[70px] placeholder:text-gray-500 scrollbar-thin scrollbar-thumb-[#333] scrollbar-track-transparent"
+                required
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    if (description.trim() && issueType) {
+                       handleSubmit(e as any);
+                    }
+                  }
+                }}
+              />
+              <button 
+                type="submit"
+                disabled={submitting || !issueType || !description.trim()}
+                className="p-3 mt-auto bg-[#47c92f] text-black rounded-lg hover:bg-[#3db028] transition-colors disabled:opacity-50 disabled:bg-[#262626] disabled:text-gray-600 shrink-0"
+              >
+                {submitting ? <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin" /> : <Send className="w-5 h-5 ml-0.5" />}
+              </button>
+            </div>
+            <div className="text-center mt-3 text-[10px] text-gray-600 uppercase tracking-widest font-bold">
+              Press enter to send
+            </div>
+          </form>
+        </div>
 
-      <div className="flex justify-center mt-16 pb-16">
-        <a href="https://discord.gg/qVxdgvdTSK" target="_blank" rel="noopener noreferrer" className="w-full max-w-md flex flex-col items-center justify-center p-8 bg-[#111]/80 backdrop-blur-xl border border-white/10 hover:border-[#5865F2]/30 rounded-3xl transition-all group">
-          <div className="w-16 h-16 bg-[#5865F2]/10 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-            <img src="/discord.png" alt="Discord" className="w-8 h-8 object-contain" />
-          </div>
-          <h2 className="text-xl font-bold text-white mb-2">Discord Community</h2>
-          <p className="text-gray-400 text-center text-sm leading-relaxed mb-4">
-            If you encounter any problems with the website or support tickets, please join our Discord and report it there.
-          </p>
-          <span className="text-[#5865F2] font-medium">Join Server</span>
-        </a>
       </div>
     </div>
   );

@@ -50,14 +50,14 @@ export default function HowItWorks() {
         {steps.map((step, index) => (
           <div 
             key={index}
-            className={`flex flex-col p-8 bg-[#0a0a0a] border border-white/5 rounded-2xl transition-all duration-300 hover:bg-[#0c0c0c] hover:border-emerald-500/20 group ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-20'}`}
+            className={`flex flex-col items-start p-8 bg-[#111111] rounded-[24px] ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}
             style={{ transitionDelay: `${isVisible ? 100 + index * 100 : 0}ms`, transitionDuration: '1000ms' }}
           >
-            <div className="w-12 h-12 bg-[#111] border border-white/10 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:border-emerald-500/30 transition-all duration-300">
+            <div className="mb-6">
               {step.icon}
             </div>
-            <h3 className="text-white font-bold text-lg mb-3">{step.title}</h3>
-            <p className="text-gray-400 text-sm leading-relaxed">
+            <h3 className="text-white font-semibold text-[20px] tracking-tight mb-2">{step.title}</h3>
+            <p className="text-[#f5f5f7]/60 text-[15px] leading-relaxed">
               {step.description}
             </p>
           </div>

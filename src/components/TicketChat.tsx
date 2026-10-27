@@ -259,7 +259,7 @@ export default function TicketChat({ sessionId, initialMessage, initialAttachmen
   };
 
   return (
-    <div className="w-full max-w-2xl mx-auto bg-[#111]/80 backdrop-blur-xl border border-white/10 rounded-3xl overflow-hidden flex flex-col h-[600px] shadow-2xl">
+    <div className="w-full h-[85vh] min-h-[750px] max-w-4xl mx-auto bg-[#0a0a0a] border border-[#262626] rounded-xl overflow-hidden flex flex-col shadow-none">
       
       {/* Lightbox for enlarged images */}
       {selectedImage && (
@@ -273,21 +273,18 @@ export default function TicketChat({ sessionId, initialMessage, initialAttachmen
 
       {/* Close Confirmation Modal */}
       {showCloseConfirm && (
-        <div className="absolute inset-0 bg-black/80 backdrop-blur-sm z-[110] flex items-center justify-center p-4">
-          <div className="bg-[#111] border border-white/10 rounded-2xl p-6 max-w-sm w-full shadow-2xl animate-in zoom-in-95 duration-200">
-            <div className="flex items-center gap-3 text-red-500 mb-4">
-              <div className="p-2 bg-red-500/10 rounded-full">
-                <AlertTriangle className="w-6 h-6" />
-              </div>
-              <h3 className="text-lg font-bold text-white">Close Ticket?</h3>
-            </div>
-            <p className="text-gray-400 text-sm mb-6">
+        <div className="absolute inset-0 bg-[#000000]/95 z-[110] flex items-center justify-center p-4">
+          <div className="bg-[#0a0a0a] border border-[#262626] p-6 max-w-sm w-full shadow-none animate-in fade-in duration-150">
+            <h3 className="text-base font-bold text-[#ff3333] mb-3 uppercase tracking-widest border-b border-[#262626] pb-3">
+              [ Close Ticket ]
+            </h3>
+            <p className="text-[#f5f5f7]/70 text-sm mb-8 leading-relaxed">
               Are you sure you want to close this ticket? You won't be able to continue the conversation.
             </p>
             <div className="flex justify-end gap-3">
               <button
                 onClick={() => setShowCloseConfirm(false)}
-                className="px-4 py-2 rounded-xl border border-white/10 hover:bg-white/5 text-gray-300 text-sm font-medium transition-colors"
+                className="px-5 py-2.5 bg-[#0a0a0a] border border-[#262626] hover:bg-[#141414] text-[#f5f5f7] text-xs uppercase tracking-wider font-bold transition-colors"
               >
                 Cancel
               </button>
@@ -296,7 +293,7 @@ export default function TicketChat({ sessionId, initialMessage, initialAttachmen
                   setShowCloseConfirm(false);
                   onCloseTicket();
                 }}
-                className="px-4 py-2 rounded-xl bg-red-500 hover:bg-red-600 text-white text-sm font-bold transition-colors"
+                className="px-5 py-2.5 bg-[#0a0a0a] border border-[#ff3333] text-[#ff3333] hover:bg-[#ff3333] hover:text-black text-xs uppercase tracking-wider font-bold transition-colors"
               >
                 Confirm Close
               </button>
@@ -306,10 +303,10 @@ export default function TicketChat({ sessionId, initialMessage, initialAttachmen
       )}
 
       {/* Header */}
-      <div className="shrink-0 bg-black/50 p-6 flex justify-between items-center border-b border-white/10">
+      <div className="shrink-0 bg-[#0a0a0a] border-b border-[#262626] p-4 sm:p-6 flex justify-between items-center">
         <div>
           <h2 className="text-xl font-bold text-white flex items-center gap-3">
-            <span className={`w-3 h-3 rounded-full ${isConnected ? 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.5)]' : 'bg-red-500'}`}></span>
+            <span className={`w-2.5 h-2.5 rounded-full ${isConnected ? 'bg-accent' : 'bg-red-500'}`}></span>
             Live Support Ticket
           </h2>
           <p className="text-sm text-gray-400 mt-1">Ticket ID: #{sessionId}</p>
@@ -317,7 +314,7 @@ export default function TicketChat({ sessionId, initialMessage, initialAttachmen
         {!isTicketClosed && (
           <button 
             onClick={() => setShowCloseConfirm(true)}
-            className="bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 rounded-xl px-4 py-2 transition-colors text-sm font-semibold flex items-center gap-2"
+            className="bg-[#0a0a0a] hover:bg-[#1a0a0a] text-[#ff3333] border border-[#ff3333] rounded-xl px-4 py-2 transition-colors text-sm font-bold flex items-center gap-2"
           >
             <X className="w-4 h-4" /> Close Ticket
           </button>
@@ -327,71 +324,71 @@ export default function TicketChat({ sessionId, initialMessage, initialAttachmen
       {/* Scrollable chat area */}
       <div 
         ref={scrollContainerRef}
-        className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar"
+        className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6 custom-scrollbar"
       >
         {parsedTicketInfo && (
-          <div className="bg-white/5 border border-white/10 rounded-2xl p-6 text-sm">
-            <h3 className="font-bold text-white mb-4 text-base">Ticket Information</h3>
+          <div className="bg-[#141414] border border-[#262626] rounded-xl p-4 sm:p-6 text-sm">
+            <h3 className="font-bold text-[#f5f5f7] mb-4 text-base">Ticket Information</h3>
             <div className="grid grid-cols-2 gap-4 text-gray-300">
               <div>
-                <span className="text-gray-500 uppercase tracking-wider text-xs font-bold block mb-1">Issue Type</span>
+                <span className="text-[#f5f5f7]/50 uppercase tracking-wider text-[10px] font-bold block mb-1">Issue Type</span>
                 {parsedTicketInfo.issue_type.replace(/_/g, ' ')}
               </div>
               <div>
-                <span className="text-gray-500 uppercase tracking-wider text-xs font-bold block mb-1">Created At</span>
+                <span className="text-[#f5f5f7]/50 uppercase tracking-wider text-[10px] font-bold block mb-1">Created At</span>
                 {new Date(parsedTicketInfo.created_at).toLocaleString()}
               </div>
               {parsedTicketInfo.order_id && (
                 <div className="col-span-2">
-                  <span className="text-gray-500 uppercase tracking-wider text-xs font-bold block mb-1">Order</span>
+                  <span className="text-[#f5f5f7]/50 uppercase tracking-wider text-[10px] font-bold block mb-1">Order</span>
                   Order #{parsedTicketInfo.order_id.split('-')[0]}
                 </div>
               )}
               {parsedTicketInfo.transactionId && (
                 <div>
-                  <span className="text-gray-500 uppercase tracking-wider text-xs font-bold block mb-1">Transaction ID</span>
+                  <span className="text-[#f5f5f7]/50 uppercase tracking-wider text-[10px] font-bold block mb-1">Transaction ID</span>
                   {parsedTicketInfo.transactionId}
                 </div>
               )}
               {parsedTicketInfo.paymentMethod && (
                 <div>
-                  <span className="text-gray-500 uppercase tracking-wider text-xs font-bold block mb-1">Payment Method</span>
+                  <span className="text-[#f5f5f7]/50 uppercase tracking-wider text-[10px] font-bold block mb-1">Payment Method</span>
                   {parsedTicketInfo.paymentMethod}
                 </div>
               )}
-              <div className="col-span-2 mt-2">
-                <span className="text-gray-500 uppercase tracking-wider text-xs font-bold block mb-1">Description</span>
-                <p className="whitespace-pre-wrap">{parsedTicketInfo.description}</p>
+              <div className="col-span-2 mt-2 min-w-0">
+                <span className="text-[#f5f5f7]/50 uppercase tracking-wider text-[10px] font-bold block mb-1">Description</span>
+                <p className="whitespace-pre-wrap break-words break-all text-[#f5f5f7]">{parsedTicketInfo.description}</p>
               </div>
             </div>
           </div>
         )}
         
-        <div className="text-center text-sm text-gray-500 my-4 bg-white/5 p-4 rounded-xl border border-white/5">
+        <div className="text-center text-xs text-[#f5f5f7]/50 my-6">
           Your ticket has been submitted! An admin will reply shortly.<br/>
           You can safely leave this page – the chat will remain active in this tab.
         </div>
         
         {messages.map((msg, i) => (
           <div key={i} className={`flex w-full ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
-            <div className={`flex gap-3 max-w-[85%] ${msg.sender === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
+            <div className={`flex gap-3 max-w-[85%] min-w-0 ${msg.sender === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
               
               {/* Avatar */}
               <div className="shrink-0 pt-1">
                 {msg.sender === 'user' ? (
                    userAvatar ? (
-                     <img src={userAvatar} alt="User" className="w-8 h-8 rounded-full object-cover border border-white/10" />
+                     <img src={userAvatar} alt="User" className="w-8 h-8 rounded-full object-cover border border-[#262626]" />
                    ) : (
-                     <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 shadow-lg flex items-center justify-center">
-                       <span className="text-white text-xs font-bold">{userName.charAt(0).toUpperCase()}</span>
+                     <div className="w-8 h-8 rounded-full bg-[#1a1a1a] border border-[#262626] flex items-center justify-center">
+                       <span className="text-accent text-xs font-bold">{userName.charAt(0).toUpperCase()}</span>
                      </div>
                    )
                 ) : (
                    msg.authorAvatar ? (
-                     <img src={msg.authorAvatar} alt={msg.author || "Admin"} className="w-8 h-8 rounded-full object-cover border border-white/10" />
+                     <img src={msg.authorAvatar} alt={msg.author || "Admin"} className="w-8 h-8 rounded-full object-cover border border-[#262626]" />
                    ) : (
-                     <div className="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center">
-                       <span className="text-gray-400 text-xs font-bold">A</span>
+                     <div className="w-8 h-8 rounded-full bg-[#1a1a1a] border border-[#262626] flex items-center justify-center">
+                       <span className="text-[#f5f5f7]/50 text-xs font-bold">A</span>
                      </div>
                    )
                 )}
@@ -400,15 +397,14 @@ export default function TicketChat({ sessionId, initialMessage, initialAttachmen
               {/* Message Content */}
               <div className="flex flex-col min-w-0">
                 {msg.sender === 'admin' && msg.author && (
-                  <span className="text-xs text-gray-400 mb-1 ml-1 font-medium">{msg.author}</span>
+                  <span className="text-xs text-[#f5f5f7]/50 mb-1 ml-1 font-medium">{msg.author}</span>
                 )}
                 <div 
-                  className={`p-4 rounded-2xl text-sm leading-relaxed ${
+                  className={`p-4 rounded-xl text-sm leading-relaxed break-words break-all ${
                     msg.sender === 'user' 
-                      ? 'bg-accent/20 text-white rounded-tr-none border border-accent/30' 
-                      : 'bg-white/5 text-gray-200 rounded-tl-none border border-white/10'
+                      ? 'bg-accent text-black rounded-tr-sm' 
+                      : 'bg-[#141414] text-[#f5f5f7] border border-[#262626] rounded-tl-sm'
                   }`}
-                  style={{ wordBreak: 'break-word' }}
                 >
                   {!(msg.content.trim().startsWith('http') && !msg.content.trim().includes(' ') && msg.attachments && msg.attachments.length > 0) && (
                     <span>{msg.content}</span>
@@ -470,15 +466,15 @@ export default function TicketChat({ sessionId, initialMessage, initialAttachmen
       </div>
       
       {isTicketClosed && (
-        <div className="w-full text-center py-3 bg-gradient-to-t from-[#0a0a0a] to-transparent z-10">
-          <div className="inline-block bg-red-500/10 border border-red-500/20 text-red-400 px-4 py-2 rounded-xl text-sm font-medium shadow-lg backdrop-blur-md">
+        <div className="w-full text-center py-3 bg-[#0a0a0a] border-t border-[#262626] z-10">
+          <div className="inline-block bg-[#1a0a0a] border border-[#ff3333] text-[#ff3333] px-4 py-2 rounded-xl text-sm font-bold">
             🔒 This ticket has been closed by an admin.
           </div>
         </div>
       )}
       
       {/* Input area */}
-      <div className="p-4 bg-white/5 border-t border-white/10">
+      <div className="p-4 bg-[#0a0a0a] border-t border-[#262626]">
         <form onSubmit={sendMessage} className="flex gap-2">
           <input
             type="file"
@@ -492,7 +488,7 @@ export default function TicketChat({ sessionId, initialMessage, initialAttachmen
             type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={isTicketClosed}
-            className="p-3 text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-xl transition-colors shrink-0 disabled:opacity-50 disabled:hover:bg-white/5 disabled:hover:text-gray-400"
+            className="p-3 text-[#f5f5f7]/50 hover:text-[#f5f5f7] hover:bg-[#141414] rounded-xl transition-colors shrink-0 disabled:opacity-50"
           >
             <ImageIcon className="w-5 h-5" />
           </button>
@@ -502,7 +498,7 @@ export default function TicketChat({ sessionId, initialMessage, initialAttachmen
             onChange={(e) => setInputValue(e.target.value)}
             disabled={isTicketClosed}
             placeholder={isTicketClosed ? "Ticket closed..." : "Type your message here..."}
-            className="flex-1 bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/50 transition-all disabled:opacity-50"
+            className="flex-1 bg-[#141414] border border-[#262626] rounded-xl px-4 py-3 text-white focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all disabled:opacity-50"
           />
           <button
             type="submit"

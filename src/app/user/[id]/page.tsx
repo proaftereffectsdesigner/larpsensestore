@@ -109,12 +109,12 @@ export default function PublicProfile() {
   
   // Compute time badge
   const ALL_TIME_BADGES = [
-    { name: "Newcomer / Registered", desc: "Welcome to the community", color: "text-blue-400", bg: "bg-blue-500/10 border-blue-500/20", glow: "shadow-[0_0_2px_rgba(59,130,246,0.2)]", Icon: UserPlus, daysReq: 0 },
-    { name: "Active Member", desc: "Active community member for a week", color: "text-emerald-400", bg: "bg-emerald-500/10 border-emerald-500/20", glow: "shadow-[0_0_5px_rgba(16,185,129,0.3)]", Icon: CalendarCheck, daysReq: 7 },
-    { name: "Trusted User", desc: "30 days of trusted membership", color: "text-purple-400", bg: "bg-purple-500/10 border-purple-500/20", glow: "shadow-[0_0_8px_rgba(168,85,247,0.4)]", Icon: ShieldCheck, daysReq: 30 },
-    { name: "Established Client", desc: "90 days of consistent presence", color: "text-orange-400", bg: "bg-orange-500/10 border-orange-500/20", glow: "shadow-[0_0_12px_rgba(249,115,22,0.5)]", Icon: Award, daysReq: 90 },
-    { name: "Platform Veteran", desc: "Legendary 6 months milestone", color: "text-red-400", bg: "bg-red-500/10 border-red-500/20", glow: "shadow-[0_0_16px_rgba(239,68,68,0.6)]", Icon: Medal, daysReq: 180 },
-    { name: "Foundation Pillar", desc: "Full year of elite platform status", color: "text-yellow-400", bg: "bg-yellow-500/10 border-yellow-500/30", glow: "shadow-[0_0_22px_rgba(234,179,8,0.8)]", Icon: Crown, daysReq: 365 },
+    { name: "Newcomer / Registered", desc: "Welcome to the community", color: "text-blue-400", bg: "bg-blue-500/10 border-blue-500/20", glow: "shadow-none", Icon: UserPlus, daysReq: 0 },
+    { name: "Active Member", desc: "Active community member for a week", color: "text-emerald-400", bg: "bg-emerald-500/10 border-emerald-500/20", glow: "shadow-none", Icon: CalendarCheck, daysReq: 7 },
+    { name: "Trusted User", desc: "30 days of trusted membership", color: "text-purple-400", bg: "bg-purple-500/10 border-purple-500/20", glow: "shadow-none", Icon: ShieldCheck, daysReq: 30 },
+    { name: "Established Client", desc: "90 days of consistent presence", color: "text-orange-400", bg: "bg-orange-500/10 border-orange-500/20", glow: "shadow-none", Icon: Award, daysReq: 90 },
+    { name: "Platform Veteran", desc: "Legendary 6 months milestone", color: "text-red-400", bg: "bg-red-500/10 border-red-500/20", glow: "shadow-none", Icon: Medal, daysReq: 180 },
+    { name: "Foundation Pillar", desc: "Full year of elite platform status", color: "text-yellow-400", bg: "bg-yellow-500/10 border-yellow-500/30", glow: "shadow-none", Icon: Crown, daysReq: 365 },
   ];
   
   let TimeIcon = UserPlus;
@@ -141,7 +141,7 @@ export default function PublicProfile() {
         
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
           <div className="flex items-center gap-4">
-            <Link href={isLoggedIn ? "/dashboard?tab=profile" : "/"} className="w-10 h-10 rounded-full bg-[#141414] border border-red-500/20 text-red-400 flex items-center justify-center hover:bg-red-500/10 hover:border-red-500/40 transition-all shadow-[0_0_15px_rgba(239,68,68,0.1)]">
+            <Link href={isLoggedIn ? "/dashboard?tab=profile" : "/"} className="w-10 h-10 rounded-full bg-[#141414] border border-red-500/20 text-red-400 flex items-center justify-center hover:bg-red-500/10 hover:border-red-500/40 transition-colors">
               <ArrowLeft className="w-5 h-5" />
             </Link>
             <h2 className="text-2xl font-bold text-white tracking-tight flex items-center gap-3">
@@ -170,10 +170,10 @@ export default function PublicProfile() {
                 
                 <div className="relative w-48 h-48 group">
                   {/* Avatar Border & Container */}
-                  <div className={`w-full h-full rounded-full overflow-hidden border-4 bg-[#0a0a0a] transition-all duration-500 ${
+                  <div className={`w-full h-full rounded-full overflow-hidden border-4 bg-[#0a0a0a] transition-colors duration-500 ${
                     isOnline 
-                      ? 'border-emerald-500 shadow-[0_0_30px_rgba(16,185,129,0.3)]' 
-                      : 'border-red-500 shadow-[0_0_20px_rgba(239,68,68,0.2)]'
+                      ? 'border-emerald-500' 
+                      : 'border-red-500'
                   }`}>
                     {avatar_url ? (
                       <img src={avatar_url} alt="Avatar" className="w-full h-full object-cover" />
@@ -191,7 +191,6 @@ export default function PublicProfile() {
                       isOnline ? 'bg-emerald-500' : 'bg-red-500'
                     } flex items-center justify-center group-hover:scale-110 transition-transform cursor-help`}
                   >
-                    {isOnline && <div className="absolute inset-0 rounded-full animate-ping bg-emerald-500 opacity-30"></div>}
                   </div>
                 </div>
 
@@ -212,7 +211,7 @@ export default function PublicProfile() {
                     )}
                   </div>
                   {is_banned ? (
-                    <div className="group relative inline-flex items-center gap-1.5 px-3 py-1 bg-red-500/10 border border-red-500/20 rounded-full mt-2 ml-2 shadow-[0_0_15px_rgba(239,68,68,0.2)] cursor-help">
+                    <div className="group relative inline-flex items-center gap-1.5 px-3 py-1 bg-red-500/10 border border-red-500/20 rounded-full mt-2 ml-2 cursor-help">
                       <ShieldAlert className="w-4 h-4 text-red-500" />
                       <span className="text-xs font-bold text-red-500 uppercase tracking-widest">User Has Been Banned</span>
                       
@@ -233,15 +232,14 @@ export default function PublicProfile() {
                     </div>
                   ) : (profile?.can_topup === false || profile?.can_purchase === false || profile?.can_update_profile === false) ? (
                     <div className="flex flex-wrap gap-2 mt-3">
-                       {profile?.can_purchase === false && <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-orange-500/10 border border-orange-500/20 rounded-full shadow-[0_0_15px_rgba(249,115,22,0.1)] text-[10px] font-bold text-orange-400 uppercase tracking-widest"><ShieldAlert className="w-3.5 h-3.5" /> Purchases Blocked</span>}
-                       {profile?.can_topup === false && <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-orange-500/10 border border-orange-500/20 rounded-full shadow-[0_0_15px_rgba(249,115,22,0.1)] text-[10px] font-bold text-orange-400 uppercase tracking-widest"><ShieldAlert className="w-3.5 h-3.5" /> Top-ups Blocked</span>}
-                       {profile?.can_update_profile === false && <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-orange-500/10 border border-orange-500/20 rounded-full shadow-[0_0_15px_rgba(249,115,22,0.1)] text-[10px] font-bold text-orange-400 uppercase tracking-widest"><ShieldAlert className="w-3.5 h-3.5" /> Profile Locked</span>}
+                       {profile?.can_purchase === false && <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-orange-500/10 border border-orange-500/20 rounded-full text-[10px] font-bold text-orange-400 uppercase tracking-widest"><ShieldAlert className="w-3.5 h-3.5" /> Purchases Blocked</span>}
+                       {profile?.can_topup === false && <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-orange-500/10 border border-orange-500/20 rounded-full text-[10px] font-bold text-orange-400 uppercase tracking-widest"><ShieldAlert className="w-3.5 h-3.5" /> Top-ups Blocked</span>}
+                       {profile?.can_update_profile === false && <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-orange-500/10 border border-orange-500/20 rounded-full text-[10px] font-bold text-orange-400 uppercase tracking-widest"><ShieldAlert className="w-3.5 h-3.5" /> Profile Locked</span>}
                     </div>
                   ) : null}
                 </div>
 
                 <div className="bg-[#0a0a0a] border border-white/5 rounded-2xl p-5 relative overflow-hidden">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-accent/5 rounded-bl-full -mr-16 -mt-16 blur-2xl"></div>
                   <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3 flex items-center gap-2">
                     About Me
                   </h3>
@@ -268,7 +266,7 @@ export default function PublicProfile() {
                     <div className="bg-[#0a0a0a] border border-white/5 rounded-2xl p-4 flex items-center gap-4">
                       {total_spent >= 250 ? (
                         <>
-                          <div className="p-3 rounded-xl border shrink-0 bg-cyan-500/10 border-cyan-500/30 shadow-[0_0_15px_rgba(34,211,238,0.5)]">
+                          <div className="p-3 rounded-xl border shrink-0 bg-cyan-500/10 border-cyan-500/30">
                             <Gem className="w-6 h-6 text-cyan-400" />
                           </div>
                           <div>
@@ -278,7 +276,7 @@ export default function PublicProfile() {
                         </>
                       ) : total_spent >= 50 ? (
                         <>
-                          <div className="p-3 rounded-xl border shrink-0 bg-yellow-500/10 border-yellow-500/30 shadow-[0_0_15px_rgba(234,179,8,0.5)]">
+                          <div className="p-3 rounded-xl border shrink-0 bg-yellow-500/10 border-yellow-500/30">
                             <Coins className="w-6 h-6 text-yellow-400" />
                           </div>
                           <div>
@@ -288,7 +286,7 @@ export default function PublicProfile() {
                         </>
                       ) : total_spent >= 25 ? (
                         <>
-                          <div className="p-3 rounded-xl border shrink-0 bg-purple-500/10 border-purple-500/30 shadow-[0_0_15px_rgba(168,85,247,0.5)]">
+                          <div className="p-3 rounded-xl border shrink-0 bg-purple-500/10 border-purple-500/30">
                             <Star className="w-6 h-6 text-purple-400" />
                           </div>
                           <div>
@@ -298,7 +296,7 @@ export default function PublicProfile() {
                         </>
                       ) : (
                         <>
-                          <div className="p-3 rounded-xl border shrink-0 bg-green-500/10 border-green-500/20 shadow-[0_0_8px_rgba(34,197,94,0.3)]">
+                          <div className="p-3 rounded-xl border shrink-0 bg-green-500/10 border-green-500/20">
                             <ShoppingBag className="w-6 h-6 text-green-400" />
                           </div>
                           <div>

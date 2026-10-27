@@ -25,7 +25,6 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
-import ParticlesBackground from "@/components/ParticlesBackground";
 
 function AccountCard({ 
   account, 
@@ -99,8 +98,8 @@ function AccountCard({
     }
   };
   return (
-    <div className="bg-[#0f0f0f] border border-white/5 rounded-2xl p-4 space-y-4">
-      <div className="flex items-center justify-center p-3 bg-black/40 rounded-xl relative overflow-hidden">
+    <div className="bg-[#0f0f0f] border border-[#262626] rounded-xl overflow-hidden">
+      <div className="flex items-center justify-center p-4 bg-[#141414]">
         <input 
           readOnly
           value={account.token}
@@ -108,10 +107,10 @@ function AccountCard({
         />
       </div>
 
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-3 border-t border-[#262626]">
         <button 
           onClick={() => setRevealed(!revealed)}
-          className="flex items-center justify-center gap-2 py-2.5 rounded-xl border border-white/10 text-gray-400 hover:text-white hover:bg-white/5 transition-colors text-xs font-semibold"
+          className="flex items-center justify-center gap-2 py-3 border-r border-[#262626] text-[#f5f5f7]/50 hover:text-white hover:bg-white/5 transition-colors text-[11px] font-bold uppercase tracking-wider"
         >
           {revealed ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />} 
           {revealed ? "Hide" : "Reveal"}
@@ -119,10 +118,10 @@ function AccountCard({
 
         <button 
           onClick={handleCopy}
-          className={`flex items-center justify-center gap-2 py-2.5 rounded-xl border transition-colors text-xs font-semibold ${
+          className={`flex items-center justify-center gap-2 py-3 border-r transition-colors text-[11px] font-bold uppercase tracking-wider ${
             copied 
-              ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-400' 
-              : 'border-white/10 text-gray-400 hover:text-white hover:bg-white/5'
+              ? 'bg-white text-black border-white' 
+              : 'border-[#262626] text-[#f5f5f7]/50 hover:text-white hover:bg-white/5 bg-transparent'
           }`}
         >
           {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
@@ -132,14 +131,14 @@ function AccountCard({
         <button 
           onClick={handleReplace}
           disabled={replacing}
-          className={`flex items-center justify-center gap-2 py-2.5 rounded-xl border transition-colors text-xs font-semibold disabled:opacity-50 ${
+          className={`flex items-center justify-center gap-2 py-3 transition-colors text-[11px] font-bold uppercase tracking-wider disabled:opacity-50 ${
             confirmingReplace
-              ? 'border-orange-500/50 bg-orange-500/10 text-orange-400 hover:bg-orange-500/20'
-              : 'border-red-500/20 text-red-400 bg-red-500/5 hover:bg-red-500/10'
+              ? 'text-emerald-500 bg-transparent hover:bg-white/5'
+              : 'text-[#f5f5f7]/50 hover:text-white hover:bg-white/5 bg-transparent'
           }`}
         >
           {replacing ? (
-            <div className="w-3.5 h-3.5 border-2 border-red-400/30 border-t-red-400 rounded-full animate-spin" />
+            <div className="w-3.5 h-3.5 border-2 border-[#f5f5f7]/30 border-t-[#f5f5f7] rounded-full animate-spin" />
           ) : (
             <RefreshCw className="w-3.5 h-3.5" /> 
           )}
@@ -270,238 +269,227 @@ export default function OrderDetails() {
 
   return (
     <>
-      <ParticlesBackground />
-      <div className="min-h-screen pt-24 pb-12 px-4 relative z-10 flex justify-center">
-        <div className="w-full max-w-[900px] bg-[#141414] border border-white/5 rounded-3xl p-6 md:p-10 shadow-2xl animate-in fade-in zoom-in-95 duration-500">
+      <div className="min-h-screen pt-24 pb-12 px-4 relative z-10 flex justify-center bg-[#0a0a0a]">
+        <div className="w-full max-w-[800px] flex flex-col gap-6 animate-in fade-in zoom-in-95 duration-500">
           
-          {/* Header */}
-          <div className="flex items-center mb-6">
-            <Link href="/dashboard?tab=orders" className="p-2 rounded-xl bg-white/5 border border-white/10 hover:bg-red-500/10 hover:border-red-500/30 text-gray-400 hover:text-red-400 transition-colors group">
-              <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+          {/* Back Button */}
+          <div>
+            <Link href="/dashboard?tab=orders" className="inline-flex items-center gap-2 text-sm text-[#f5f5f7]/50 hover:text-white transition-colors group">
+              <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> Back to Dashboard
             </Link>
           </div>
 
-          <div className="text-center mb-10 pb-10 border-b border-white/5 relative">
-            {order?.status === 'completed' ? (
-              <>
-                <div className="w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto mb-6 shadow-[0_0_30px_rgba(16,185,129,0.15)]">
-                  <CheckCircle2 className="w-8 h-8 text-emerald-500" />
-                </div>
-                <h1 className="text-3xl font-bold text-white mb-3">Order Successful!</h1>
-                <p className="text-gray-400 font-medium mb-6">Your payment was processed and your accounts are ready.</p>
-              </>
-            ) : order?.status === 'cancelled' ? (
-              <>
-                <div className="w-16 h-16 rounded-full bg-gray-500/10 border border-gray-500/20 flex items-center justify-center mx-auto mb-6 shadow-[0_0_30px_rgba(156,163,175,0.15)]">
-                  <Ban className="w-8 h-8 text-gray-400" />
-                </div>
-                <h1 className="text-3xl font-bold text-white mb-3">Order Cancelled</h1>
-                <p className="text-gray-400 font-medium mb-6">This order has been cancelled.</p>
-              </>
-            ) : order?.status === 'refunded' ? (
-              <>
-                <div className="w-16 h-16 rounded-full bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center mx-auto mb-6 shadow-[0_0_30px_rgba(99,102,241,0.15)]">
-                  <Undo2 className="w-8 h-8 text-indigo-400" />
-                </div>
-                <h1 className="text-3xl font-bold text-white mb-3">Order Refunded</h1>
-                <p className="text-gray-400 font-medium mb-6">The payment for this order has been refunded.</p>
-              </>
-            ) : order?.status === 'failed' ? (
-              <>
-                <div className="w-16 h-16 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center mx-auto mb-6 shadow-[0_0_30px_rgba(239,68,68,0.15)]">
-                  <XOctagon className="w-8 h-8 text-red-500" />
-                </div>
-                <h1 className="text-3xl font-bold text-white mb-3">Order Failed</h1>
-                <p className="text-gray-400 font-medium mb-6">This order was not completed successfully.</p>
-              </>
-            ) : (
-              <>
-                <div className="w-16 h-16 rounded-full bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-center mx-auto mb-6 shadow-[0_0_30px_rgba(234,179,8,0.15)]">
-                  <Clock className="w-8 h-8 text-yellow-500 animate-pulse" />
-                </div>
-                <h1 className="text-3xl font-bold text-white mb-3">Order Processing</h1>
-                <p className="text-gray-400 font-medium mb-6">Your order is being processed, please wait.</p>
-              </>
-            )}
-            <button 
-              onClick={handleCopyId}
-              className={`inline-block bg-[#0f0f0f] border rounded-xl px-4 py-2 font-mono text-sm transition-colors ${
-                copiedId ? 'border-emerald-500/50 text-emerald-400' : 'border-white/10 text-gray-500 hover:text-white hover:border-white/20'
-              }`}
-            >
-              Order ID: <span className={copiedId ? "text-emerald-400 ml-2" : "text-gray-300 ml-2"}>
-                {copiedId ? "Copied!" : (id || "26d757c0-31ea-4616-98de-73b22c097550")}
-              </span>
-            </button>
-          </div>
-
-          {order?.status !== 'cancelled' && order?.status !== 'refunded' && order?.status !== 'failed' && (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+          <div className="bg-[#0f0f0f] border border-[#262626] rounded-2xl p-6 md:p-8">
             
-            {/* Left Column - Accounts */}
-            {order?.product_id === 'topup' ? (
-              <div className="bg-[#0f0f0f] border border-white/5 rounded-3xl p-6 md:p-8 flex flex-col items-center justify-center text-center h-full min-h-[300px]">
-                <div className="w-16 h-16 rounded-full bg-accent/10 border border-accent/20 flex items-center justify-center mb-4">
-                  <Wallet className="w-8 h-8 text-accent" />
-                </div>
-                <h2 className="text-xl font-bold text-white mb-2">Balance Top-up</h2>
-                {order.status === 'completed' ? (
-                  <p className="text-gray-400 text-sm max-w-[250px]">Your balance has been successfully credited with €{Number(order.total_price).toFixed(2)}.</p>
-                ) : order.status === 'cancelled' ? (
-                  <p className="text-red-400/80 text-sm max-w-[250px]">This top-up request has been cancelled or expired.</p>
-                ) : (
-                  <p className="text-yellow-500/80 text-sm max-w-[250px]">This top-up request is awaiting payment confirmation.</p>
-                )}
-                <div className="mt-6 inline-flex flex-col gap-1 items-center bg-white/5 px-6 py-4 rounded-xl border border-white/10">
-                  <span className="text-[10px] text-gray-500 uppercase font-bold tracking-widest">Transaction Ref</span>
-                  <span className="font-mono text-gray-300 text-xs">{order.accounts_data}</span>
-                </div>
-              </div>
-            ) : accounts.length > 0 ? (
-              <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-xl font-bold text-white tracking-tight">Your Accounts</h2>
-                  <button 
-                    onClick={handleDownloadTxt}
-                    className="flex items-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 text-gray-300 px-4 py-2 rounded-xl text-xs font-semibold transition-colors"
-                  >
-                    <Download className="w-3.5 h-3.5" /> Save .txt
-                  </button>
-                </div>
-  
-                <div className="space-y-4">
-                  {accounts.map((acc, idx) => (
-                    <AccountCard 
-                      key={acc.id} 
-                      account={acc} 
-                      orderId={order?.id}
-                      productId={order?.product_id}
-                      accountIdx={idx}
-                      onReplaceSuccess={() => {
-                        // Re-fetch order to show the newly replaced account
-                        supabase.from('orders').select('*').eq('id', id as string).single().then(({data}) => {
-                          if (data) {
-                            setOrder(data);
-                            const splitAccounts = data.accounts_data
-                              ? data.accounts_data
-                                  .split(/\\n|\n/)
-                                  .map((t: string) => t.trim())
-                                  .filter((t: string) => t.length > 0 && !t.startsWith('[') && t.includes(':'))
-                              : [];
-                            setAccounts(splitAccounts.map((token: string, i: number) => ({
-                              id: i + 1,
-                              token
-                            })));
-                          }
-                        });
-                      }}
-                    />
-                  ))}
-                </div>
-              </div>
-            ) : (
-              <div className="bg-white/5 border border-white/10 rounded-2xl p-8 flex flex-col items-center justify-center text-center h-full min-h-[300px]">
-                <Package className="w-12 h-12 text-gray-500 mb-4 opacity-50" />
-                <h3 className="text-xl font-bold text-white mb-2">No Accounts Available</h3>
-                <p className="text-gray-400 text-sm max-w-[250px]">Accounts will appear here once the order is successfully completed.</p>
-              </div>
-            )}
-
-            {/* Right Column - Instructions */}
-            {order?.product_id !== 'topup' && (
-              <div className="bg-[#0f0f0f] border border-white/5 rounded-3xl p-6 md:p-8">
-                <h2 className="text-xl font-bold text-white tracking-tight mb-8">How to login?</h2>
-
-                <div className="space-y-8 relative before:absolute before:inset-0 before:ml-[1.1rem] before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-white/10 before:via-white/5 before:to-transparent">
-                  
-                  {/* Step 1 */}
-                  <div className="relative flex items-start gap-6">
-                    <div className="absolute left-0 md:left-1/2 w-9 h-9 rounded-full bg-[#1a1a1a] border border-white/10 flex items-center justify-center -translate-x-1/2 mt-0.5 shadow-xl z-10">
-                      <Download className="w-4 h-4 text-gray-400" />
-                    </div>
-                    <div className="ml-10 md:ml-0 md:w-1/2 md:pr-10 md:text-right flex flex-col md:items-end">
-                      <h3 className="text-sm font-bold text-white mb-2">Get the login tool</h3>
-                      <p className="text-xs text-gray-400 leading-relaxed mb-4">We use a dedicated app instead of standard passwords. Grab the software here.</p>
-                      
-                      {toolLoading ? (
-                        <div className="inline-flex items-center gap-2 bg-white/20 text-white/50 px-4 py-2 rounded-xl text-xs font-bold cursor-not-allowed">
-                          <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> Loading...
-                        </div>
+            {/* Header - Receipt Style */}
+            <div className="border-b border-[#262626] pb-8 mb-8">
+              <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-8">
+                <div>
+                  <h1 className="text-3xl font-bold text-white tracking-tight mb-2">Order Receipt</h1>
+                  <div className="text-[#f5f5f7]/50 font-mono text-sm tracking-tight flex items-center gap-2">
+                    Order ID: #{id || "26d757c0"} 
+                    <button 
+                      onClick={handleCopyId} 
+                      className={`flex items-center gap-1.5 px-2 py-1 rounded-[6px] transition-colors text-[11px] font-bold tracking-wider uppercase ${
+                        copiedId ? 'bg-white text-black' : 'hover:bg-white/5 hover:text-white'
+                      }`}
+                      title="Copy full ID"
+                    >
+                      {copiedId ? (
+                        <>
+                          <Check className="w-3 h-3" /> COPIED
+                        </>
                       ) : (
-                        <div className="flex flex-col md:items-end items-start gap-2">
-                          <a 
-                            href={toolUrl || "#"} 
-                            download
-                            target="_blank"
-                            rel="noreferrer"
-                            className="inline-flex items-center justify-center gap-2 bg-white text-black px-4 py-2 rounded-xl text-xs font-bold hover:bg-gray-200 transition-colors shadow-lg"
-                          >
-                            <Download className="w-3.5 h-3.5" /> Download Login Tool
-                          </a>
-                          {toolVersion && (
-                            <span className="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded flex items-center gap-1 mt-1">
-                              LATEST RELEASE ({toolVersion})
-                            </span>
-                          )}
-                        </div>
+                        <>
+                          <Copy className="w-3 h-3" /> COPY
+                        </>
                       )}
-                    </div>
+                    </button>
                   </div>
-
-                  {/* Step 2 */}
-                  <div className="relative flex items-start gap-6 md:flex-row-reverse">
-                    <div className="absolute left-0 md:left-1/2 w-9 h-9 rounded-full bg-[#1a1a1a] border border-white/10 flex items-center justify-center -translate-x-1/2 mt-0.5 shadow-xl z-10">
-                      <Copy className="w-4 h-4 text-gray-400" />
-                    </div>
-                    <div className="ml-10 md:ml-0 md:w-1/2 md:pl-10">
-                      <h3 className="text-sm font-bold text-white mb-2">Copy your unique credentials</h3>
-                      <p className="text-xs text-gray-400 leading-relaxed">Head to your order accounts and hit copy. You'll receive a special token and Steam ID combination instead of a traditional email and password.</p>
-                    </div>
-                  </div>
-
-                  {/* Step 3 */}
-                  <div className="relative flex items-start gap-6">
-                    <div className="absolute left-0 md:left-1/2 w-9 h-9 rounded-full bg-[#1a1a1a] border border-white/10 flex items-center justify-center -translate-x-1/2 mt-0.5 shadow-xl z-10">
-                      <Box className="w-4 h-4 text-gray-400" />
-                    </div>
-                    <div className="ml-10 md:ml-0 md:w-1/2 md:pr-10 md:text-right">
-                      <h3 className="text-sm font-bold text-white mb-2">Load your account</h3>
-                      <p className="text-xs text-gray-400 leading-relaxed">Insert your copied credentials directly into our app. The system will automatically configure your account.</p>
-                    </div>
-                  </div>
-
-                  {/* Step 4 */}
-                  <div className="relative flex items-start gap-6 md:flex-row-reverse">
-                    <div className="absolute left-0 md:left-1/2 w-9 h-9 rounded-full bg-[#1a1a1a] border border-white/10 flex items-center justify-center -translate-x-1/2 mt-0.5 shadow-xl z-10">
-                      <Play className="w-4 h-4 text-gray-400" />
-                    </div>
-                    <div className="ml-10 md:ml-0 md:w-1/2 md:pl-10">
-                      <h3 className="text-sm font-bold text-white mb-2">Start Steam via the software</h3>
-                      <p className="text-xs text-gray-400 leading-relaxed">Boot up Steam using the provided button inside the authentication app to gain access. Always use this method when you're ready to play.</p>
-                    </div>
-                  </div>
-
                 </div>
-
-                {/* Warning Box */}
-                <div className="mt-10 bg-orange-500/5 border border-orange-500/20 rounded-2xl p-5 shadow-[0_0_20px_rgba(249,115,22,0.05)]">
-                  <div className="flex items-start gap-3 mb-2">
-                    <AlertTriangle className="w-5 h-5 text-orange-500 shrink-0 mt-0.5" />
-                    <h4 className="text-sm font-bold text-orange-500">Warning: Never log out of Steam manually</h4>
+                <div className="flex flex-col items-start md:items-end gap-2">
+                  <div className={`text-[10px] uppercase tracking-widest font-bold ${
+                      order?.status === 'completed' ? 'text-emerald-500' :
+                      order?.status === 'failed' ? 'text-red-500' :
+                      order?.status === 'cancelled' ? 'text-gray-500' :
+                      order?.status === 'refunded' ? 'text-indigo-500' :
+                      'text-yellow-500'
+                  }`}>
+                    {order?.status || 'Processing'}
                   </div>
-                  <p className="text-xs text-orange-500/80 leading-relaxed ml-8">
-                    Manually signing out will permanently invalidate your token and destroy your access. Just simply switch accounts or just close steam normally.
-                  </p>
+                  <div className="text-sm text-[#f5f5f7]/50 font-medium">
+                    {order?.created_at ? new Date(order.created_at).toLocaleString('en-GB', { dateStyle: 'long', timeStyle: 'short' }) : 'Unknown Date'}
+                  </div>
                 </div>
-
-                <p className="text-[11px] text-gray-600 mt-6 text-center leading-relaxed">
-                  If your account faces any issues, navigate back to your order details to request a hassle-free replacement under your warranty.
-                </p>
-
               </div>
+
+              {/* Price Breakdown */}
+              <div className="bg-[#141414] border border-[#262626] rounded-xl p-5 flex flex-col gap-4">
+                 <div className="flex justify-between items-center text-sm">
+                   <span className="text-white font-medium">{order?.product_id === 'topup' ? 'Balance Top-up' : (order?.product_id || 'Product')} <span className="text-[#f5f5f7]/50 ml-1">(x{order?.quantity || 1})</span></span>
+                   <span className="text-white font-mono font-bold">€{Number(order?.total_price || 0).toFixed(2)}</span>
+                 </div>
+                 <div className="w-full h-px bg-[#262626]"></div>
+                 <div className="flex justify-between items-center text-sm">
+                   <span className="text-[#f5f5f7]/50 font-medium tracking-tight">Payment Method</span>
+                   <span className="text-white font-medium capitalize tracking-tight">{
+                     order?.product_id === 'topup' ? 'Crypto' :
+                     order?.accounts_data?.toLowerCase().includes('oxapay') || order?.accounts_data?.toLowerCase().includes('crypto') ? 'Crypto' :
+                     order?.accounts_data?.toLowerCase().includes('stripe') ? 'Stripe' : 'Store Balance'
+                   }</span>
+                 </div>
+              </div>
+            </div>
+
+            {/* Delivered Items Section */}
+            {order?.status !== 'cancelled' && order?.status !== 'refunded' && order?.status !== 'failed' && (
+              <>
+                {order?.product_id === 'topup' ? (
+                  <div className="mb-8 flex flex-col items-center justify-center text-center p-8 bg-[#141414] border border-[#262626] rounded-xl">
+                    <Wallet className="w-10 h-10 text-accent mb-4" />
+                    <h2 className="text-xl font-bold text-white mb-2">Balance Top-up</h2>
+                    <p className="text-[#f5f5f7]/50 text-sm max-w-[250px] mb-6">
+                      {order.status === 'completed' 
+                        ? `Your balance has been successfully credited with €${Number(order.total_price).toFixed(2)}.` 
+                        : "This top-up request is awaiting payment confirmation."}
+                    </p>
+                    <div className="inline-flex flex-col gap-1 items-center bg-[#0a0a0a] px-6 py-4 rounded-xl border border-[#262626]">
+                      <span className="text-[10px] text-accent uppercase font-bold tracking-widest">Transaction Ref</span>
+                      <span className="font-mono text-white text-xs">{order.accounts_data}</span>
+                    </div>
+                  </div>
+                ) : accounts.length > 0 ? (
+                  <div className="mb-10">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+                      <h2 className="text-xl font-bold text-white tracking-tight">Delivered Accounts</h2>
+                      <button 
+                        onClick={handleDownloadTxt}
+                        className="flex items-center gap-2 bg-[#141414] hover:bg-[#262626] border border-[#262626] text-white px-4 py-2 rounded-lg text-xs font-bold transition-colors"
+                      >
+                        <Download className="w-4 h-4" /> Save .txt
+                      </button>
+                    </div>
+                    <div className="space-y-4">
+                      {accounts.map((acc, idx) => (
+                        <AccountCard 
+                          key={acc.id} 
+                          account={acc} 
+                          orderId={order?.id}
+                          productId={order?.product_id}
+                          accountIdx={idx}
+                          onReplaceSuccess={() => {
+                            supabase.from('orders').select('*').eq('id', id as string).single().then(({data}) => {
+                              if (data) {
+                                setOrder(data);
+                                const splitAccounts = data.accounts_data
+                                  ? data.accounts_data.split(/\n|\n/).map((t: string) => t.trim()).filter((t: string) => t.length > 0 && !t.startsWith('[') && t.includes(':'))
+                                  : [];
+                                setAccounts(splitAccounts.map((token: string, i: number) => ({ id: i + 1, token })));
+                              }
+                            });
+                          }}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="mb-10 flex flex-col items-center justify-center text-center p-8 bg-[#141414] border border-[#262626] rounded-xl">
+                    <Package className="w-10 h-10 text-[#f5f5f7]/30 mb-4" />
+                    <h3 className="text-lg font-bold text-white mb-2">No Accounts Available</h3>
+                    <p className="text-[#f5f5f7]/50 text-sm">Accounts will appear here once the order is successfully completed.</p>
+                  </div>
+                )}
+
+                {/* Instructions Section */}
+                {order?.product_id !== 'topup' && (
+                  <div className="border-t border-[#262626] pt-8">
+                    <h2 className="text-xl font-bold text-white tracking-tight mb-6">Setup Instructions</h2>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                      {/* Step 1 */}
+                      <div className="bg-[#141414] border border-[#262626] p-5 rounded-xl flex flex-col">
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="w-6 h-6 rounded bg-[#262626] flex items-center justify-center text-[11px] font-bold text-white">1</div>
+                          <h3 className="text-sm font-bold text-white">Get the login tool</h3>
+                        </div>
+                        <p className="text-xs text-[#f5f5f7]/50 leading-relaxed mb-4 flex-1">We use a dedicated app instead of standard passwords to protect your accounts.</p>
+                        
+                        {toolLoading ? (
+                          <div className="inline-flex items-center gap-2 bg-[#262626]/50 text-[#f5f5f7]/50 px-4 py-2 rounded-lg text-xs font-bold cursor-not-allowed w-fit">
+                            <div className="w-3.5 h-3.5 border-2 border-[#f5f5f7]/30 border-t-[#f5f5f7] rounded-full animate-spin"></div> Loading...
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-3">
+                            <a 
+                              href={toolUrl || "#"} 
+                              download
+                              target="_blank"
+                              rel="noreferrer"
+                              className="inline-flex items-center justify-center gap-2 bg-white text-black px-4 py-2 rounded-lg text-xs font-bold hover:bg-gray-200 transition-colors"
+                            >
+                              <Download className="w-3.5 h-3.5" /> Download Tool
+                            </a>
+                            {toolVersion && (
+                              <span className="text-[10px] font-mono text-emerald-500">
+                                {toolVersion}
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Step 2 */}
+                      <div className="bg-[#141414] border border-[#262626] p-5 rounded-xl flex flex-col">
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="w-6 h-6 rounded bg-[#262626] flex items-center justify-center text-[11px] font-bold text-white">2</div>
+                          <h3 className="text-sm font-bold text-white">Copy credentials</h3>
+                        </div>
+                        <p className="text-xs text-[#f5f5f7]/50 leading-relaxed">
+                          Copy the token provided in the "Delivered Accounts" section above. This acts as your secure login key.
+                        </p>
+                      </div>
+
+                      {/* Step 3 */}
+                      <div className="bg-[#141414] border border-[#262626] p-5 rounded-xl flex flex-col">
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="w-6 h-6 rounded bg-[#262626] flex items-center justify-center text-[11px] font-bold text-white">3</div>
+                          <h3 className="text-sm font-bold text-white">Load account</h3>
+                        </div>
+                        <p className="text-xs text-[#f5f5f7]/50 leading-relaxed">
+                          Insert your copied credentials directly into the software. The system will automatically configure it.
+                        </p>
+                      </div>
+
+                      {/* Step 4 */}
+                      <div className="bg-[#141414] border border-[#262626] p-5 rounded-xl flex flex-col">
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="w-6 h-6 rounded bg-[#262626] flex items-center justify-center text-[11px] font-bold text-white">4</div>
+                          <h3 className="text-sm font-bold text-white">Play</h3>
+                        </div>
+                        <p className="text-xs text-[#f5f5f7]/50 leading-relaxed">
+                          Boot up Steam using the provided button inside the app. Always use this method when you're ready to play.
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Warning Box */}
+                    <div className="bg-orange-500/10 border border-orange-500/30 rounded-xl p-5">
+                      <div className="flex items-start gap-3">
+                        <AlertTriangle className="w-5 h-5 text-orange-500 shrink-0 mt-0.5" />
+                        <div>
+                          <h4 className="text-sm font-bold text-orange-500 mb-1">Warning: Never log out of Steam manually</h4>
+                          <p className="text-xs text-orange-500/80 leading-relaxed">
+                            Manually signing out will permanently invalidate your token and destroy your access. Just simply switch accounts or close steam normally.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </>
             )}
+
           </div>
-          )}
         </div>
       </div>
     </>

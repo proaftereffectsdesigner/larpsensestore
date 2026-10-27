@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import MiniPumpkin from "./halloween/MiniPumpkin";
+import { HALLOWEEN_EVENT_ENABLED } from "./halloween/HalloweenConfig";
 
 export default function Footer() {
   const pathname = usePathname();
@@ -10,109 +12,101 @@ export default function Footer() {
   }
 
   return (
-    <footer className="border-t border-white/5 bg-gradient-to-b from-[#0a0a0a]/50 to-[#000000] backdrop-blur-2xl mt-auto relative z-20 overflow-hidden">
-      {/* Ozdobny gradient w tle */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-4xl h-[1px] bg-gradient-to-r from-transparent via-emerald-500/50 to-transparent"></div>
-      
+    <footer className="border-t border-white/5 mt-auto relative z-20">
       <div className="max-w-6xl mx-auto px-6 py-16 lg:py-20">
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-12 lg:gap-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 lg:gap-12">
           
-          {/* Logo i Nazwa */}
-          <div className="col-span-1 md:col-span-12 lg:col-span-4 flex flex-col items-start">
-            <Link 
-              href="/" 
-              onClick={(e) => {
-                if (window.location.pathname === '/') {
-                  e.preventDefault();
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                }
-              }}
-              className="flex items-center gap-4 text-2xl font-bold tracking-tight text-white mb-6 hover:opacity-80 transition-opacity"
-            >
-              <div className="bg-white/5 p-2 rounded-2xl border border-white/10 shadow-xl">
-                <img src="/logo.png" alt="LarpSense Logo" className="h-10 w-auto object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]" />
-              </div>
-              <div className="flex items-baseline">
-                <span className="font-extrabold tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400">LarpSense</span>
-                <span className="font-light tracking-wide text-gray-500 ml-1">Store</span>
-              </div>
-            </Link>
-            <p className="text-gray-400 text-sm leading-relaxed max-w-sm mb-6">
-              Your trusted destination for premium, instantly delivered NFA accounts. Experience seamless matchmaking, backed by our automated warranty.
-            </p>
-            <div className="text-xs text-gray-500 space-y-1">
-              <a href="mailto:support@larpsensestore.com" className="text-accent hover:text-white transition-colors mt-2 inline-block">support@larpsensestore.com</a>
-            </div>
-          </div>
-
-          <div className="col-span-1 md:col-span-4 lg:col-span-2 lg:col-start-6">
-            <h3 className="text-white font-bold tracking-wider text-xs uppercase mb-6 text-gray-400">Quick Links</h3>
-            <ul className="space-y-4">
+          <div className="flex flex-col">
+            <h3 className="font-semibold text-[12px] mb-3 text-white">Games</h3>
+            <ul className="space-y-2.5">
               <li>
-                <Link href="/support" className="text-sm text-gray-400 hover:text-white transition-colors flex items-center gap-2 group">
-                  <span className="w-1.5 h-1.5 rounded-full bg-white/20 group-hover:bg-white transition-colors"></span>
-                  Support
+                <Link href="/shop?category=cs2" className="text-[12px] text-gray-400 hover:text-white transition-colors">
+                  Counter-Strike 2
                 </Link>
               </li>
               <li>
-                <Link href="/faq" className="text-sm text-gray-400 hover:text-white transition-colors flex items-center gap-2 group">
-                  <span className="w-1.5 h-1.5 rounded-full bg-white/20 group-hover:bg-white transition-colors"></span>
+                <Link href="/shop?category=rust" className="text-[12px] text-gray-400 hover:text-white transition-colors">
+                  Rust
+                </Link>
+              </li>
+              <li>
+                <Link href="/shop?category=extra" className="text-[12px] text-gray-400 hover:text-white transition-colors">
+                  Extra
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          <div className="flex flex-col">
+            <h3 className="font-semibold text-[12px] mb-3 text-white">Account</h3>
+            <ul className="space-y-2.5">
+              <li>
+                <Link href="/dashboard?tab=profile" className="text-[12px] text-gray-400 hover:text-white transition-colors">
+                  Dashboard Profile
+                </Link>
+              </li>
+              <li>
+                <Link href="/dashboard?tab=orders" className="text-[12px] text-gray-400 hover:text-white transition-colors">
+                  My Orders
+                </Link>
+              </li>
+              <li>
+                <Link href="/dashboard?tab=tickets" className="text-[12px] text-gray-400 hover:text-white transition-colors">
+                  Support Tickets
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          <div className="flex flex-col">
+            <h3 className="font-semibold text-[12px] mb-3 text-white">Support</h3>
+            <ul className="space-y-2.5">
+              <li>
+                <Link href="/faq" className="text-[12px] text-gray-400 hover:text-white transition-colors">
                   FAQ
                 </Link>
               </li>
-
               <li>
-                <a href="mailto:support@larpsensestore.com" className="text-sm text-gray-400 hover:text-white transition-colors flex items-center gap-2 group">
-                  <span className="w-1.5 h-1.5 rounded-full bg-white/20 group-hover:bg-white transition-colors"></span>
+                <Link href="/support/affiliate" className="text-[12px] text-gray-400 hover:text-white transition-colors">
+                  Affiliate
+                </Link>
+              </li>
+              <li>
+                <Link href="/support" className="text-[12px] text-gray-400 hover:text-white transition-colors">
                   Contact Us
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          <div className="flex flex-col">
+            <h3 className="font-semibold text-[12px] mb-3 text-white">Community</h3>
+            <ul className="space-y-2.5">
+              <li>
+                <a href="https://discord.gg/qVxdgvdTSK" target="_blank" rel="noopener noreferrer" className="text-[12px] text-gray-400 hover:text-white transition-colors">
+                  Discord Server
                 </a>
               </li>
-            </ul>
-          </div>
 
-          <div className="col-span-1 md:col-span-4 lg:col-span-2">
-            <h3 className="text-white font-bold tracking-wider text-xs uppercase mb-6 text-gray-400">Legal Info</h3>
-            <ul className="space-y-4">
-              <li>
-                <Link href="/terms" className="text-sm text-gray-400 hover:text-white transition-colors flex items-center gap-2 group">
-                  <span className="w-1.5 h-1.5 rounded-full bg-white/20 group-hover:bg-white transition-colors"></span>
-                  Terms of Service
-                </Link>
-              </li>
-              <li>
-                <Link href="/privacy" className="text-sm text-gray-400 hover:text-white transition-colors flex items-center gap-2 group">
-                  <span className="w-1.5 h-1.5 rounded-full bg-white/20 group-hover:bg-white transition-colors"></span>
-                  Privacy Policy
-                </Link>
-              </li>
             </ul>
-          </div>
-
-          <div className="col-span-1 md:col-span-4 lg:col-span-3">
-            <h3 className="text-white font-bold tracking-wider text-xs uppercase mb-6 text-gray-400">Join the Community</h3>
-            <a 
-              href="https://discord.gg/qVxdgvdTSK" 
-              target="_blank" 
-              rel="noopener noreferrer" 
-              className="inline-flex items-center justify-center gap-3 bg-[#5865F2]/10 hover:bg-[#5865F2]/20 border border-[#5865F2]/20 text-white rounded-xl px-5 py-3 transition-all hover:-translate-y-1 hover:shadow-[0_0_20px_rgba(88,101,242,0.3)] w-full sm:w-auto"
-            >
-              <img src="/discord.png" alt="Discord" className="w-6 h-6 object-contain drop-shadow-md" />
-              <span className="text-sm font-semibold tracking-wide text-[#5865F2]">Discord</span>
-            </a>
-            <p className="text-xs text-gray-500 mt-4 leading-relaxed">
-              Join our server for exclusive drops, support, and giveaways.
-            </p>
           </div>
 
         </div>
 
         {/* Bottom Bar */}
-        <div className="border-t border-white/5 mt-16 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
-          <p className="text-xs font-medium tracking-wide text-gray-500">
-            &copy; {new Date().getFullYear()} LarpSense Store. All rights reserved.
-          </p>
-          <div className="flex items-center gap-2 text-xs font-medium text-gray-600 bg-white/5 px-4 py-2 rounded-full border border-white/5">
-            <span className="w-2 h-2 rounded-full bg-amber-500/50 animate-pulse"></span>
+        <div className="border-t border-white/5 mt-16 pt-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-12 text-[12px] text-gray-500">
+            <span className="flex items-center gap-1.5">
+              Copyright &copy; {new Date().getFullYear()} LarpSense Store. All rights reserved.
+              {HALLOWEEN_EVENT_ENABLED && <MiniPumpkin className="w-3.5 h-3.5 opacity-60 hover:opacity-100 transition-opacity" />}
+            </span>
+            <div className="flex items-center gap-4">
+              <Link href="/terms" className="hover:text-white transition-colors">Terms of Service</Link>
+              <span className="text-gray-700">|</span>
+              <Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
+            </div>
+          </div>
+          <div className="text-[12px] text-[#f5f5f7]/30">
             Not affiliated with Valve Corporation.
           </div>
         </div>

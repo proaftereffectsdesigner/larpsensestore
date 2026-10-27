@@ -67,12 +67,11 @@ export default function GlobalBanGuard() {
   if ((!isBanned && !isRestricted) || banAcknowledged) return null;
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-in fade-in duration-300">
-      <div className={`bg-[#0a0a0a] border ${isBanned ? 'border-red-500/30 shadow-[0_0_100px_rgba(239,68,68,0.2)]' : 'border-orange-500/30 shadow-[0_0_100px_rgba(249,115,22,0.2)]'} rounded-3xl overflow-hidden w-full max-w-lg relative`}>
-        <div className={`absolute top-0 left-1/2 -translate-x-1/2 w-64 h-32 ${isBanned ? 'bg-red-500/20' : 'bg-orange-500/20'} rounded-full blur-[80px] pointer-events-none`}></div>
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/90 animate-in fade-in duration-300">
+      <div className={`bg-[#0a0a0a] border ${isBanned ? 'border-red-500/30' : 'border-orange-500/30'} rounded-3xl overflow-hidden w-full max-w-lg relative`}>
         
         <div className="p-8 pb-6 relative z-10 text-center">
-          <div className={`w-20 h-20 ${isBanned ? 'bg-red-500/10 border-red-500/20' : 'bg-orange-500/10 border-orange-500/20'} rounded-full flex items-center justify-center mx-auto mb-6 border-4 shadow-inner`}>
+          <div className={`w-20 h-20 ${isBanned ? 'bg-red-500/10 border-red-500/20' : 'bg-orange-500/10 border-orange-500/20'} rounded-full flex items-center justify-center mx-auto mb-6 border-4`}>
             <ShieldAlert className={`w-10 h-10 ${isBanned ? 'text-red-500' : 'text-orange-500'}`} />
           </div>
           
@@ -116,7 +115,7 @@ export default function GlobalBanGuard() {
         <div className="p-8 bg-[#0a0a0a] flex flex-col items-center gap-4 mt-6">
           <button 
             onClick={handleAcknowledgeBan}
-            className={`w-full py-4 rounded-xl ${isBanned ? 'bg-red-500 hover:bg-red-600 shadow-[0_0_20px_rgba(239,68,68,0.3)] hover:shadow-[0_0_30px_rgba(239,68,68,0.5)]' : 'bg-orange-500 hover:bg-orange-600 shadow-[0_0_20px_rgba(249,115,22,0.3)] hover:shadow-[0_0_30px_rgba(249,115,22,0.5)]'} text-white font-black text-lg transition-all hover:scale-[1.02]`}
+            className={`w-full py-3.5 rounded-full ${isBanned ? 'bg-red-500 hover:bg-red-600' : 'bg-orange-500 hover:bg-orange-600'} text-white font-semibold text-base transition-colors`}
           >
             I Understand
           </button>

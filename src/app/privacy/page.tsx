@@ -1,5 +1,5 @@
 import { Metadata } from "next";
-import ParticlesBackground from "@/components/ParticlesBackground";
+
 import { ShieldCheck, Database, Lock, Eye } from "lucide-react";
 
 export const metadata: Metadata = {
@@ -17,14 +17,14 @@ export const metadata: Metadata = {
 export default function PrivacyPage() {
   return (
     <div className="relative min-h-screen flex flex-col items-center justify-start p-4 sm:p-8">
-      <ParticlesBackground />
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[300px] bg-accent/10 rounded-full blur-[120px] pointer-events-none -z-10" />
+      
+      
 
       <div className="relative z-10 w-full max-w-4xl mt-12 mb-24 animate-in fade-in slide-in-from-bottom-8 duration-700">
         
         {/* Premium Header */}
         <div className="text-center mb-16">
-          <div className="inline-flex items-center justify-center p-4 bg-accent/10 border border-accent/20 rounded-2xl mb-6 shadow-2xl shadow-accent/20">
+          <div className="inline-flex items-center justify-center p-4 bg-[#141414] border border-[#262626] rounded-xl mb-6">
             <ShieldCheck className="w-8 h-8 text-accent" />
           </div>
           <h1 className="text-4xl md:text-6xl font-black text-white mb-6 tracking-tight">
@@ -36,10 +36,10 @@ export default function PrivacyPage() {
         </div>
 
         {/* Premium Content Card */}
-        <div className="bg-[#111]/80 backdrop-blur-xl border border-white/10 rounded-3xl p-8 md:p-12 shadow-2xl space-y-12">
+        <div className="bg-[#0a0a0a] border border-[#262626] rounded-xl p-8 md:p-12 space-y-12">
           
           <section className="flex flex-col md:flex-row gap-6 items-start">
-            <div className="flex-shrink-0 p-3 bg-white/5 border border-white/10 rounded-xl">
+            <div className="flex-shrink-0 p-3 bg-[#141414] border border-[#262626] rounded-lg">
               <Database className="w-6 h-6 text-accent" />
             </div>
             <div>
@@ -53,10 +53,10 @@ export default function PrivacyPage() {
             </div>
           </section>
 
-          <div className="h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+          <div className="h-px w-full bg-[#262626]" />
 
           <section className="flex flex-col md:flex-row gap-6 items-start">
-            <div className="flex-shrink-0 p-3 bg-white/5 border border-white/10 rounded-xl">
+            <div className="flex-shrink-0 p-3 bg-[#141414] border border-[#262626] rounded-lg">
               <Eye className="w-6 h-6 text-accent" />
             </div>
             <div>
@@ -67,10 +67,10 @@ export default function PrivacyPage() {
             </div>
           </section>
 
-          <div className="h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+          <div className="h-px w-full bg-[#262626]" />
 
           <section className="flex flex-col md:flex-row gap-6 items-start">
-            <div className="flex-shrink-0 p-3 bg-white/5 border border-white/10 rounded-xl">
+            <div className="flex-shrink-0 p-3 bg-[#141414] border border-[#262626] rounded-lg">
               <Lock className="w-6 h-6 text-accent" />
             </div>
             <div>
@@ -81,10 +81,10 @@ export default function PrivacyPage() {
             </div>
           </section>
 
-          <div className="h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+          <div className="h-px w-full bg-[#262626]" />
 
           <section className="flex flex-col md:flex-row gap-6 items-start">
-            <div className="flex-shrink-0 p-3 bg-white/5 border border-white/10 rounded-xl">
+            <div className="flex-shrink-0 p-3 bg-[#141414] border border-[#262626] rounded-lg">
               <ShieldCheck className="w-6 h-6 text-accent" />
             </div>
             <div>

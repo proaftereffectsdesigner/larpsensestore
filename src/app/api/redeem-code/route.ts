@@ -64,6 +64,19 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: "You have already used this promo code" }, { status: 400 });
       }
 
+      // Enforce account ownership for scratch cards (CARD... or SCRATCH...)
+      if (standardCode.code.startsWith("CARD") || standardCode.code.startsWith("SCRATCH")) {
+        const parts = standardCode.code.split("-");
+        if (parts.length >= 2) {
+          const userPrefix = parts[1].toUpperCase();
+          const cleanUserPrefix = userId.replace(/-/g, "").slice(0, 8).toUpperCase();
+          const dashedUserPrefix = userId.slice(0, 8).toUpperCase();
+          if (userPrefix !== cleanUserPrefix && userPrefix !== dashedUserPrefix) {
+            return NextResponse.json({ error: "This scratch card code can only be used on the account that opened it." }, { status: 403 });
+          }
+        }
+      }
+
       return NextResponse.json({
         ok: true,
         message: `Promo code applied! ${standardCode.discount_pct}% off.`,
